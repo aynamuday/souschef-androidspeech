@@ -1,9 +1,5 @@
 package com.samsantech.souschef.ui.components
 
-import android.content.Intent
-import android.provider.MediaStore
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.result.ActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,18 +24,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.samsantech.souschef.R
 
 @Composable
-fun UploadImagePopUp(isClicked: (Boolean) -> Unit, launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
+fun BottomActionMenuPopUp(
+    options: HashMap<String, Int>,
+    onClick: (String) -> Unit,
+    onOutsideClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Gray.copy(.4f))
-            .clickable {
-                isClicked(true)
-            }
             .zIndex(1f)
+            .clickable {
+                onOutsideClick()
+            }
     ) {
         Column(
             modifier = Modifier
@@ -49,34 +48,32 @@ fun UploadImagePopUp(isClicked: (Boolean) -> Unit, launcher: ManagedActivityResu
                 .background(Color.White)
                 .padding(bottom = 50.dp, top = 20.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        isClicked(true)
-
-                        val intent =
-                            Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-                        launcher.launch(intent)
-                    }
-                    .padding(vertical = 10.dp, horizontal = 20.dp)
-            ) {
-                Box(
+            options.forEach { option ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(CircleShape)
+                        .fillMaxWidth()
+                        .clickable {
+                            onClick(option.key)
+                        }
+                        .padding(vertical = 10.dp, horizontal = 20.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.images),
-                        contentDescription = null,
+                    Box(
                         modifier = Modifier
-                            .background(Color.Gray.copy(.3f))
-                            .padding(10.dp)
-                            .size(20.dp)
-                    )
+                            .clip(CircleShape)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = option.value),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .background(Color.Gray.copy(.3f))
+                                .padding(10.dp)
+                                .size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(15.dp))
+                    Text(text = option.key, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.width(15.dp))
-                Text(text = "Upload from Gallery", fontWeight = FontWeight.Bold)
             }
         }
     }

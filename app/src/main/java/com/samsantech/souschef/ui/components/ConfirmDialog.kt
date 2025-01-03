@@ -78,7 +78,7 @@ fun ConfirmDialog(
                     modifier = Modifier.weight(1f),
                     containerColor = Color.White,
                     contentColor = Green,
-                    border = BorderStroke(1.dp, Color.Black)
+                    border = BorderStroke(1.dp, Green)
                 )
             }
         }

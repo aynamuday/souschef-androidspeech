@@ -3,7 +3,12 @@ package com.samsantech.souschef.data
 import android.net.Uri
 
 data class Recipe(
-    var photos: HashMap<String, Uri>? = null,
+    var id: String? = null,
+    var userId: String? = null,
+    var userName: String? = null,
+    var userPhotoUrl: String? = null,
+    var photosUrl: HashMap<String, Uri> = hashMapOf(),
+    var photosUri: HashMap<String, Uri> = hashMapOf(),
     var title: String = "",
     var description: String = "",
     var cookTimeHr: String = "0",

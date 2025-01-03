@@ -30,7 +30,6 @@ class FirebaseAuthManager(
     }
 
     fun signUp(user: User, isSuccess: (Boolean, String?) -> Unit) {
-        println("signing up...")
         auth.createUserWithEmailAndPassword(user.email, user.password)
             .addOnCompleteListener {
                 var error: String? = null
@@ -40,9 +39,7 @@ class FirebaseAuthManager(
                     println(it.exception)
                 } else {
                     val signedUpUser = getCurrentUser()
-                    println("heeey")
                     if (signedUpUser != null) {
-                        println("available")
                         firebaseUserManager.updateProfile(newDisplayName = user.displayName) { _, errorMessage ->
                             if (errorMessage != null) {
                                 error = errorMessage

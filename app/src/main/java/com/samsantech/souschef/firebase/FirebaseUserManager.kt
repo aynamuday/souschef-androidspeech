@@ -70,7 +70,6 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                     .addOnSuccessListener {
                         callback(true, null)
                         user.reload()
-                        println("success")
                     }
                     .addOnFailureListener{
                         println(it.message)
@@ -80,7 +79,6 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
     }
 
     fun updateProfilePhoto(imageUri: Uri, callback: (Boolean, String?) -> Unit) {
-        println("hi")
         val user = auth.currentUser
 
         if (user != null) {

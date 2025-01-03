@@ -43,16 +43,17 @@ fun OwnRecipeHeader(
                 .clip(RoundedCornerShape(50))
                 .clickable {
                     closeCreateRecipe()
-                }
+                },
+            tint = Color.White
         )
         Text(
             text = "Create Recipe",
             fontFamily = Konkhmer_Sleokcher,
             fontSize = 24.sp,
-            color = Green,
+            color = Color.White,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
+                .background(Green)
                 .padding(top = 32.dp),
             textAlign = TextAlign.Center
         )

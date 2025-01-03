@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -32,31 +33,31 @@ import com.samsantech.souschef.ui.SignUpScreen
 import com.samsantech.souschef.ui.UpdateEmailScreen
 import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
-import com.samsantech.souschef.ui.TiktokVideosScreen
 import com.samsantech.souschef.viewmodel.AuthViewModel
-import com.samsantech.souschef.viewmodel.OwnRecipeViewModel
+import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.serialization.Serializable
 
 @Composable
 fun SousChefApp(
+    systemNavigationBarHeight: Dp,
     user: FirebaseUser?,
     activity: ComponentActivity,
     context: Context,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
-    ownRecipeViewModel: OwnRecipeViewModel
+    ownRecipesViewModel: OwnRecipesViewModel
 ) {
     Box {
         val navController = rememberNavController()
 
 
-        NavHost(navController = navController, startDestination = Opening) {
+        NavHost(navController = navController, startDestination = Profile) {
 
             composable<Opening> {
                 var afterOpening: Any = GetStarted
                 if (user != null) {
-                    afterOpening = Profile
+                    afterOpening = Home
                 }
 
                 OpeningScreen(
@@ -186,6 +187,7 @@ fun SousChefApp(
             }
             composable<Home> {
                 ContentBottomNavigationWrapper(
+                    systemNavigationBarHeight,
                     name = "Home",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -204,12 +206,14 @@ fun SousChefApp(
                             popUpTo(Profile) { inclusive = true }
                         }
                     },
+                    ownRecipesViewModel
                 ) { paddingValues ->
                     HomeScreen(paddingValues)
                 }
             }
             composable<Profile> {
                 ContentBottomNavigationWrapper(
+                    systemNavigationBarHeight,
                     name = "Profile",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -228,16 +232,22 @@ fun SousChefApp(
                             popUpTo(Profile) { inclusive = true }
                         }
                     },
+                    ownRecipesViewModel
                 ) { paddingValues ->
                     ProfileScreen(
+                        paddingValues,
                         context,
                         userViewModel,
-                        onNavigateToEditProfile = { navController.navigate(route = EditProfile) }
+                        ownRecipesViewModel,
+                        onNavigateToEditProfile = { navController.navigate(route = EditProfile) },
+                        onNavigateToRecipe = { navController.navigate(route = Recipe) },
+                        onNavigateToCreateRecipeOne = { navController.navigate(route = CreateRecipeOne) }
                     )
                 }
             }
             composable<Search> {
                 ContentBottomNavigationWrapper(
+                    systemNavigationBarHeight,
                     name = "Search",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -256,6 +266,7 @@ fun SousChefApp(
                             popUpTo(Profile) { inclusive = true }
                         }
                     },
+                    ownRecipesViewModel
                 ) { paddingValues ->
                     SearchScreen(paddingValues)
                 }
@@ -272,7 +283,7 @@ fun SousChefApp(
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
                     context,
-                    ownRecipeViewModel,
+                    ownRecipesViewModel,
                     onNavigateToCreateRecipeTwo = {
                         navController.navigate(route = CreateRecipeTwo)
                     },
@@ -280,12 +291,13 @@ fun SousChefApp(
                         navController.navigate(route = Home) {
                             popUpTo(CreateRecipeOne) { inclusive = true }
                         }
+                        ownRecipesViewModel.resetRecipe()
                     }
                 )
             }
             composable<CreateRecipeTwo> {
                 CreateRecipeScreenTwo(
-                    ownRecipeViewModel,
+                    ownRecipesViewModel,
                     onNavigateToCreateRecipeOne = {
                         navController.navigate(route = CreateRecipeOne) {
                             popUpTo(CreateRecipeTwo) { inclusive = true }
@@ -298,12 +310,13 @@ fun SousChefApp(
                         navController.navigate(route = Home) {
                             popUpTo(CreateRecipeOne) { inclusive = true }
                         }
+                        ownRecipesViewModel.resetRecipe()
                     }
                 )
             }
             composable<CreateRecipeThree> {
                 CreateRecipeScreenThree(
-                    ownRecipeViewModel,
+                    ownRecipesViewModel,
                     onNavigateToCreateRecipeTwo = {
                         navController.navigate(route = CreateRecipeTwo) {
                             popUpTo(CreateRecipeThree) { inclusive = true }
@@ -316,12 +329,14 @@ fun SousChefApp(
                         navController.navigate(route = Home) {
                             popUpTo(CreateRecipeOne) { inclusive = true }
                         }
+                        ownRecipesViewModel.resetRecipe()
                     }
                 )
             }
             composable<CreateRecipeFour> {
                 CreateRecipeScreenFour(
-                    ownRecipeViewModel,
+                    context,
+                    ownRecipesViewModel,
                     onNavigateToCreateRecipeThree = {
                         navController.navigate(route = CreateRecipeThree) {
                             popUpTo(CreateRecipeFour) { inclusive = true }
@@ -331,6 +346,7 @@ fun SousChefApp(
                         navController.navigate(route = Home) {
                             popUpTo(CreateRecipeOne) { inclusive = true }
                         }
+                        ownRecipesViewModel.resetRecipe()
                     }
                 )
             }

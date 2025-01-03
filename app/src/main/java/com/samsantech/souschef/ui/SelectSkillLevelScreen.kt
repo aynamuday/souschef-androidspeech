@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.SelectionCard
-import com.samsantech.souschef.ui.components.SuccessDialog
+import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.viewmodel.UserViewModel
@@ -132,11 +132,11 @@ fun SelectSkillLevelScreen(
         }
 
         if (success){
-            SuccessDialog(
+            Dialog(
+                icon = "success",
                 message = "All done!",
                 subMessage = "Thank you for helping us get to know your preferences.",
-                buttonName = "Go to home",
-                onClick = onNavigateToHome
+                onCloseClick = onNavigateToHome
             )
         }
     }

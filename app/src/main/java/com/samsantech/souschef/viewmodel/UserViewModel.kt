@@ -21,7 +21,6 @@ class UserViewModel(
 
     fun refreshUser() {
         val currentUser = firebaseAuthManager.getCurrentUser()
-        println(currentUser?.displayName)
 
         if (currentUser != null) {
             firebaseAuthManager.getUser(currentUser.uid) {

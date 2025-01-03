@@ -15,26 +15,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Yellow
+import com.samsantech.souschef.utils.OwnRecipeAction
+import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 
 @Composable
 fun BottomNavigationBar(
+    systemNavigationBarHeight: Dp,
     name: String,
     onNavigateToHome: () -> Unit,
     onNavigateToCreateRecipe: () -> Unit,
     onNavigateToSearch: () -> Unit,
     //onNavigateToTiktokVideos: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    ownRecipesViewModel: OwnRecipesViewModel,
     modifier: Modifier = Modifier
 ) {
     val bottomNavigationItems = arrayOf(
@@ -51,6 +55,7 @@ fun BottomNavigationBar(
         BottomNavigation(
             backgroundColor = Green,
             modifier = modifier
+                .padding(bottom = systemNavigationBarHeight)
                 .height(60.dp)
                 .fillMaxWidth()
         ) {
@@ -60,7 +65,11 @@ fun BottomNavigationBar(
                     onClick = {
                         when (item["name"]) {
                             "Home" -> onNavigateToHome()
-                            "Create recipe" -> onNavigateToCreateRecipe()
+                            "Create recipe" -> {
+                                onNavigateToCreateRecipe()
+                                ownRecipesViewModel.resetRecipe()
+                                ownRecipesViewModel.action.value = OwnRecipeAction.ADD
+                            }
                             "Search" -> onNavigateToSearch()
                             //"Tiktok videos" -> onNavigateToTiktokVideos()
                             "Profile" -> onNavigateToProfile()

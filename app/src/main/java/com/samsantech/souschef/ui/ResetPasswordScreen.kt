@@ -32,7 +32,7 @@ import com.samsantech.souschef.ui.components.FormOutlinedTextField
 import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.ErrorText
 import com.samsantech.souschef.ui.components.ProgressSpinner
-import com.samsantech.souschef.ui.components.SuccessDialog
+import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.viewmodel.AuthViewModel
@@ -142,11 +142,11 @@ fun ResetPasswordScreen(
         ProgressSpinner()
     }
     if (success) {
-        SuccessDialog(
+        Dialog(
+            icon = "success",
             message = "Reset Link Sent",
             subMessage = "Password reset link has been successfully sent to your email.",
-            buttonName = "Okay",
-            onClick = onNavigateToLogin
+            onCloseClick = onNavigateToLogin
         )
     }
 }

@@ -1,6 +1,5 @@
 package com.samsantech.souschef.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,33 +33,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.sp
-import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.CreateRecipeBottomButtons
 import com.samsantech.souschef.ui.components.ErrorText
 import com.samsantech.souschef.ui.components.FormBasicTextField
 import com.samsantech.souschef.ui.components.ImageButton
 import com.samsantech.souschef.ui.components.OwnRecipeHeader
-import com.samsantech.souschef.ui.theme.Green
-import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.ui.theme.Yellow
-import com.samsantech.souschef.viewmodel.OwnRecipeViewModel
+import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 @Composable
 fun CreateRecipeScreenTwo(
-    ownRecipeViewModel: OwnRecipeViewModel,
+    ownRecipesViewModel: OwnRecipesViewModel,
     onNavigateToCreateRecipeOne: () -> Unit,
     onNavigateToCreateRecipeThree: () -> Unit,
     closeCreateRecipe: () -> Unit
 ) {
-    val newRecipe by ownRecipeViewModel.newRecipe.collectAsState()
+    val recipe by ownRecipesViewModel.recipe.collectAsState()
 
     var error by remember {
         mutableStateOf("")
@@ -86,7 +78,7 @@ fun CreateRecipeScreenTwo(
                         Text(text = "Ingredients", fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        newRecipe.ingredients.forEachIndexed { index, ingredient ->
+                        recipe.ingredients.forEachIndexed { index, ingredient ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -95,7 +87,7 @@ fun CreateRecipeScreenTwo(
                                     maxLines = 3,
                                     onValueChange = {
                                         error = ""
-                                        ownRecipeViewModel.updateIngredients(index, it)
+                                        ownRecipesViewModel.updateIngredients(index, it)
                                     },
                                     modifier = Modifier.weight(1f),
                                     borderColor = Color.Gray
@@ -109,7 +101,7 @@ fun CreateRecipeScreenTwo(
                                         .clip(RoundedCornerShape(50))
                                         .clickable {
                                             error = ""
-                                            ownRecipeViewModel.removeIngredient(index)
+                                            ownRecipesViewModel.removeIngredient(index)
                                         },
                                     tint = Color.Gray,
                                 )
@@ -126,7 +118,7 @@ fun CreateRecipeScreenTwo(
                         ) {
                             ImageButton(
                                 onClick = {
-                                    ownRecipeViewModel.addIngredient()
+                                    ownRecipesViewModel.addIngredient()
                                 },
                                 imageVector = Icons.Filled.Add,
                                 containerColor = Yellow,
@@ -145,13 +137,13 @@ fun CreateRecipeScreenTwo(
                     onFirstButtonClick = onNavigateToCreateRecipeOne,
                     secondButtonText = "Next",
                     onSecondButtonClick = {
-                        val newIngredients = newRecipe.ingredients.toMutableList()
+                        val newIngredients = recipe.ingredients.toMutableList()
                         newIngredients.removeAll { it.trim().isBlank() }
 
                         if(newIngredients.size == 0) {
                             error = "At least one ingredient is required."
                         } else {
-                            ownRecipeViewModel.setIngredients(newIngredients)
+                            ownRecipesViewModel.setIngredients(newIngredients)
                             onNavigateToCreateRecipeThree()
                         }
                     }
