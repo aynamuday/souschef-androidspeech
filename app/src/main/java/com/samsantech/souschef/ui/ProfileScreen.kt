@@ -73,6 +73,7 @@ import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.utils.OwnRecipeAction
 import com.samsantech.souschef.utils.convertUriToBitmap
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
+import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 
@@ -83,6 +84,7 @@ fun ProfileScreen(
     context: Context,
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
+    recipesViewModel: RecipesViewModel,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToRecipe: () -> Unit,
     onNavigateToCreateRecipeOne: () -> Unit
@@ -284,7 +286,10 @@ fun ProfileScreen(
                                                 if (photoUrl != null) Color.Transparent else Color.Gray,
                                                 RoundedCornerShape(5.dp)
                                             )
-                                            .clickable { },
+                                            .clickable {
+                                                recipesViewModel.displayRecipe.value = recipe
+                                                onNavigateToRecipe()
+                                            },
                                         contentAlignment = Alignment.Center
                                     ) {
                                         AsyncImage(

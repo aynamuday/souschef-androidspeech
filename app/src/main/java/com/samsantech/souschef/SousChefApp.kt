@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseUser
 import com.samsantech.souschef.ui.CreateRecipeScreenOne
 import com.samsantech.souschef.ui.CreateRecipeScreenThree
@@ -35,7 +36,9 @@ import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
+import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -46,7 +49,8 @@ fun SousChefApp(
     context: Context,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
-    ownRecipesViewModel: OwnRecipesViewModel
+    ownRecipesViewModel: OwnRecipesViewModel,
+    recipesViewModel: RecipesViewModel
 ) {
     Box {
         val navController = rememberNavController()
@@ -239,6 +243,7 @@ fun SousChefApp(
                         context,
                         userViewModel,
                         ownRecipesViewModel,
+                        recipesViewModel,
                         onNavigateToEditProfile = { navController.navigate(route = EditProfile) },
                         onNavigateToRecipe = { navController.navigate(route = Recipe) },
                         onNavigateToCreateRecipeOne = { navController.navigate(route = CreateRecipeOne) }
@@ -278,7 +283,11 @@ fun SousChefApp(
                 RecipeBrowserScreen()
             }
             composable<Recipe> {
-                RecipeScreen()
+                RecipeScreen(
+                    activity,
+                    context,
+                    recipesViewModel,
+                ) { navController.popBackStack() }
             }
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
