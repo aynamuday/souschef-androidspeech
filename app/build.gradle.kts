@@ -1,8 +1,11 @@
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.gms.google-services")
+//    id("com.google.protobuf") version "0.9.1"
 }
 
 android {
@@ -32,11 +35,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -61,6 +64,7 @@ android {
 
 dependencies {
 
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -69,6 +73,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.client.sdk)
     implementation(libs.firebase.functions.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -87,13 +92,32 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-functions:20.0.")
 
     implementation (platform("com.google.cloud:libraries-bom:26.51.0"))
 //    implementation("com.google.auth:google-auth-library-oauth2-http")
 //    implementation("com.google.api-client:google-api-client")
-//    implementation("com.google.cloud:google-cloud-texttospeech")
 //    implementation("com.google.cloud:google-cloud-speech")
+//    implementation("com.google.cloud:google-cloud-texttospeech")
+
+
+//    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.42.0")
 }
+
+//configurations.all {
+        // i can exclude javalite and proto-google-common-protos
+////    exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+////    exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+////    exclude(group = "com.google.api.grpc", module = "proto-google-common-protos")
+////    exclude(group = "com.google.protobuf", module = "protobuf-java")
+//
+//    resolutionStrategy {
+//        force("com.google.protobuf:protobuf-java:3.0.2")
+//    }
+//}
+
+
+
+
