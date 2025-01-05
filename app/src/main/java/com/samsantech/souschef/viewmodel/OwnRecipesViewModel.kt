@@ -16,6 +16,10 @@ class OwnRecipesViewModel(
     val originalData = MutableStateFlow<Recipe>(Recipe())
 
     init {
+        getOwnRecipes()
+    }
+
+    fun getOwnRecipes() {
         firebaseRecipeManager.getOwnRecipes {
             recipes.value = it
         }
