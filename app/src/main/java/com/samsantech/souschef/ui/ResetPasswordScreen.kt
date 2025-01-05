@@ -42,18 +42,14 @@ fun ResetPasswordScreen(
     authViewModel: AuthViewModel,
     onNavigateToLogin: () -> Unit
 ) {
-    var email by remember {
-        mutableStateOf("")
-    }
-    var error by remember {
-        mutableStateOf("")
-    }
-    var loading by remember {
-        mutableStateOf(false)
-    }
-    var success by remember {
-        mutableStateOf(false)
-    }
+    var email by remember { mutableStateOf("") }
+    var otp by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
+    var success by remember { mutableStateOf(false) }
+    var otpSent by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -69,54 +65,122 @@ fun ResetPasswordScreen(
                 text = "Reset Password",
                 color = Color(0xFF16A637),
                 fontSize = 32.sp,
-                fontFamily = Konkhmer_Sleokcher,
-                style = LocalTextStyle.current.merge(
-                    TextStyle(
-                        platformStyle = PlatformTextStyle(
-                            includeFontPadding = false
-                        )
-                    )
-                )
+                fontFamily = Konkhmer_Sleokcher
             )
-            Text(text = "Please enter the email associated with your account.", textAlign = TextAlign.Center)
 
-            FormOutlinedTextField(
-                value = email,
-                onValueChange = {
-                    error = ""
-                    email = it
-                },
-                label = "Email",
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Email,
-                        contentDescription = null
-                    )
-                },
-            )
-            if (error.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                ErrorText(text = error)
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            ColoredButton(
-                onClick = {
-                    if (email.isNotEmpty() ) {
-                        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                            error = "Please provide a valid email address."
-                        } else {
+            if (!otpSent) {
+                // Email input field
+                FormOutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        error = ""
+                        email = it
+                    },
+                    label = "Email",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Email,
+                            contentDescription = null
+                        )
+                    },
+                )
+                if (error.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ErrorText(text = error)
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+
+                ColoredButton(
+                    onClick = {
+                        if (email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                             loading = true
-                            authViewModel.resetPassword(email) { isSuccess, errorMessage ->
+                            authViewModel.sendOtpToEmail(email) { isSuccess, errorMessage ->
                                 loading = false
-                                success = isSuccess
+                                otpSent = isSuccess
                                 if (errorMessage != null) {
                                     error = errorMessage
                                 }
                             }
+                        } else {
+                            error = "Please provide a valid email address."
                         }
-                    }
-                },
-                text = "Send Reset Email"
+                    },
+                    text = "Send OTP"
+                )
+            } else {
+                // OTP input field
+                FormOutlinedTextField(
+                    value = otp,
+                    onValueChange = {
+                        otp = it
+                    },
+                    label = "Enter OTP",
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+
+                ColoredButton(
+                    onClick = {
+                        loading = true
+                        authViewModel.verifyOtp(email, otp) { isSuccess, errorMessage ->
+                            loading = false
+                            if (isSuccess) {
+                                otpSent = false
+                            } else {
+                                error = errorMessage ?: "OTP verification failed."
+                            }
+                        }
+                    },
+                    text = "Verify OTP"
+                )
+            }
+
+            // New password fields after OTP verification
+            if (!otpSent && otp.isNotEmpty()) {
+                FormOutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = "New Password",
+                    //isPassword = true
+                )
+                FormOutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = "Confirm Password",
+                    //isPassword = true
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+
+                ColoredButton(
+                    onClick = {
+                        if (newPassword == confirmPassword) {
+                            loading = true
+                            authViewModel.resetPassword(newPassword) { isSuccess, errorMessage ->
+                                loading = false
+                                if (isSuccess) {
+                                    success = true
+                                } else {
+                                    error = errorMessage ?: "Password reset failed."
+                                }
+                            }
+                        } else {
+                            error = "Passwords do not match."
+                        }
+                    },
+                    text = "Reset Password"
+                )
+            }
+        }
+
+        if (loading) {
+            ProgressSpinner()
+        }
+
+        if (success) {
+            Dialog(
+                icon = "success",
+                message = "Password Reset Successful",
+                subMessage = "Your password has been successfully reset.",
+                onCloseClick = onNavigateToLogin
             )
         }
 
@@ -136,17 +200,5 @@ fun ResetPasswordScreen(
                 border = BorderStroke(1.dp, Color.Black)
             )
         }
-    }
-
-    if (loading) {
-        ProgressSpinner()
-    }
-    if (success) {
-        Dialog(
-            icon = "success",
-            message = "Reset Link Sent",
-            subMessage = "Password reset link has been successfully sent to your email.",
-            onCloseClick = onNavigateToLogin
-        )
     }
 }

@@ -10,6 +10,7 @@ activityCompose = "1.9.0"
 composeBom = "2023.08.00"
 clientSdk = "1.42.0"
 pagingComposeAndroid = "3.3.5"
+firebaseFunctionsKtx = "21.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +29,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 client-sdk = { group = "com.microsoft.cognitiveservices.speech", name = "client-sdk", version.ref = "clientSdk" }
 androidx-paging-compose-android = { group = "androidx.paging", name = "paging-compose-android", version.ref = "pagingComposeAndroid" }
+firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-functions-ktx", version.ref = "firebaseFunctionsKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
