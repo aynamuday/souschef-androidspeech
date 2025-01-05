@@ -8,6 +8,8 @@ class AuthViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
 ) {
     val signUpInformation = MutableStateFlow<User>(User())
+    val otpState = MutableStateFlow("")
+    val newPassword = MutableStateFlow("")
 
     fun login(email: String, password: String, onComplete: (Boolean, String?) -> Unit) {
         firebaseAuthManager.login(email, password) { isSuccess, error ->
@@ -50,8 +52,29 @@ class AuthViewModel(
         }
     }
 
-    fun resetPassword(email: String, callback: (Boolean, String?) -> Unit) {
-        firebaseAuthManager.sendResetEmail(email) { isSuccess, error ->
+//    fun resetPassword(email: String, callback: (Boolean, String?) -> Unit) {
+//        firebaseAuthManager.sendResetEmail(email) { isSuccess, error ->
+//            callback(isSuccess, error)
+//        }
+//    }
+
+    // Send OTP to email
+    fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
+        firebaseAuthManager.sendOtpToEmail(email) { isSuccess, error ->
+            callback(isSuccess, error)
+        }
+    }
+
+    // Verify OTP
+    fun verifyOtp(email: String, otp: String, callback: (Boolean, String?) -> Unit) {
+        firebaseAuthManager.verifyOtp(email, otp) { isSuccess, error ->
+            callback(isSuccess, error)
+        }
+    }
+
+    // Reset password after OTP verification
+    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {
+        firebaseAuthManager.resetPassword(newPassword) { isSuccess, error ->
             callback(isSuccess, error)
         }
     }

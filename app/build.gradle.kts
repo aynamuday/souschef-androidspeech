@@ -73,7 +73,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.client.sdk)     // this
+    implementation(libs.client.sdk)
+    implementation(libs.firebase.functions.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -93,6 +94,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-functions:20.0.")
 
     implementation (platform("com.google.cloud:libraries-bom:26.51.0"))
 //    implementation("com.google.auth:google-auth-library-oauth2-http")

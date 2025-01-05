@@ -50,13 +50,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.samsantech.souschef.R
 import com.samsantech.souschef.Recipe
 import com.samsantech.souschef.ui.components.FormOutlinedTextField
 import kotlinx.coroutines.delay
 
 @Composable
-fun HomeScreen(paddingValues: PaddingValues) {
+fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
 //    BackHandler {
 //        activity.finish()
 //    }
@@ -163,7 +164,7 @@ fun HomeScreen(paddingValues: PaddingValues) {
                     modifier = Modifier.padding(bottom = 10.dp)
                 )
 
-                RecipeFeed()
+                RecipeFeed(navController)
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -187,11 +188,11 @@ fun HomeScreen(paddingValues: PaddingValues) {
 //    }
 }
 @Composable
-fun RecipeFeed() {
+fun RecipeFeed(navController: NavController) {
     val recipes = listOf(
         Pair("Spaghetti Carbonara", R.drawable.sphagetti_carbonara),
         Pair("Chicken Adobo", R.drawable.chicken_adobo),
-        Pair("Beef Stroganoff",R.drawable.beef_stroganoff),
+        Pair("Beef Stroganoff", R.drawable.beef_stroganoff),
         Pair("Vegetarian Stir Fry", R.drawable.vegetarian_stirfry),
         Pair("Chocolate Lava Cake", R.drawable.chocolate_lavacake),
         Pair("Garlic Butter Shrimp", R.drawable.garlic_buttershrimp)
@@ -199,26 +200,30 @@ fun RecipeFeed() {
 
     Column {
         recipes.forEach { recipe ->
-            RecipeCard(recipe)
+            RecipeCard(recipe = recipe, navController = navController)
             Spacer(modifier = Modifier.height(15.dp))
         }
     }
 }
+
 @Composable
-fun RecipeCard(recipe: Pair) {
+fun RecipeCard(recipe: Pair<String, Int>, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .background(Color(245, 245, 220))
-            .clickable {}
+            .clickable {
+                // Navigate to RecipeScreen with recipe name and image resource ID
+                navController.navigate("recipe/${recipe.first}/${recipe.second}")
+            }
     ) {
         Row(
             modifier = Modifier.padding(15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(recipe.imageRes),
+                painter = painterResource(id = recipe.second),
                 contentDescription = null,
                 modifier = Modifier
                     .size(80.dp)
@@ -230,12 +235,12 @@ fun RecipeCard(recipe: Pair) {
 
             Column {
                 Text(
-                    text = recipe.name,
+                    text = recipe.first,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Learn to make ${recipe.name}!",
+                    text = "Learn to cook ${recipe.first}!",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -243,6 +248,7 @@ fun RecipeCard(recipe: Pair) {
         }
     }
 }
+
 @Composable
 fun TikTokVideoListEmbedded(tiktokLinks: List<String>) {
     Column(
@@ -271,7 +277,7 @@ fun TikTokVideoPlayer(link: String) {
             .background(Color.LightGray)
     )
 }
-data class Pair(val name: String, val imageRes: Int)
+data class RecipeData(val name: String, val imageRes: Int)
 
 //@Composable
 //fun DisplayUserGuide(context: Context) {
