@@ -1,16 +1,8 @@
 package com.samsantech.souschef.ui
 
 import androidx.compose.runtime.getValue
-import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.os.Build
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -23,20 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import android.webkit.WebView
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,62 +23,31 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.zIndex
-import androidx.navigation.NavController
-import com.samsantech.souschef.R
-import com.samsantech.souschef.Recipe
-import com.samsantech.souschef.ui.components.FormOutlinedTextField
-import kotlinx.coroutines.delay
+import androidx.compose.ui.text.style.TextAlign
+import com.samsantech.souschef.ui.components.FiveStarRate
+import com.samsantech.souschef.utils.getRecipeTimeText
 
 //val sharedViewModel = SharedViewModel()
 @Composable
@@ -138,7 +86,7 @@ fun RecipeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .fillMaxWidth()
-                    .height(320.dp)
+                    .height(300.dp)
             )
             Icon(
                 painter = painterResource(id = R.drawable.arrowback),
@@ -152,13 +100,19 @@ fun RecipeScreen(
             )
         }
 
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp, start = 20.dp, end = 20.dp)
+        ) {
 
+            RecipeMetadata(recipe = recipe)
+            Spacer(modifier = Modifier.height(20.dp))
+            RecipeIngredients(recipe.ingredients)
+            Spacer(modifier = Modifier.height(20.dp))
+            RecipeInstructions(instructions = recipe.instructions)
 
-//        RecipeScreenHeader(recipe.title, onNavigateToPreviousScreen)
-        Recipe(recipe, context)
-        RecipeIngredients(recipe.ingredients)
-//        RecipeInstructions(displayVoiceCommandPopUp = { displayVoiceCommandPopUp.value = it },
-//            recipe, activity, context, cookingAssistantViewModel)
+        }
     }
 
 //    if (displayVoiceCommandPopUp.value) {
@@ -175,109 +129,111 @@ fun RecipeScreen(
 }
 
 @Composable
-fun RecipeScreenHeader(recipeName: String, onNavigateToPreviousScreen: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
-            .background(Color(22, 166, 55, 255))
-            .padding(start = 20.dp, bottom = 20.dp, end = 20.dp),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { onNavigateToPreviousScreen() }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.arrowback),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(30.dp)
-                )
-            }
-
+fun RecipeMetadata(recipe: Recipe) {
+    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+        Column(modifier = Modifier.weight(.65f)) {
             Text(
-                text = recipeName,
-                color = Color(255, 207, 81, 255),
-                fontSize = if (recipeName.length > 17) 24.sp else 28.sp,
-                lineHeight = if (recipeName.length > 17) 29.sp else 33.sp,
-                fontWeight = FontWeight(600)
+                text = recipe.title,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Green,
+                modifier = Modifier
+                    .fillMaxHeight(),
             )
+            Text(
+                text = "a cocktail from Spain a cocktail from Spain a cocktail from Spain ",
+                modifier = Modifier
+                    .padding(top = 8.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(32.dp))
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(.2f)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "7.5k",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                    )
+                    Text(
+                        text = "likes",
+                        modifier = Modifier
+                            .offset(y = -(3.dp)),
+                        fontSize = 12.sp,
+                    )
+                }
+                Column {
+                    Icon(
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clickable { },
+                        tint = Color(0xfff73056)
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Filled.BookmarkBorder,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(0.dp, top = 12.dp)
+                    .size(28.dp)
+                    .clickable { },
+//                    tint = Color(255, 207, 81, 255)
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        FiveStarRate(rate = 3.7f)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = "(1 reviews)", fontSize = 12.sp)
+    }
+    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier
+        .fillMaxWidth()
+        .height(1.dp)
+        .background(Color(255, 207, 81))
+    )
+    Spacer(modifier = Modifier.height(20.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        TimeOrServing(title = "Serving", text = recipe.serving, modifier = Modifier.weight(1f))
+        if (recipe.prepTimeHr.trim() != "0" || recipe.prepTimeMin.trim() != "0") {
+            TimeOrServing(title = "Prep Time", text = getRecipeTimeText(recipe.prepTimeHr, recipe.prepTimeMin), modifier = Modifier.weight(1f))
+        }
+        if (recipe.cookTimeHr.trim() != "0" || recipe.cookTimeMin.trim() != "0") {
+            TimeOrServing(title = "Cook Time", text = getRecipeTimeText(recipe.cookTimeHr, recipe.cookTimeMin), modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-fun Recipe(recipe: Recipe, context: Context) {
-    Column (
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp, start = 20.dp, end = 20.dp)
-    ) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .background(Color(255, 214, 0, 220))
-//                .padding(start = 15.dp, top = 10.dp, end = 10.dp, bottom = 10.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Icon(painter = painterResource(id = R.drawable.timer),
-//                contentDescription = null,
-//                tint = Color.Black,
-//                modifier = Modifier
-//                    .size(25.dp)
-//            )
-//            Spacer(modifier = Modifier.width(10.dp))
-//            recipe.cookTimeHr?.let {
-//                if (it != 0) {
-//                    if (it > 1) {
-//                        Text(text = "$it hours",
-//                            fontWeight = FontWeight(600)
-//                        )
-//                    } else {
-//                        Text(text = "$it hour",
-//                            fontWeight = FontWeight(600)
-//                        )
-//                    }
-//                }
-//            }
-//            Spacer(modifier = Modifier.width(8.dp))
-//            recipe.recipe.totalMinutes?.let {
-//                if (it != 0) {
-//                    Text(text = "$it minutes",
-//                        fontWeight = FontWeight(600)
-//                    )
-//                }
-//            }
-//        }
-        
+fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Text(
-            text = recipe.title,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Green
+            text = title,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 12.sp,
         )
-            Text(
-                text = recipe.description,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 15.dp, start = 20.dp, end = 20.dp,)
-            )
+        Text(
+            text = text,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
 @Composable
 fun RecipeIngredients(ingredients: List<String>) {
-    Column (
-        modifier = Modifier.padding(top = 25.dp, start = 20.dp, end = 20.dp)
-    ) {
+    Column {
         Text(
             text = "Ingredients",
             fontWeight = FontWeight(600),
-            fontSize = 18.sp,
-            modifier = Modifier
-                .padding(bottom = 8.dp)
+            fontSize = 18.sp
         )
         for (ingredient in ingredients) {
             Text(
@@ -289,59 +245,26 @@ fun RecipeIngredients(ingredients: List<String>) {
     }
 }
 
-//@Composable
-//fun RecipeInstructionsItems(instruction: InstructionEntity) {
-//    Row(
-//        modifier = Modifier
-//            .padding(top = 10.dp),
-//        horizontalArrangement = Arrangement.Start
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .size(25.dp)
-//                .clip(CircleShape)
-//                .background(Color(255, 207, 81, 255)),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            Text(
-//                text = instruction.orderNo.toString(),
-//                color = Color.White,
-//                fontWeight = FontWeight(600),
-//                fontSize = 14.sp
-//            )
-//        }
-//
-//        instruction.description?.let {
-//            Text(
-//                text = it,
-//                modifier = Modifier
-//                    .padding(start = 10.dp)
-//            )
-//        }
-//    }
-//}
-
-//@Composable
-//fun RecipeInstructions(displayVoiceCommandPopUp: (Boolean) -> Unit,
-//                       recipe: Recipe?, activity: Activity,
-//                       context: Context, cookingAssistantViewModel: CookingAssistantViewModel) {
+//displayVoiceCommandPopUp: (Boolean) -> Unit,
+//recipe: Recipe?, activity: Activity,
+//context: Context, cookingAssistantViewModel: CookingAssistantViewModel
+@Composable
+fun RecipeInstructions(instructions: List<String>) {
 //    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
-//
+
 //    val instructions = recipe?.instructions?.sortedBy { it.orderNo }
-//
-//    Column (
-//        modifier = Modifier.padding(top = 20.dp, start = 20.dp, end = 20.dp)
-//    ) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text(
-//                text = "Instructions",
-//                fontWeight = FontWeight(600),
-//                fontSize = 18.sp
-//            )
-//
+
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Instructions",
+                fontWeight = FontWeight(600),
+                fontSize = 18.sp
+            )
+
 //            val showRecordAudioRationaleDialog = remember {
 //                mutableStateOf(false)
 //            }
@@ -367,7 +290,7 @@ fun RecipeIngredients(ingredients: List<String>) {
 //                    }
 //                }
 //            )
-//
+
 //            IconButton(onClick = {
 //                when {
 //                    ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
@@ -408,11 +331,10 @@ fun RecipeIngredients(ingredients: List<String>) {
 //                        .size(35.dp)
 //                )
 //            }
-//
+
 //            IconButton(onClick = {
 //                displayVoiceCommandPopUp(true)
-//            })
-//            {
+//            }) {
 //                Icon(
 //                    painter = painterResource(id = R.drawable.manual_icon),
 //                    contentDescription = null,
@@ -421,7 +343,7 @@ fun RecipeIngredients(ingredients: List<String>) {
 //                        .size(25.dp)
 //                )
 //            }
-//
+
 //            if (showRecordAudioRationaleDialog.value) {
 //                PermissionRationaleDialog(
 //                    title = "Allow SousChef to access your microphone?",
@@ -433,7 +355,7 @@ fun RecipeIngredients(ingredients: List<String>) {
 //                    }
 //                )
 //            }
-//
+
 //            if (showBluetoothConnectRationaleDialog.value) {
 //                PermissionRationaleDialog(
 //                    title = "Allow SousChef to access Bluetooth (nearby devices)?",
@@ -448,84 +370,40 @@ fun RecipeIngredients(ingredients: List<String>) {
 //                    }
 //                )
 //            }
-//        }
-//
-//        if (instructions != null) {
-//            for (instruction in instructions) {
-//                RecipeInstructionsItems(instruction)
-//            }
-//        }
-//    }
-//}
-fun RecipeScreen(recipeName: String, imageResId: Int, paddingValues: PaddingValues) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(paddingValues)
-    ) {
-        Spacer(
-            modifier = Modifier
-                .background(Color(22, 166, 55, 255))
-                .fillMaxWidth()
-                .height(100.dp)
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = 50.dp, start = 20.dp, end = 20.dp
-                )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "SOUSCHEF",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight(700),
-                    color = Color(255, 207, 81, 255)
-                )
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(40.dp)
-                )
-            }
+        }
+
+        instructions.forEachIndexed { index, instruction ->
+            RecipeInstructionsItem(index = index+1, instruction = instruction)
         }
     }
-    Column(
+}
+
+@Composable
+fun RecipeInstructionsItem(index: Int, instruction: String) {
+    Row(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(top = 10.dp),
+        horizontalArrangement = Arrangement.Start
     ) {
-
-        Spacer(modifier = Modifier.height(100.dp))
-
-        // Display the recipe name with a description
-        Text(
-            text = "Learn to cook $recipeName!",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-
-        // Display the image
-        Spacer(modifier = Modifier.height(30.dp))
-
-        Image(
-            painter = painterResource(id = imageResId),
-            contentDescription = null,
+        Box(
             modifier = Modifier
-                .size(200.dp)
-                .clip(RoundedCornerShape(10.dp)),
-            contentScale = ContentScale.Crop
+                .size(25.dp)
+                .clip(CircleShape)
+                .background(Color(255, 207, 81, 255)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "$index",
+                color = Color.White,
+                fontWeight = FontWeight(600),
+                fontSize = 14.sp
+            )
+        }
+
+        Text(
+            text = instruction,
+            modifier = Modifier
+                .padding(start = 10.dp)
         )
     }
 }
