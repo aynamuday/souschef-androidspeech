@@ -208,7 +208,7 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    HomeScreen(paddingValues)
+                    HomeScreen(navController, paddingValues)
                 }
             }
             composable<Profile> {
@@ -277,9 +277,9 @@ fun SousChefApp(
             composable<RecipeBrowser> {
                 RecipeBrowserScreen()
             }
-            composable<Recipe> {
-                RecipeScreen()
-            }
+//            composable<Recipe> {
+//                RecipeScreen()
+//            }
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
                     context,

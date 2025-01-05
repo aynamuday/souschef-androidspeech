@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.storage.storage
 import com.samsantech.souschef.firebase.FirebaseAuthManager
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
@@ -43,9 +44,10 @@ class MainActivity : ComponentActivity() {
                 val auth = Firebase.auth
                 val db = Firebase.firestore
                 val storage = Firebase.storage
+                val functions = FirebaseFunctions.getInstance()
 
                 val firebaseUserManager = FirebaseUserManager(auth, db, storage)
-                val firebaseAuthManager = FirebaseAuthManager(auth, db, firebaseUserManager)
+                val firebaseAuthManager = FirebaseAuthManager(auth, db, firebaseUserManager, functions)
                 val firebaseRecipeManager = FirebaseRecipeManager(auth, db, storage)
 
                 val user = auth.currentUser

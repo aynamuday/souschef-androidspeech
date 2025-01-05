@@ -4,12 +4,15 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import com.samsantech.souschef.data.User
+import kotlin.random.Random
 
 class FirebaseAuthManager(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore,
     private val firebaseUserManager: FirebaseUserManager,
+    private val functions: FirebaseFunctions,
 ) {
     fun getCurrentUser(): FirebaseUser? {
         return auth.currentUser
@@ -140,14 +143,40 @@ class FirebaseAuthManager(
         }
     }
 
-    fun sendResetEmail(email: String, callback: (Boolean, String?) -> Unit) {
-        auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    callback(true, null)
-                } else {
-                    callback(false, getErrorMessage(task.exception))
-                }
-            }
+//    fun sendResetEmail(email: String, callback: (Boolean, String?) -> Unit) {
+//        auth.sendPasswordResetEmail(email)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    callback(true, null)
+//                } else {
+//                    callback(false, getErrorMessage(task.exception))
+//                }
+//            }
+//    }
+
+    // Send OTP to the user's email using Firebase Functions
+    fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
+        val data = hashMapOf("email" to email)
+        functions.getHttpsCallable("sendOtpEmail")
+            .call(data)
+            .addOnSuccessListener { callback(true, null) }
+            .addOnFailureListener { callback(false, "Failed to send OTP.") }
+    }
+
+    // Verify OTP
+    fun verifyOtp(email: String, otp: String, callback: (Boolean, String?) -> Unit) {
+        val data = hashMapOf("email" to email, "otp" to otp)
+        functions.getHttpsCallable("verifyOtp")
+            .call(data)
+            .addOnSuccessListener { callback(true, null) }
+            .addOnFailureListener { callback(false, "OTP verification failed.") }
+    }
+
+    // Reset password
+    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {
+        val user = getCurrentUser()
+        user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
+            callback(task.isSuccessful, task.exception?.message)
+        }
     }
 }
