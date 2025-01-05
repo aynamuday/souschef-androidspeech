@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
 //    id("com.google.protobuf") version "0.9.1"
 }
 
@@ -74,7 +75,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.client.sdk)
-    implementation(libs.firebase.functions.ktx)
+    implementation(libs.androidx.paging.compose.android)     // this
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -95,6 +96,15 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-functions:20.0.")
+
+//    implementation("com.algolia:algoliasearch-client-kotlin:3.12.1")
+//    implementation("io.ktor:ktor-client-android:3.0.3")
+    implementation ("com.algolia:instantsearch-compose:3.3.1")
+    implementation ("com.algolia:instantsearch-android-paging3:3.3.1")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
+    implementation ("androidx.compose.material:material-icons-extended:1.7.6")
+
 
     implementation (platform("com.google.cloud:libraries-bom:26.51.0"))
 //    implementation("com.google.auth:google-auth-library-oauth2-http")
