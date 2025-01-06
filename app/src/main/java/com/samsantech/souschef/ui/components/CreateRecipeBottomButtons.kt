@@ -40,6 +40,6 @@ fun CreateRecipeBottomButtons(
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }

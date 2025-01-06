@@ -3,12 +3,14 @@ package com.samsantech.souschef
 import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseUser
 import com.samsantech.souschef.ui.CreateRecipeScreenOne
 import com.samsantech.souschef.ui.CreateRecipeScreenThree
@@ -38,7 +40,6 @@ import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -52,7 +53,12 @@ fun SousChefApp(
     ownRecipesViewModel: OwnRecipesViewModel,
     recipesViewModel: RecipesViewModel
 ) {
-    Box {
+    Scaffold {
+
+    }
+    Box(
+        modifier = Modifier.padding(bottom = systemNavigationBarHeight)
+    ) {
         val navController = rememberNavController()
 
 
@@ -84,6 +90,7 @@ fun SousChefApp(
                 LoginScreen(
                     authViewModel,
                     userViewModel,
+                    ownRecipesViewModel,
                     onNavigateToSignUp = { navController.navigate(route = SignUp) },
                     onNavigateToVerifyEmail = { navController.navigate(route = VerifyEmail) },
                     onNavigateToForgotPassword = { navController.navigate(route = ResetPassword) },
@@ -191,7 +198,7 @@ fun SousChefApp(
             }
             composable<Home> {
                 ContentBottomNavigationWrapper(
-                    systemNavigationBarHeight,
+//                    systemNavigationBarHeight,
                     name = "Home",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -217,7 +224,7 @@ fun SousChefApp(
             }
             composable<Profile> {
                 ContentBottomNavigationWrapper(
-                    systemNavigationBarHeight,
+//                    systemNavigationBarHeight,
                     name = "Profile",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -252,7 +259,7 @@ fun SousChefApp(
             }
             composable<Search> {
                 ContentBottomNavigationWrapper(
-                    systemNavigationBarHeight,
+//                    systemNavigationBarHeight,
                     name = "Search",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -287,11 +294,12 @@ fun SousChefApp(
                     activity,
                     context,
                     recipesViewModel,
-                ) { navController.popBackStack() }
+                    onNavigateToPreviousScreen = { navController.popBackStack() },
+                    userViewModel,
+                    ownRecipesViewModel,
+                    onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
+                )
             }
-//            composable<Recipe> {
-//                RecipeScreen()
-//            }
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
                     context,
@@ -300,9 +308,7 @@ fun SousChefApp(
                         navController.navigate(route = CreateRecipeTwo)
                     },
                     closeCreateRecipe = {
-                        navController.navigate(route = Home) {
-                            popUpTo(CreateRecipeOne) { inclusive = true }
-                        }
+                        navController.popBackStack(route = CreateRecipeOne, inclusive = true)
                         ownRecipesViewModel.resetRecipe()
                     }
                 )
@@ -319,9 +325,7 @@ fun SousChefApp(
                         navController.navigate(route = CreateRecipeThree)
                     },
                     closeCreateRecipe = {
-                        navController.navigate(route = Home) {
-                            popUpTo(CreateRecipeOne) { inclusive = true }
-                        }
+                        navController.popBackStack(route = CreateRecipeOne, inclusive = true)
                         ownRecipesViewModel.resetRecipe()
                     }
                 )
@@ -338,9 +342,7 @@ fun SousChefApp(
                         navController.navigate(route = CreateRecipeFour)
                     },
                     closeCreateRecipe = {
-                        navController.navigate(route = Home) {
-                            popUpTo(CreateRecipeOne) { inclusive = true }
-                        }
+                        navController.popBackStack(route = CreateRecipeOne, inclusive = true)
                         ownRecipesViewModel.resetRecipe()
                     }
                 )
@@ -355,9 +357,7 @@ fun SousChefApp(
                         }
                     },
                     closeCreateRecipe = {
-                        navController.navigate(route = Home) {
-                            popUpTo(CreateRecipeOne) { inclusive = true }
-                        }
+                        navController.popBackStack(route = CreateRecipeOne, inclusive = true)
                         ownRecipesViewModel.resetRecipe()
                     }
                 )

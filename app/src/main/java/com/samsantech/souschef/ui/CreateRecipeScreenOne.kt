@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -155,7 +157,7 @@ fun CreateRecipeScreenOne(
             ) {
                 // GALLERY
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                    CreateImageContainer(
+                    CreateRecipeImageContainer(
                         height = 200.dp,
                         width = 113.dp,
                         image  = if (action == OwnRecipeAction.EDIT)
@@ -173,7 +175,7 @@ fun CreateRecipeScreenOne(
                         }
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    CreateImageContainer(
+                    CreateRecipeImageContainer(
                         height = 150.dp,
                         width = 150.dp,
                         image  = if (action == OwnRecipeAction.EDIT)
@@ -366,7 +368,7 @@ fun CreateRecipeScreenOne(
                 Column {
                     Text(text = "Difficulty", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(10.dp))
-                    Box {
+                    Box(modifier = Modifier.clickable { showDifficultyDropdown = !showDifficultyDropdown }) {
                         Text(
                             text = if (recipe.difficulty != "") recipe.difficulty else "Select difficulty",
                             modifier = Modifier
@@ -381,7 +383,6 @@ fun CreateRecipeScreenOne(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .padding(end = 10.dp)
-                                .clickable { showDifficultyDropdown = !showDifficultyDropdown }
                         )
                     }
                     BoxWithConstraints(
@@ -488,7 +489,7 @@ fun CreateRecipeScreenOne(
                 }
 
                 // NEXT BUTTON
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 if (errors["general"] != null && errors["general"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
                     ErrorText(text = errors["general"]!!, textAlign = TextAlign.Center)
@@ -536,7 +537,7 @@ fun CreateRecipeScreenOne(
                     containerColor = Green,
                     contentColor = Color.White
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
 
@@ -557,14 +558,14 @@ fun CreateRecipeScreenOne(
 }
 
 @Composable
-fun CreateImageContainer(
+fun CreateRecipeImageContainer(
     height: Dp,
     width: Dp,
     image: Uri?,
     pickImage: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
     onRemoveClick: () -> Unit
 ) {
-    Box {
+    Box(modifier = Modifier.padding(top = 10.dp)) {
         Box(
             modifier = Modifier
                 .height(height)
@@ -641,6 +642,11 @@ fun CreateCategory(onCloseClick: () -> Unit, onAddCategory: (String) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(.5f))
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    onCloseClick()
+                }
+            }
     ) {
         Column(
             modifier = Modifier

@@ -8,7 +8,7 @@ import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 @Composable
 fun ContentBottomNavigationWrapper(
-    systemNavigationBarHeight: Dp,
+//    systemNavigationBarHeight: Dp,
     name: String,
     onNavigateToHome: () -> Unit,
     onNavigateToCreateRecipe: () -> Unit,
@@ -21,7 +21,7 @@ fun ContentBottomNavigationWrapper(
     Scaffold (
         bottomBar = {
             BottomNavigationBar(
-                systemNavigationBarHeight,
+//                systemNavigationBarHeight,
                 name,
                 onNavigateToHome,
                 onNavigateToCreateRecipe,
