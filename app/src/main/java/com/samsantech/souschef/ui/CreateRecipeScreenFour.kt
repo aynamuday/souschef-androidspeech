@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.ui.components.ConfirmDialog
 import com.samsantech.souschef.ui.components.CreateRecipeBottomButtons
 import com.samsantech.souschef.ui.components.FormBasicTextField
 import com.samsantech.souschef.ui.components.OwnRecipeHeader
@@ -64,6 +65,9 @@ fun CreateRecipeScreenFour(
     val recipe by ownRecipesViewModel.recipe.collectAsState()
     val action by ownRecipesViewModel.action.collectAsState()
     val originalData by ownRecipesViewModel.originalData.collectAsState()
+    var changes by remember {
+        mutableStateOf(hashMapOf<String, Any>())
+    }
     var suggestedTags by remember {
         mutableStateOf(
             listOf("filipino", "korean", "american", "vegan", "vegetarian", "gluten-free",
@@ -80,6 +84,9 @@ fun CreateRecipeScreenFour(
     var success by remember {
         mutableStateOf(false)
     }
+    var saveRecipe by remember {
+        mutableStateOf(false)
+    }
     var errors by remember {
         mutableStateOf(hashMapOf<String, String>())
     }
@@ -94,7 +101,7 @@ fun CreateRecipeScreenFour(
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .padding(start = 24.dp, end = 24.dp)
+                    .padding(start = 24.dp, end = 24.dp, top = 10.dp)
                     .fillMaxWidth()
                     .defaultMinSize(Dp.Unspecified, maxHeight)
                     .verticalScroll(rememberScrollState())
@@ -198,7 +205,7 @@ fun CreateRecipeScreenFour(
                                 modifier = Modifier
                                     .height(40.dp),
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.Black.copy(.9f),
+                                    checkedThumbColor = Green,
                                     checkedTrackColor = Color.Gray.copy(.1f),
                                     checkedBorderColor = Color.Gray.copy(.8f),
                                     uncheckedThumbColor = Color.Black,
@@ -221,37 +228,56 @@ fun CreateRecipeScreenFour(
                     onFirstButtonClick = onNavigateToCreateRecipeThree,
                     secondButtonText = if (action == OwnRecipeAction.EDIT) "Save" else "Create",
                     onSecondButtonClick = {
-                        if (action == OwnRecipeAction.ADD) {
-                            loading = true
-                            ownRecipesViewModel.uploadRecipe { isSuccess, error ->
-                                loading = false
+                        if (action == OwnRecipeAction.EDIT) {
+                            changes = getRecipesDifference(originalData, recipe)
 
-                                if (!isSuccess && error != null) {
-                                    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-                                } else {
-                                    success = true
-                                }
-                            }
-                        } else if (action == OwnRecipeAction.EDIT) {
-                            val data = getRecipesDifference(originalData, recipe)
-
-                            if (data.isNotEmpty() || recipe.photosUri.size > 0) {
-                                loading = true
-                                ownRecipesViewModel.updateRecipe(data) { isSuccess, err ->
-                                    loading = false
-
-                                    if (!isSuccess && err != null) {
-                                        Toast.makeText(context, err, Toast.LENGTH_LONG).show()
-                                    } else {
-                                        success = true
-                                    }
-                                }
-                            } else {
+                            if (changes.isEmpty() && recipe.photosUri.size < 1) {
                                 closeCreateRecipe()
+                            } else {
+                                saveRecipe = true
+                                changes = hashMapOf()
                             }
+                        } else {
+                            saveRecipe = true
                         }
                     }
                 )
+            }
+        }
+
+        if (saveRecipe) {
+            ConfirmDialog(
+                message = if (action == OwnRecipeAction.ADD) "Upload recipe?" else "Save changes?",
+                buttonOkayName = "Continue",
+                onClickCancel = { saveRecipe = false }
+            ) {
+                saveRecipe = false
+
+                if (action == OwnRecipeAction.ADD) {
+                    loading = true
+                    ownRecipesViewModel.uploadRecipe { isSuccess, error ->
+                        loading = false
+
+                        if (!isSuccess && error != null) {
+                            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                        } else {
+                            success = true
+                        }
+                    }
+                } else if (action == OwnRecipeAction.EDIT) {
+                    loading = true
+                    ownRecipesViewModel.updateRecipe(changes) { isSuccess, err ->
+                        loading = false
+
+                        if (!isSuccess && err != null) {
+                            Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                        } else {
+                            success = true
+                        }
+
+                        changes = hashMapOf()
+                    }
+                }
             }
         }
 
