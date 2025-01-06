@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -188,7 +189,27 @@ fun RecipeMetadata(recipe: Recipe) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         FiveStarRate(rate = 3.7f)
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "(1 reviews)", fontSize = 12.sp)
+        Text(text = "(1 ratings)", fontSize = 12.sp)
+    }
+    Text(
+        text = "Leave a rating", // or edit rating if rated already
+        fontSize = 12.sp,
+        modifier = Modifier
+            .clickable {  }
+            .padding(top = 8.dp),
+        fontStyle = FontStyle.Italic
+    )
+    Spacer(modifier = Modifier.height(20.dp))
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        AsyncImage(
+            model = "${recipe.userPhotoUrl}",
+            contentDescription = null,
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .size(40.dp, 40.dp),
+            contentScale = ContentScale.Crop
+        )
+        Text(text = "aynamuday", fontWeight = FontWeight(600))
     }
     Spacer(modifier = Modifier.height(20.dp))
     Spacer(modifier = Modifier

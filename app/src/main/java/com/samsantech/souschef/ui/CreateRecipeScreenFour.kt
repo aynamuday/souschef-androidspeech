@@ -1,5 +1,6 @@
 package com.samsantech.souschef.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -17,9 +18,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,11 +46,13 @@ import com.samsantech.souschef.ui.components.FormBasicTextField
 import com.samsantech.souschef.ui.components.OwnRecipeHeader
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.Dialog
+import com.samsantech.souschef.ui.components.ErrorText
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.OwnRecipeAction
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
+@SuppressLint("MutableCollectionMutableState")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CreateRecipeScreenFour(
@@ -74,6 +80,9 @@ fun CreateRecipeScreenFour(
     var success by remember {
         mutableStateOf(false)
     }
+    var errors by remember {
+        mutableStateOf(hashMapOf<String, String>())
+    }
 
     BoxWithConstraints(modifier = Modifier
         .background(Color.White)
@@ -92,7 +101,12 @@ fun CreateRecipeScreenFour(
             ) {
                 Column {
                     Text(text = "Tags", fontWeight = FontWeight.Bold)
-                    Text(text = "You may select up to 7 tags.", fontSize = 14.sp, fontStyle = FontStyle.Italic)
+//                    Text(
+//                        text = "You may select up to 7 tags.",
+//                        fontSize = 14.sp,
+//                        fontStyle = FontStyle.Italic,
+//                        color = if (errors["tags"] != null && errors["tags"] != "") Color.Red else Color.Black
+//                    )
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -101,7 +115,7 @@ fun CreateRecipeScreenFour(
                         FormBasicTextField(
                             value = newTag,
                             onValueChange = {
-                                newTag = it
+                                newTag = it.lowercase()
                             },
                             padding = 10.dp,
                             modifier = Modifier.weight(1f),
@@ -115,14 +129,22 @@ fun CreateRecipeScreenFour(
 
                                     val updatedSuggestedTags = suggestedTags.toMutableList()
                                     updatedSuggestedTags.add(newTag)
-
-                                    ownRecipesViewModel.addTag(newTag)
                                     suggestedTags = updatedSuggestedTags
+
+                                    if (recipe.tags.size < 7) {
+                                        ownRecipesViewModel.addTag(newTag)
+                                    }
+
+                                    newTag = ""
                                 }
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Yellow)
                                 .padding(12.dp, 5.dp)
                         )
+                    }
+                    if (errors["tags"] != null && errors["tags"] != "") {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ErrorText(text = errors["tags"]!!)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     FlowRow(
@@ -142,14 +164,56 @@ fun CreateRecipeScreenFour(
                                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                                     .background(backgroundColor, RoundedCornerShape(10.dp))
                                     .clickable {
-                                        if (isSelected) ownRecipesViewModel.removeTag(it) else ownRecipesViewModel.addTag(
-                                            it
-                                        )
+                                        val newErrors = hashMapOf<String, String>()
+                                        if (isSelected) {
+                                            ownRecipesViewModel.removeTag(it)
+                                            newErrors["tags"] = ""
+                                        } else if (recipe.tags.size < 7) {
+                                            ownRecipesViewModel.addTag(it)
+                                            newErrors["tags"] = ""
+                                        } else {
+                                            newErrors["tags"] = "You may only select up to 7 tags."
+                                        }
+                                        errors = newErrors
                                     }
                                     .padding(10.dp, 5.dp)
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = recipe.audience, fontWeight = FontWeight(600))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Switch(
+                                checked = recipe.audience == "Public",
+                                onCheckedChange = {
+                                    val audience: String = if (recipe.audience == "Public") {
+                                        "Only me"
+                                    } else {
+                                        "Public"
+                                    }
+                                    ownRecipesViewModel.toggleAudience(audience)
+                                },
+                                modifier = Modifier
+                                    .height(40.dp),
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.Black.copy(.9f),
+                                    checkedTrackColor = Color.Gray.copy(.1f),
+                                    checkedBorderColor = Color.Gray.copy(.8f),
+                                    uncheckedThumbColor = Color.Black,
+                                    uncheckedTrackColor = Color.Gray.copy(.1f),
+                                    uncheckedBorderColor = Color.Gray.copy(.8f),
+                                )
+                            )
+                        }
+                        Text(
+                            text = if (recipe.audience == "Only me") "Only you can see this recipe" else "Other users can see your recipe",
+                            fontSize = 12.sp,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
+
                 }
 
                 CreateRecipeBottomButtons(

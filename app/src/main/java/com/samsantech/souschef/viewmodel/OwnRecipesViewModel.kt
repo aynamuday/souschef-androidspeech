@@ -10,10 +10,10 @@ class OwnRecipesViewModel(
     private val userViewModel: UserViewModel,
     private val firebaseRecipeManager: FirebaseRecipeManager
 ) {
-    val recipe = MutableStateFlow<Recipe>(Recipe())
+    val recipe = MutableStateFlow(Recipe())
     val recipes = MutableStateFlow<List<Recipe>>(listOf())
     val action = MutableStateFlow(OwnRecipeAction.ADD)
-    val originalData = MutableStateFlow<Recipe>(Recipe())
+    val originalData = MutableStateFlow(Recipe())
 
     init {
         getOwnRecipes()
@@ -46,7 +46,8 @@ class OwnRecipesViewModel(
     fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
         firebaseRecipeManager.updateRecipe(
             recipe.value.id!!,
-            data, recipe.value,
+            data,
+            recipe.value,
             updatedRecipe = {updatedRecipe ->
                 updateRecipes(updatedRecipe)
             },
@@ -80,6 +81,7 @@ class OwnRecipesViewModel(
 
     fun resetRecipe() {
         recipe.value = Recipe()
+        originalData.value = Recipe()
     }
 
     private fun updateRecipes(recipe: Recipe) {
@@ -260,6 +262,12 @@ class OwnRecipesViewModel(
     fun removeTag(tag: String) {
         recipe.value = recipe.value.copy(
             tags = recipe.value.tags.minus(tag)
+        )
+    }
+
+    fun toggleAudience(audience: String) {
+        recipe.value = recipe.value.copy(
+            audience = audience
         )
     }
 }

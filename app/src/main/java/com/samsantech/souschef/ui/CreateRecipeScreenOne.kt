@@ -63,7 +63,6 @@ import com.samsantech.souschef.ui.components.OwnRecipeHeader
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.OwnRecipeAction
-import com.samsantech.souschef.utils.convertUriToBitmap
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 @SuppressLint("MutableCollectionMutableState")
@@ -79,7 +78,8 @@ fun CreateRecipeScreenOne(
 
     var categories by remember {
 //        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Dessert", "Drink"))
-        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Other Meat", "Seafood", "Rice", "Vegetables", "Fruits", "Dessert", "Drink", "Others"))
+        // Rice, Others
+        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Other Meat", "Seafood", "Vegetables", "Fruits", "Dessert", "Drink"))
     }
     val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
@@ -87,11 +87,11 @@ fun CreateRecipeScreenOne(
     var portrait by remember {
         mutableStateOf<Uri?>(null)
     }
-    var landscape by remember {
-        mutableStateOf<Uri?>(null)
-    }
+//    var landscape by remember {
+//        mutableStateOf<Uri?>(null)
+//    }
     var square by remember {
-        mutableStateOf<Uri?>(null)
+        mutableStateOf<Uri?>(recipe.photosUri["square"])
     }
 
     var showDifficultyDropdown by remember {
@@ -117,19 +117,19 @@ fun CreateRecipeScreenOne(
             ownRecipesViewModel.addPhoto("portrait", uri)
         }
     }
-    val pickImageLandscape = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) {
-            clearError("photos", errors) { newErrors ->
-                errors = newErrors
-            }
-
-            landscape = uri
-//            landscape = convertUriToBitmap(context, uri)
-            ownRecipesViewModel.addPhoto("landscape", uri)
-        }
-    }
+//    val pickImageLandscape = rememberLauncherForActivityResult(
+//        ActivityResultContracts.PickVisualMedia()
+//    ) { uri ->
+//        if (uri != null) {
+//            clearError("photos", errors) { newErrors ->
+//                errors = newErrors
+//            }
+//
+//            landscape = uri
+////            landscape = convertUriToBitmap(context, uri)
+//            ownRecipesViewModel.addPhoto("landscape", uri)
+//        }
+//    }
     val pickImageSquare = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -153,10 +153,8 @@ fun CreateRecipeScreenOne(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
-
                 // GALLERY
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     CreateImageContainer(
                         height = 200.dp,
                         width = 113.dp,
@@ -167,7 +165,7 @@ fun CreateRecipeScreenOne(
                                     } else {
                                         null
                                     }
-                                else portrait,
+                                else recipe.photosUri["portrait"],
                         pickImage = pickImagePortrait,
                         onRemoveClick = {
                             portrait = null
@@ -175,43 +173,43 @@ fun CreateRecipeScreenOne(
                         }
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        CreateImageContainer(
-                            height = 113.dp,
-                            width = 200.dp,
-                            image  = if (action == OwnRecipeAction.EDIT)
-                                        if (landscape != null) landscape
-                                        else if (recipe.photosUrl["landscape"] != null) {
-                                            Uri.parse(recipe.photosUrl["landscape"].toString())
-                                        } else {
-                                            null
-                                        }
-                                    else landscape,
-                            pickImage = pickImageLandscape,
-                            onRemoveClick = {
-                                landscape = null
-                                ownRecipesViewModel.removePhoto("landscape")
+                    CreateImageContainer(
+                        height = 150.dp,
+                        width = 150.dp,
+                        image  = if (action == OwnRecipeAction.EDIT)
+                            if (square != null) square
+                            else if (recipe.photosUrl["square"] != null) {
+                                Uri.parse(recipe.photosUrl["square"].toString())
+                            } else {
+                                null
                             }
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        CreateImageContainer(
-                            height = 150.dp,
-                            width = 150.dp,
-                            image  = if (action == OwnRecipeAction.EDIT)
-                                        if (square != null) square
-                                        else if (recipe.photosUrl["square"] != null) {
-                                            Uri.parse(recipe.photosUrl["square"].toString())
-                                        } else {
-                                            null
-                                        }
-                                    else square,
-                            pickImage = pickImageSquare,
-                            onRemoveClick = {
-                                square = null
-                                ownRecipesViewModel.removePhoto("square")
-                            }
-                        )
-                    }
+                        else recipe.photosUri["square"],
+                        pickImage = pickImageSquare,
+                        onRemoveClick = {
+                            square = null
+                            ownRecipesViewModel.removePhoto("square")
+                        }
+                    )
+//                    Column {
+//                        CreateImageContainer(
+//                            height = 113.dp,
+//                            width = 200.dp,
+//                            image  = if (action == OwnRecipeAction.EDIT)
+//                                        if (landscape != null) landscape
+//                                        else if (recipe.photosUrl["landscape"] != null) {
+//                                            Uri.parse(recipe.photosUrl["landscape"].toString())
+//                                        } else {
+//                                            null
+//                                        }
+//                                    else landscape,
+//                            pickImage = pickImageLandscape,
+//                            onRemoveClick = {
+//                                landscape = null
+//                                ownRecipesViewModel.removePhoto("landscape")
+//                            }
+//                        )
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
                 }
                 if (errors["photos"] != null && errors["photos"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
@@ -267,12 +265,18 @@ fun CreateRecipeScreenOne(
                         clearError("prepTime", errors) { newErrors ->
                             errors = newErrors
                         }
+                        clearError("cookTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
 
                         ownRecipesViewModel.setPrepTimeHr(it)
                     },
                     min = recipe.prepTimeMin,
                     onMinChange = {
                         clearError("prepTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
+                        clearError("cookTime", errors) { newErrors ->
                             errors = newErrors
                         }
 
@@ -296,6 +300,9 @@ fun CreateRecipeScreenOne(
                     hr = recipe.cookTimeHr,
                     maxHr = 48,
                     onHrChange = {
+                        clearError("prepTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
                         clearError("cookTime", errors) { newErrors ->
                             errors = newErrors
                         }
@@ -304,6 +311,9 @@ fun CreateRecipeScreenOne(
                     },
                     min = recipe.cookTimeMin,
                     onMinChange = {
+                        clearError("prepTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
                         clearError("cookTime", errors) { newErrors ->
                             errors = newErrors
                         }
@@ -488,7 +498,8 @@ fun CreateRecipeScreenOne(
                     onClick = {
                         val newErrors = hashMapOf<String, String>()
 
-                        if (action != OwnRecipeAction.EDIT && (recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null && recipe.photosUri["square"] == null)) {
+                        // recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null &&
+                        if (action != OwnRecipeAction.EDIT && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null)) {
                             newErrors["photos"] = "At least one photo is required."
                         }
 
@@ -510,9 +521,9 @@ fun CreateRecipeScreenOne(
                             newErrors["mealTypes"] = "Select at least one meal type."
                         }
 
-                        if (recipe.categories.isEmpty()) {
-                            newErrors["categories"] = "Select at least one category."
-                        }
+//                        if (recipe.categories.isEmpty()) {
+//                            newErrors["categories"] = "Select at least one category."
+//                        }
 
                         if (newErrors.size != 0) {
                             newErrors["general"] = "Check your inputs for errors."
