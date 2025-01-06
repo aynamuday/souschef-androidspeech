@@ -30,6 +30,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +51,13 @@ import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import androidx.compose.ui.text.style.TextAlign
 import com.samsantech.souschef.ui.components.FiveStarRate
+import com.samsantech.souschef.ui.components.KebabMenu
+import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
+import com.samsantech.souschef.ui.components.ProfilePhoto
+import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.utils.getRecipeTimeText
+import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
+import com.samsantech.souschef.viewmodel.UserViewModel
 
 //val sharedViewModel = SharedViewModel()
 @Composable
@@ -57,20 +66,34 @@ fun RecipeScreen(
     context: Context,
     recipesViewModel: RecipesViewModel,
     onNavigateToPreviousScreen: () -> Unit,
+    userViewModel: UserViewModel,
+    ownRecipesViewModel: OwnRecipesViewModel,
+    onNavigateToCreateRecipeOne: () -> Unit
 ) {
 
+    val user by userViewModel.user.collectAsState()
     val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
 //    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
 
 //    val displayVoiceCommandPopUp = remember {
 //        mutableStateOf(false)
 //    }
+    var showRecipeActionMenu by remember {
+        mutableStateOf(false)
+    }
+    var recipeWithAction: Recipe? by remember {
+        mutableStateOf(null)
+    }
+    var loading by remember {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
 //            .padding(bottom = if (cookingAssistantState.isCooking) 130.dp else 40.dp)
+            .padding(bottom = 32.dp)
             .pointerInput(Unit) {
                 detectTapGestures {
 //                    displayVoiceCommandPopUp.value = false
@@ -81,13 +104,13 @@ fun RecipeScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             AsyncImage(
-                model = "${recipe.photosUrl["portrait"]}",
+                model = if (recipe.photosUrl["square"] != null) "${recipe.photosUrl["square"]}" else "${recipe.photosUrl["portrait"]}",
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(320.dp)
             )
             Icon(
                 painter = painterResource(id = R.drawable.arrowback),
@@ -99,6 +122,17 @@ fun RecipeScreen(
                     .clip(RoundedCornerShape(50))
                     .clickable { onNavigateToPreviousScreen() }
             )
+            if (recipe.userId == user?.uid) {
+                KebabMenu(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(y = 30.dp, x = -(10.dp)),
+                    onClick = {
+                            showRecipeActionMenu = !showRecipeActionMenu
+                            recipeWithAction = if (recipeWithAction == null) recipe else null
+                        }
+                )
+            }
         }
 
         Column (
@@ -112,7 +146,6 @@ fun RecipeScreen(
             RecipeIngredients(recipe.ingredients)
             Spacer(modifier = Modifier.height(20.dp))
             RecipeInstructions(instructions = recipe.instructions)
-
         }
     }
 
@@ -127,6 +160,24 @@ fun RecipeScreen(
 //            }
 //        }
 //    }
+
+    if (recipe.userId == user?.uid) {
+        OwnRecipeActionMenu(
+            showRecipeActionMenu = showRecipeActionMenu,
+            setShowRecipeActionMenu = { showRecipeActionMenu = it },
+            recipeWithAction = recipeWithAction,
+            setRecipeWithAction = { recipeWithAction = it },
+            ownRecipesViewModel = ownRecipesViewModel,
+            onNavigateToCreateRecipeOne = { onNavigateToCreateRecipeOne() },
+            setLoading = {
+                loading = it
+            }
+        )
+    }
+
+    if (loading) {
+        ProgressSpinner()
+    }
 }
 
 @Composable
@@ -141,10 +192,26 @@ fun RecipeMetadata(recipe: Recipe) {
                 modifier = Modifier
                     .fillMaxHeight(),
             )
+            if (recipe.description.isNotEmpty()) {
+                Text(
+                    text = recipe.description,
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FiveStarRate(rate = 3.7f)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "(1 ratings)", fontSize = 12.sp)
+            }
             Text(
-                text = "a cocktail from Spain a cocktail from Spain a cocktail from Spain ",
+                text = "Leave a rating", // or edit rating if rated already
+                fontSize = 12.sp,
                 modifier = Modifier
-                    .padding(top = 8.dp)
+                    .clickable { }
+                    .padding(top = 8.dp),
+                fontStyle = FontStyle.Italic
             )
         }
         Spacer(modifier = Modifier.width(32.dp))
@@ -185,31 +252,10 @@ fun RecipeMetadata(recipe: Recipe) {
             )
         }
     }
-    Spacer(modifier = Modifier.height(16.dp))
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        FiveStarRate(rate = 3.7f)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "(1 ratings)", fontSize = 12.sp)
-    }
-    Text(
-        text = "Leave a rating", // or edit rating if rated already
-        fontSize = 12.sp,
-        modifier = Modifier
-            .clickable {  }
-            .padding(top = 8.dp),
-        fontStyle = FontStyle.Italic
-    )
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(24.dp))
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        AsyncImage(
-            model = "${recipe.userPhotoUrl}",
-            contentDescription = null,
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .size(40.dp, 40.dp),
-            contentScale = ContentScale.Crop
-        )
-        Text(text = "aynamuday", fontWeight = FontWeight(600))
+        ProfilePhoto(uri = recipe.userPhotoUrl, size = 40.dp)
+        recipe.userName?.let { Text(text = it, fontWeight = FontWeight(600)) }
     }
     Spacer(modifier = Modifier.height(20.dp))
     Spacer(modifier = Modifier

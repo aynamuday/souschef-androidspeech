@@ -35,7 +35,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -68,9 +67,11 @@ import com.samsantech.souschef.ui.components.DisplayProfileImage
 import com.samsantech.souschef.ui.components.Header
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
+import com.samsantech.souschef.ui.components.KebabMenu
+import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
+import com.samsantech.souschef.ui.components.ProfilePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
-import com.samsantech.souschef.utils.OwnRecipeAction
 import com.samsantech.souschef.utils.convertUriToBitmap
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -113,12 +114,6 @@ fun ProfileScreen(
     var recipeWithAction: Recipe? by remember {
         mutableStateOf(null)
     }
-    var showDeleteConfirmation by remember {
-        mutableStateOf(false)
-    }
-    var successDelete by remember {
-        mutableStateOf(false)
-    }
     var error:String? by remember {
         mutableStateOf(null)
     }
@@ -138,6 +133,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
+                    .padding(top = 16.dp)
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -145,21 +141,13 @@ fun ProfileScreen(
                 Box {
                     Box(
                         modifier = Modifier
-                            .clip(CircleShape)
                             .size(133.dp)
-                            .background(Color.LightGray)
+                            .background(Color.White)
+                            .clip(CircleShape)
                             .clickable { showProfileImage = true },
                         contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
-                            model = "${user?.photoUrl}",
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(130.dp)
-                                .background(Color.LightGray)
-                        )
+                        ProfilePhoto(uri = user?.photoUrl, size = 130.dp)
                     }
                     IconButton(
                         onClick = {
@@ -210,7 +198,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -300,19 +288,15 @@ fun ProfileScreen(
                                                 .fillMaxSize()
                                                 .clip(RoundedCornerShape(5.dp))
                                         )
-                                        Icon(
-                                            imageVector = Icons.Filled.MoreVert,
-                                            contentDescription = null,
-                                            tint = Color.White,
+                                        KebabMenu(
                                             modifier = Modifier
                                                 .align(Alignment.TopEnd)
                                                 .offset(5.dp, 3.dp)
-                                                .clip(RoundedCornerShape(100))
-                                                .clickable {
-                                                    showRecipeActionMenu = !showRecipeActionMenu
-                                                    recipeWithAction =
-                                                        if (recipeWithAction == null) recipe else null
-                                                }
+                                                .size(25.dp),
+                                            onClick = {
+                                                showRecipeActionMenu = !showRecipeActionMenu
+                                                recipeWithAction = if (recipeWithAction == null) recipe else null
+                                            }
                                         )
                                     }
                                 }
@@ -395,67 +379,17 @@ fun ProfileScreen(
         )
     }
 
-    if (showRecipeActionMenu) {
-        BottomActionMenuPopUp(
-            options = hashMapOf("Edit" to R.drawable.pencil_icon, "Delete" to R.drawable.delete_icon),
-            onClick = { key ->
-                if (key == "Delete") {
-                    showDeleteConfirmation = true
-                    showRecipeActionMenu = false
-                } else if (key == "Edit") {
-                    showRecipeActionMenu = false
-                    ownRecipesViewModel.action.value = OwnRecipeAction.EDIT
-                    ownRecipesViewModel.recipe.value = recipeWithAction!!
-                    ownRecipesViewModel.originalData.value = recipeWithAction!!
-                    onNavigateToCreateRecipeOne()
-                }
-            },
-            onOutsideClick = {
-                showRecipeActionMenu = false
-                recipeWithAction = null
-            }
-        )
-    }
-
-    if (showDeleteConfirmation) {
-        ConfirmDialog(
-            message = "Are you sure you want to delete this recipe?",
-            buttonOkayName = "Yes",
-            onClickCancel = {
-                showDeleteConfirmation = false
-                recipeWithAction = null
-            },
-            onClickOkay = {
-                showDeleteConfirmation = false
-
-                if (recipeWithAction != null) {
-                    loading = true
-
-                    ownRecipesViewModel.deleteRecipe(recipeWithAction!!.id!!, recipeWithAction!!.photosUrl) { isSuccess, err ->
-                        loading = false
-
-                        if (isSuccess) {
-                            successDelete = true
-                        } else {
-                            error = err
-                        }
-                    }
-
-                    recipeWithAction = null
-                }
-            }
-        )
-    }
-
-    if (successDelete) {
-        Dialog(
-            icon = "success",
-            message = "Recipe successfully deleted!",
-            onCloseClick = {
-                successDelete = false
-            }
-        )
-    }
+    OwnRecipeActionMenu(
+        showRecipeActionMenu = showRecipeActionMenu,
+        setShowRecipeActionMenu = { showRecipeActionMenu = it },
+        recipeWithAction = recipeWithAction,
+        setRecipeWithAction = { recipeWithAction = it },
+        ownRecipesViewModel = ownRecipesViewModel,
+        onNavigateToCreateRecipeOne = { onNavigateToCreateRecipeOne() },
+        setLoading = {
+            loading = it
+        }
+    )
 
     if (error != null) {
         Dialog(
