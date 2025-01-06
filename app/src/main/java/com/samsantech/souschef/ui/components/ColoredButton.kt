@@ -36,7 +36,8 @@ fun ColoredButton(modifier: Modifier = Modifier, onClick: () -> Unit, containerC
         shape = RoundedCornerShape(20),
         contentPadding = contentPadding,
     ) {
-        Text(text = text,
+        Text(
+            text = text,
             fontSize = 16.sp,
             fontWeight = fontWeight
         )

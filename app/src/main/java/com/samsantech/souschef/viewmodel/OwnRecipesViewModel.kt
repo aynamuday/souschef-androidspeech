@@ -34,7 +34,9 @@ class OwnRecipesViewModel(
                 user = user,
                 callback = { isSuccess, error ->
                     callback(isSuccess, error)
-                    resetRecipe()
+                    if (isSuccess) {
+                        resetRecipe()
+                    }
                 },
                 updatedRecipe = { updatedRecipe ->
                     updateRecipes(updatedRecipe)
