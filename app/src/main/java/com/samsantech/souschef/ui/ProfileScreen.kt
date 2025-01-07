@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,7 +63,7 @@ import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.ProfilePhoto
-import com.samsantech.souschef.ui.components.RecipeListItem
+import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.utils.convertUriToBitmap
@@ -178,17 +179,21 @@ fun ProfileScreen(
                     )
                 }
                 user?.let {
-                    Text(
-                        text = it.username,
-                        fontStyle = FontStyle.Italic
-                    )
+                    Column(
+                        modifier = Modifier
+                            .offset(y = -(8.dp)),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = it.username,
+                            fontStyle = FontStyle.Italic,
+                        )
+                        Text(
+                            text = it.email,
+                        )
+                    }
                 }
-                user?.let {
-                    Text(
-                        text = it.email
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(5.dp))
 
                 ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
                 Spacer(modifier = Modifier.height(12.dp))
@@ -256,7 +261,7 @@ fun ProfileScreen(
                                         Uri.parse("${recipe.photosUrl["landscape"]}")
                                     }
 
-                                    RecipeListItem(
+                                    RecipeCard(
                                         photoUrl = photoUrl,
                                         modifier = Modifier
                                             .width((maxWidth / 3) - 10.dp),

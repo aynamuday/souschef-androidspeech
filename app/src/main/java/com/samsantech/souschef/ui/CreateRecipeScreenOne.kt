@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -80,8 +81,8 @@ fun CreateRecipeScreenOne(
 
     var categories by remember {
 //        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Dessert", "Drink"))
-        // Rice, Others
-        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Other Meat", "Seafood", "Vegetables", "Fruits", "Dessert", "Drink"))
+        // Rice, Others, Other Meat
+        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Fruits", "Dessert", "Drink"))
     }
     val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
@@ -821,7 +822,7 @@ fun NumberFieldWithPlusMinusButtons(
             modifier = Modifier.width(60.dp),
             placeholderAlign = TextAlign.Center,
             borderColor = Color.Gray,
-            padding = 8.dp
+            paddingValues = PaddingValues(8.dp)
         )
         Spacer(modifier = Modifier.width(5.dp))
         Icon(

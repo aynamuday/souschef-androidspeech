@@ -21,7 +21,7 @@ import androidx.compose.ui.zIndex
 import coil3.compose.AsyncImage
 
 @Composable
-fun RecipeListItem(
+fun RecipeCard(
     photoUrl: Uri?,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
@@ -32,7 +32,7 @@ fun RecipeListItem(
         modifier = modifier
             .zIndex(-1f)
             .height(180.dp)
-            .background(Color.White)
+            .background(Color.Gray.copy(.2f), RoundedCornerShape(5.dp))
             .border(
                 if (photoUrl != null) 0.dp else 1.dp,
                 if (photoUrl != null) Color.Transparent else Color.Gray,

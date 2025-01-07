@@ -22,7 +22,6 @@ import com.samsantech.souschef.ui.HomeScreen
 import com.samsantech.souschef.ui.LoginScreen
 import com.samsantech.souschef.ui.OpeningScreen
 import com.samsantech.souschef.ui.ProfileScreen
-import com.samsantech.souschef.ui.RecipeBrowserScreen
 import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.ChangePasswordScreen
 import com.samsantech.souschef.ui.CreateRecipeScreenFour
@@ -286,9 +285,6 @@ fun SousChefApp(
             composable<SelectCategory> {
                 SelectCategoryScreen()
             }
-            composable<RecipeBrowser> {
-                RecipeBrowserScreen()
-            }
             composable<Recipe> {
                 RecipeScreen(
                     activity,
@@ -416,9 +412,6 @@ object Home
 
 @Serializable
 object SelectCategory
-
-@Serializable
-object RecipeBrowser
 
 @Serializable
 object Recipe

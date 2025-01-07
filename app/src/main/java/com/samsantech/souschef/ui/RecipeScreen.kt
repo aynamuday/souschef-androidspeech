@@ -53,8 +53,8 @@ import androidx.compose.ui.text.style.TextAlign
 import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.KebabMenu
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
-import com.samsantech.souschef.ui.components.ProfilePhoto
 import com.samsantech.souschef.ui.components.ProgressSpinner
+import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.utils.getRecipeTimeText
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
@@ -253,10 +253,7 @@ fun RecipeMetadata(recipe: Recipe) {
         }
     }
     Spacer(modifier = Modifier.height(24.dp))
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        ProfilePhoto(uri = recipe.userPhotoUrl, size = 40.dp)
-        recipe.userName?.let { Text(text = it, fontWeight = FontWeight(600)) }
-    }
+    UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
     Spacer(modifier = Modifier.height(20.dp))
     Spacer(modifier = Modifier
         .fillMaxWidth()
