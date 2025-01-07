@@ -1,9 +1,6 @@
 package com.samsantech.souschef.ui
 
 import android.net.Uri
-import android.util.Log
-import android.webkit.WebView
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Favorite
@@ -45,21 +40,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.viewmodel.RecipesViewModel
-import coil.compose.rememberImagePainter
+import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
-fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel) {
+fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel, userViewModel: UserViewModel) {
     val recipes by viewModel.displayRecipe.collectAsState()
+    val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
 
     Box(
         modifier = Modifier
@@ -117,27 +110,27 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewM
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            RecipeFeed(navController, recipes)
+            RecipeFeed(navController, recipes, userViewModel, favoriteRecipes)
         }
     }
 }
 
 @Composable
-fun RecipeFeed(navController: NavController, recipes: List<Recipe>) {
+fun RecipeFeed(navController: NavController, recipes: List<Recipe>, userViewModel: UserViewModel, favoriteRecipes: Set<Int>) {
     // Horizontal scrolling layout using LazyRow
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(recipes) { recipe ->
-            RecipeCard(recipe = recipe, navController = navController)
+            RecipeCard(recipe = recipe, navController = navController, userViewModel = userViewModel, favoriteRecipes = favoriteRecipes)
         }
     }
 }
 
 
 @Composable
-fun RecipeCard(recipe: Recipe, navController: NavController) {
+fun RecipeCard(recipe: Recipe, navController: NavController, userViewModel: UserViewModel, favoriteRecipes: Set<Int>) {
     var isFavorite by remember { mutableStateOf(false) }
     var rating by remember { mutableStateOf(0) }
 
@@ -239,7 +232,13 @@ fun RecipeCard(recipe: Recipe, navController: NavController) {
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
-                            isFavorite = !isFavorite
+                            // Check if recipe.id is not null before passing it to the function
+                            val id = recipe.id ?: return@clickable // Exit if id is null
+                            userViewModel.toggleFavoriteRecipe(id, !isFavorite) { isSuccess ->
+                                if (isSuccess) {
+                                    isFavorite = !isFavorite
+                                }
+                            }
                         }
                 )
             }
