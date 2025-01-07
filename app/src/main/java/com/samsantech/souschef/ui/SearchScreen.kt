@@ -13,7 +13,10 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,8 +35,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.algolia.instantsearch.android.paging3.flow
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.SearchRecipe
-import com.samsantech.souschef.ui.components.RecipeListItem
+import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.components.SearchBox
+import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 
@@ -66,10 +70,17 @@ fun SearchScreen(
                 search = it
             },
             onSubmit = {
-                hasSearched = true
-                searchBoxState.setText(search, true)
-                if (search != "") {
-                    loadingState.setIsLoading(true)
+                search = search.trim()
+                if ((!hasSearched && search != "") || hasSearched) {
+                    if (!hasSearched) {
+                        hasSearched = true
+                    }
+                    searchBoxState.setText(search, true)
+                    if (search != "") {
+                        loadingState.setIsLoading(true)
+                    } else {
+                        hasSearched = false
+                    }
                 }
             }
         )
@@ -169,6 +180,7 @@ fun RecipesList(
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier,
         state = lazyGridState
     ) {
@@ -177,21 +189,60 @@ fun RecipesList(
 
             val itemWidth = (maxWidth/2) - 8.dp
 
-            val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
-                Uri.parse("${item.photosUrl["portrait"]}")
-            } else {
-                Uri.parse("${item.photosUrl["square"]}")
-            }
+            SearchRecipeItem(itemWidth = itemWidth, item =item)
+        }
+    }
+}
 
-            RecipeListItem(
-                photoUrl = photoUri,
-                onClick = {
+@Composable
+fun SearchRecipeItem(
+    itemWidth: Dp,
+    item: SearchRecipe
+) {
+    val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
+        Uri.parse("${item.photosUrl["portrait"]}")
+    } else {
+        Uri.parse("${item.photosUrl["square"]}")
+    }
 
-                },
-                modifier = Modifier
-                    .width(itemWidth)
-                    .height(itemWidth + itemWidth / 2)
+    Column {
+        RecipeCard(
+            photoUrl = photoUri,
+            onClick = {
+
+            },
+            modifier = Modifier
+                .width(itemWidth)
+                .height(itemWidth + itemWidth / 3)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = item.title,
+            fontWeight = FontWeight(500)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            UserNamePhoto(
+                photoUri = item.userPhotoUrl,
+                userName = item.userName,
+                photoSize = 20.dp,
+                fontColor = Color.Gray,
+                fontSize = 12.sp,
+                modifier = Modifier.weight(1f),
+                spacer = 5.dp
             )
+            Row(modifier = Modifier.weight(.5f)) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(15.dp)
+                        .clickable { },
+                    tint = Color(0xfff73056)
+                )
+                Spacer(modifier = Modifier.width(2.dp))
+                Text(text = "999k", fontSize = 12.sp)
+            }
         }
     }
 }

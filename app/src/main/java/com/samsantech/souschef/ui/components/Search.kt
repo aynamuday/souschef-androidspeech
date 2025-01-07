@@ -35,7 +35,7 @@ fun SearchBox(
             FormBasicTextField(
                 value = search,
                 onValueChange = {
-                    onValueChange(it.trim().lowercase())
+                    onValueChange(it.lowercase())
                 },
                 placeholder = "What are you craving?",
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
