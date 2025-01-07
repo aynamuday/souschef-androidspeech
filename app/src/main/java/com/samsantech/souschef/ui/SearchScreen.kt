@@ -1,19 +1,19 @@
 package com.samsantech.souschef.ui
 
-import android.webkit.WebView
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,214 +21,177 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.algolia.instantsearch.android.paging3.flow
 import com.samsantech.souschef.R
+import com.samsantech.souschef.data.SearchRecipe
+import com.samsantech.souschef.ui.components.RecipeListItem
+import com.samsantech.souschef.ui.components.SearchBox
+import com.samsantech.souschef.ui.theme.Green
+import com.samsantech.souschef.viewmodel.RecipesViewModel
 
 @Composable
-fun SearchScreen(paddingValues: PaddingValues) {
-    var searchQuery by remember { mutableStateOf("") }
-    val allRecipes = listOf(
-        Recipe("Spaghetti Carbonara", R.drawable.sphagetti_carbonara),
-        Recipe("Chicken Adobo", R.drawable.chicken_adobo),
-        Recipe("Beef Stroganoff", R.drawable.beef_stroganoff),
-        Recipe("Vegetarian Stir Fry", R.drawable.vegetarian_stirfry),
-        Recipe("Chocolate Lava Cake", R.drawable.chocolate_lavacake),
-        Recipe("Garlic Butter Shrimp", R.drawable.garlic_buttershrimp)
-    )
-    val allVideos = listOf(
-        "https://www.tiktok.com/embed/v2/7128330261154090266",
-        "https://www.tiktok.com/embed/v2/7342462804953222406",
-        "https://www.tiktok.com/embed/v2/7252101476917497093"
-    )
+fun SearchScreen(
+    paddingValues: PaddingValues,
+    recipesViewModel: RecipesViewModel
+) {
+    val searchBoxState = recipesViewModel.searchBoxState
+    val paginator = recipesViewModel.hitsPaginator
+    val pagingHits = paginator.flow.collectAsLazyPagingItems()
+    val gridState = rememberLazyGridState()
+    val loadingState = recipesViewModel.loadingState
 
-    // Function to filter recipes and videos based on search query
-    val filteredRecipes = allRecipes.filter { it.name.contains(searchQuery, ignoreCase = true) }
-    val filteredVideos = allVideos.filter { it.contains(searchQuery, ignoreCase = true) }
+    var search by remember {
+        mutableStateOf("")
+    }
+    var hasSearched by remember {
+        mutableStateOf(false)
+    }
 
-    Box(
+    Column(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .padding(start = 20.dp, end = 20.dp, top = 40.dp)
             .padding(paddingValues)
     ) {
-        Spacer(
-            modifier = Modifier
-                .background(Color(22, 166, 55, 255))
-                .fillMaxWidth()
-                .height(100.dp)
+        SearchBox(
+            search = search,
+            onValueChange = {
+                search = it
+            },
+            onSubmit = {
+                hasSearched = true
+                searchBoxState.setText(search, true)
+                if (search != "") {
+                    loadingState.setIsLoading(true)
+                }
+            }
         )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = 50.dp, start = 20.dp, end = 20.dp
-                )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "SOUSCHEF",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight(700),
-                    color = Color(255, 207, 81, 255)
-                )
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = null,
-                    tint = Color.White,
+        Spacer(modifier = Modifier.height(16.dp))
+        if (hasSearched) {
+            if (loadingState.loading) {
+                Box(
                     modifier = Modifier
-                        .size(40.dp)
-                )
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .width(25.dp),
+                        color = Color.White,
+                        trackColor = Green,
+                        strokeWidth = 3.dp
+                    )
+                }
+            } else {
+                if (pagingHits.itemCount <= 0) {
+                    Text(
+                        text = "No recipes found",
+                        fontStyle = FontStyle.Italic,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    BoxWithConstraints {
+                        RecipesList(lazyPagingItems = pagingHits, lazyGridState = gridState, maxWidth = maxWidth)
+                    }
+                }
             }
-
-            // Search bar for entering the search query
-            Spacer(modifier = Modifier.height(20.dp))
-            SearchBar(searchQuery = searchQuery, onSearchQueryChanged = { searchQuery = it })
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Display filtered recipes
-            if (filteredRecipes.isNotEmpty()) {
-                Text(
-                    text = "Recipes",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
-                RecipeFeed(recipes = filteredRecipes)
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Display filtered videos
-            if (filteredVideos.isNotEmpty()) {
-                Text(
-                    text = "Videos",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
-                TikTokVideoListEmbedded(tiktokLinks = filteredVideos)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchBar(searchQuery: String, onSearchQueryChanged: (String) -> Unit) {
-    TextField(
-        value = searchQuery,
-        onValueChange = onSearchQueryChanged,
-        placeholder = { Text("Search for recipes or videos") },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = "Search Icon",
-                tint = Color.Black
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(50.dp)),
-        colors = TextFieldDefaults.textFieldColors(
-            //containerColor = Color.Gray,
-            focusedIndicatorColor = Color(22, 166, 55, 255),
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        singleLine = true
-    )
-}
-
-
-@Composable
-fun RecipeFeed(recipes: List<Recipe>) {
-    Column {
-        recipes.forEach { recipe ->
-            RecipeCard(recipe)
-            Spacer(modifier = Modifier.height(15.dp))
-        }
-    }
-}
-
-@Composable
-fun RecipeCard(recipe: Recipe) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(245, 245, 220))
-            .clickable {}
-    ) {
-        Row(
-            modifier = Modifier.padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(recipe.imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(10.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(15.dp))
-
+        } else {
             Column {
-                Text(
-                    text = recipe.name,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                val categories = mapOf(
+                    "Chicken" to R.drawable.chicken, "Pork" to R.drawable.pork, "Beef" to R.drawable.beef, "Seafood" to R.drawable.seafood,
+                    "Vegetables" to R.drawable.vegetable, "Fruits" to R.drawable.fruits, "Dessert" to R.drawable.dessert, "Drink" to R.drawable.drinks
                 )
+
                 Text(
-                    text = "Learn to make ${recipe.name}!",
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    text = "Browse Categories",
+                    fontWeight = FontWeight(500),
+                    fontSize = 16.sp
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(categories.entries.toList()) {
+                        SearchCategoryCard(title = it.key, drawable = it.value)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun TikTokVideoListEmbeddedSearch(tiktokLinks: List<String>) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
+fun SearchCategoryCard(title: String, drawable: Int) {
+    Box(modifier = Modifier
+        .clip(RoundedCornerShape(10.dp))
+        .wrapContentSize()
+        .clickable {
+
+        }
     ) {
-        tiktokLinks.forEach { link ->
-            TikTokVideoPlayerSearch(link = link)
-            Spacer(modifier = Modifier.height(16.dp))
+        Image(
+            painter = painterResource(id = drawable),
+            contentDescription = null,
+            modifier = Modifier
+                .size(150.dp),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            modifier = Modifier
+                .size(150.dp)
+                .background(Color.Black.copy(.2f))
+                .clip(RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight(600)
+            )
         }
     }
 }
 
 @Composable
-fun TikTokVideoPlayerSearch(link: String) {
-    AndroidView(
-        factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                loadUrl(link)
+fun RecipesList(
+    modifier: Modifier = Modifier,
+    lazyPagingItems: LazyPagingItems<SearchRecipe>,
+    lazyGridState: LazyGridState,
+    maxWidth: Dp
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier,
+        state = lazyGridState
+    ) {
+        items(lazyPagingItems.itemCount) { index ->
+            val item = lazyPagingItems[index] ?: return@items
+
+            val itemWidth = (maxWidth/2) - 8.dp
+
+            val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
+                Uri.parse("${item.photosUrl["portrait"]}")
+            } else {
+                Uri.parse("${item.photosUrl["square"]}")
             }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.LightGray)
-    )
+
+            RecipeListItem(
+                photoUrl = photoUri,
+                onClick = {
+
+                },
+                modifier = Modifier
+                    .width(itemWidth)
+                    .height(itemWidth + itemWidth / 2)
+            )
+        }
+    }
 }
-
-data class Recipe(val name: String, val imageRes: Int)
-
-
-
