@@ -53,9 +53,6 @@ fun SousChefApp(
     ownRecipesViewModel: OwnRecipesViewModel,
     recipesViewModel: RecipesViewModel
 ) {
-    Scaffold {
-
-    }
     Box(
         modifier = Modifier.padding(bottom = systemNavigationBarHeight)
     ) {
@@ -280,7 +277,10 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    SearchScreen(paddingValues)
+                    SearchScreen(
+                        paddingValues,
+                        recipesViewModel
+                    )
                 }
             }
             composable<SelectCategory> {

@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.sp
 fun FormOutlinedTextField(value: String, onValueChange: (String) -> Unit,
                           label: String? = null,
                           leadingIcon:  @Composable() (() -> Unit)? = null,
-                          trailingIcon:  @Composable() (() -> Unit)? = null, maxLines: Int = 1) {
+                          trailingIcon:  @Composable() (() -> Unit)? = null,
+                          maxLines: Int = 1) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,

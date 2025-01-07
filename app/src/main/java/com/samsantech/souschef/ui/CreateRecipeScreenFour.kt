@@ -7,10 +7,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -108,26 +110,28 @@ fun CreateRecipeScreenFour(
             ) {
                 Column {
                     Text(text = "Tags", fontWeight = FontWeight.Bold)
-//                    Text(
-//                        text = "You may select up to 7 tags.",
-//                        fontSize = 14.sp,
-//                        fontStyle = FontStyle.Italic,
-//                        color = if (errors["tags"] != null && errors["tags"] != "") Color.Red else Color.Black
-//                    )
+                    Text(
+                        text = "You may select up to 7 tags.",
+                        fontSize = 14.sp,
+                        fontStyle = FontStyle.Italic,
+                        color = if (errors["tags"] != null && errors["tags"] != "") Color.Red else Color.Black
+                    )
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        FormBasicTextField(
-                            value = newTag,
-                            onValueChange = {
-                                newTag = it.lowercase()
-                            },
-                            padding = 10.dp,
-                            modifier = Modifier.weight(1f),
-                            borderColor = Green
-                        )
+                        Box(modifier = Modifier.weight(1f)) {
+                            FormBasicTextField(
+                                value = newTag,
+                                onValueChange = {
+                                    newTag = it.lowercase()
+                                },
+                                paddingValues = PaddingValues(10.dp),
+                                borderColor = Green
+                            )
+                        }
+
                         Text(
                             text = "+ Add",
                             modifier = Modifier
@@ -147,6 +151,7 @@ fun CreateRecipeScreenFour(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Yellow)
                                 .padding(12.dp, 5.dp)
+                                .weight(.3f)
                         )
                     }
                     if (errors["tags"] != null && errors["tags"] != "") {
