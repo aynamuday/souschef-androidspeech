@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
@@ -55,7 +56,7 @@ fun SearchBox(
         Text(
             text = "Search",
             modifier = Modifier
-                .weight(.15f)
+                .wrapContentSize(unbounded = true)
                 .clickable {
                     onSubmit()
                 },

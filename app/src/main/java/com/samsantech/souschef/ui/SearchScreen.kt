@@ -124,7 +124,7 @@ fun SearchScreen(
                 Text(
                     text = "Browse Categories",
                     fontWeight = FontWeight(500),
-                    fontSize = 16.sp
+                    fontSize = 20.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -150,12 +150,12 @@ fun SearchCategoryCard(title: String, drawable: Int) {
             painter = painterResource(id = drawable),
             contentDescription = null,
             modifier = Modifier
-                .size(150.dp),
+                .size(190.dp),
             contentScale = ContentScale.Crop
         )
         Box(
             modifier = Modifier
-                .size(150.dp)
+                .size(190.dp)
                 .background(Color.Black.copy(.2f))
                 .clip(RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
