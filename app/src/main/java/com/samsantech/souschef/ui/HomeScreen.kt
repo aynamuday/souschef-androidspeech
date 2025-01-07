@@ -1,11 +1,11 @@
 package com.samsantech.souschef.ui
 
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.webkit.WebView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -30,10 +29,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,22 +44,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.samsantech.souschef.R
-import com.samsantech.souschef.ui.components.FormOutlinedTextField
-import kotlinx.coroutines.delay
+import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.viewmodel.RecipesViewModel
+import coil.compose.rememberImagePainter
 
 @Composable
-fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
+fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel) {
+    val recipes by viewModel.displayRecipe.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -114,44 +117,17 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues) {
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            RecipeFeed(navController)
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // TikTok Videos Section
-            Text(
-                text = "Trending Recipes on TikTok",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 10.dp)
-            )
-
-            TikTokVideoListEmbedded(
-                tiktokLinks = listOf(
-                    "https://www.tiktok.com/embed/v2/7128330261154090266",
-                    "https://www.tiktok.com/embed/v2/7342462804953222406",
-                    "https://www.tiktok.com/embed/v2/7252101476917497093"
-                )
-            )
+            RecipeFeed(navController, recipes)
         }
     }
 }
 
 @Composable
-fun RecipeFeed(navController: NavController) {
-    val recipes = listOf(
-        Pair("Spaghetti Carbonara", R.drawable.sphagetti_carbonara),
-        Pair("Chicken Adobo", R.drawable.chicken_adobo),
-        Pair("Beef Stroganoff", R.drawable.beef_stroganoff),
-        Pair("Vegetarian Stir Fry", R.drawable.vegetarian_stirfry),
-        Pair("Chocolate Lava Cake", R.drawable.chocolate_lavacake),
-        Pair("Garlic Butter Shrimp", R.drawable.garlic_buttershrimp)
-    )
-
+fun RecipeFeed(navController: NavController, recipes: List<Recipe>) {
     // Horizontal scrolling layout using LazyRow
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between items
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(recipes) { recipe ->
             RecipeCard(recipe = recipe, navController = navController)
@@ -159,18 +135,27 @@ fun RecipeFeed(navController: NavController) {
     }
 }
 
+
 @Composable
-fun RecipeCard(recipe: Pair<String, Int>, navController: NavController) {
-    var isFavorited by remember { mutableStateOf(false) }
+fun RecipeCard(recipe: Recipe, navController: NavController) {
+    var isFavorite by remember { mutableStateOf(false) }
+    var rating by remember { mutableStateOf(0) }
+
+    // Determine the photo URL based on available keys
+    val photoUrl: Uri? = when {
+        recipe.photosUrl["portrait"] != null -> Uri.parse("${recipe.photosUrl["portrait"]}")
+        recipe.photosUrl["square"] != null -> Uri.parse("${recipe.photosUrl["square"]}")
+        recipe.photosUrl["landscape"] != null -> Uri.parse("${recipe.photosUrl["landscape"]}")
+        else -> null
+    }
 
     Box(
         modifier = Modifier
-            .width(200.dp) // Adjust width to fit the horizontal scroll better
+            .width(200.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(Color(245, 245, 220))
             .clickable {
-                // Navigate to RecipeScreen with recipe name and image resource ID
-                navController.navigate("recipe/${recipe.first}/${recipe.second}")
+                // navController.navigate("recipe/${recipe.title}")
             }
     ) {
         Column(
@@ -179,71 +164,85 @@ fun RecipeCard(recipe: Pair<String, Int>, navController: NavController) {
                 .fillMaxWidth()
                 .align(Alignment.Center)
         ) {
-            Image(
-                painter = painterResource(id = recipe.second),
-                contentDescription = null,
+            Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(10.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .height(120.dp)
+                    .width(200.dp)
+                    .background(Color.White)
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(
+                        width = if (photoUrl != null) 0.dp else 1.dp,
+                        color = if (photoUrl != null) Color.Transparent else Color.Gray,
+                        shape = RoundedCornerShape(10.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (photoUrl != null) {
+                    AsyncImage(
+                        model = "$photoUrl",
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+                } else {
+                    // Placeholder text or icon when no image is available
+                    Text(
+                        text = "No Image",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = recipe.first,
+                text = recipe.title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 8.dp)
             )
             Text(
-                text = "Learn to cook ${recipe.first}!",
+                text = "Learn to cook ${recipe.title}!",
                 fontSize = 12.sp,
                 color = Color.Gray
             )
 
-            // Heart Icon to mark as favorite
-            Icon(
-                imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                contentDescription = "Favorite",
-                tint = if (isFavorited) Color.Red else Color.Gray,
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable {
-                        isFavorited = !isFavorited
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    (1..5).forEach { star ->
+                        Icon(
+                            imageVector = if (star <= rating) Icons.Filled.Star else Icons.Outlined.Star,
+                            contentDescription = "Rate $star stars",
+                            tint = if (star <= rating) Color.Yellow else Color.Gray,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable {
+                                    rating = star
+                                }
+                        )
                     }
-                    .align(Alignment.End)
-            )
-        }
-    }
-}
-
-@Composable
-fun TikTokVideoListEmbedded(tiktokLinks: List<String>) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        tiktokLinks.forEach { link ->
-            TikTokVideoPlayer(link = link)
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
-@Composable
-fun TikTokVideoPlayer(link: String) {
-    AndroidView(
-        factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                loadUrl(link)
+                }
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                    contentDescription = "Bookmark",
+                    tint = if (isFavorite) Color.Red else Color.Gray,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            isFavorite = !isFavorite
+                        }
+                )
             }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.LightGray)
-    )
+        }
+    }
 }

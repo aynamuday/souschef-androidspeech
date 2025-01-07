@@ -287,8 +287,8 @@ fun ProfileScreen(
                                                 RoundedCornerShape(5.dp)
                                             )
                                             .clickable {
-                                                recipesViewModel.displayRecipe.value = recipe
-                                                onNavigateToRecipe()
+                                                //recipesViewModel.displayRecipe.value = recipe
+                                                //onNavigateToRecipe()
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
