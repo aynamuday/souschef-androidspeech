@@ -1,6 +1,7 @@
 package com.samsantech.souschef.ui
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,6 +59,13 @@ fun SearchScreen(
     }
     var hasSearched by remember {
         mutableStateOf(false)
+    }
+
+    BackHandler {
+        if (hasSearched) {
+            hasSearched = false
+            search = ""
+        }
     }
 
     Column(
