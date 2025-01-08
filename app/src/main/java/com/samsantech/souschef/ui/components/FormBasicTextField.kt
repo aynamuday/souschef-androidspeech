@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -39,12 +40,15 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                        paddingValues: PaddingValues = PaddingValues(12.dp),
                        keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
                        keyboardActions: KeyboardActions = KeyboardActions.Default,
-                       trailingIcon: ImageVector? = null
-) {
+                       leadingIcon: ImageVector? = null,
+                       trailingIcon: ImageVector? = null,
+                       trailingIconModifier: Modifier = Modifier
+
+                       ) {
     Box {
-        if (trailingIcon != null) {
+        if (leadingIcon != null) {
             Icon(
-                imageVector = trailingIcon,
+                imageVector = leadingIcon,
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
@@ -78,7 +82,18 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                 innerTextField()
             },
             keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions
+            keyboardActions = keyboardActions,
+            singleLine = maxLines == 1
         )
+        if (trailingIcon != null) {
+            Icon(
+                imageVector = trailingIcon,
+                contentDescription = null,
+                modifier = trailingIconModifier
+                    .align(Alignment.CenterEnd)
+                    .size(16.dp),
+                tint = Color.Black.copy(.7f)
+            )
+        }
     }
 }

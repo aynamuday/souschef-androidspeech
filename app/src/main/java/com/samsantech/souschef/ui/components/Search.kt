@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,7 +27,8 @@ import com.samsantech.souschef.ui.theme.Green
 fun SearchBox(
     search: String,
     onValueChange: (String) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    clearSearch: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -45,11 +49,19 @@ fun SearchBox(
                         onSubmit()
                     }
                 ),
-                paddingValues = PaddingValues(start = 35.dp, top = 8.dp, bottom = 8.dp, end = 12.dp),
+                paddingValues = PaddingValues(start = 35.dp, top = 8.dp, bottom = 8.dp, end = 25.dp),
                 roundCorner = 5.dp,
                 backgroundColor = Color.Gray.copy(.2f),
                 borderColor = Color.Transparent,
-                trailingIcon = Icons.Filled.Search,
+                leadingIcon = Icons.Filled.Search,
+                trailingIcon = if (search != "") Icons.Filled.Close else null,
+                trailingIconModifier = Modifier
+                    .offset(x = -(5.dp))
+                    .padding(2.dp)
+                    .clickable {
+                        clearSearch()
+                    },
+                maxLines = 1
             )
         }
 

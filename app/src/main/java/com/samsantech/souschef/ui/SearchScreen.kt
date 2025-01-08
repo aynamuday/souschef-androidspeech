@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -64,26 +65,47 @@ fun SearchScreen(
             .padding(start = 20.dp, end = 20.dp, top = 40.dp)
             .padding(paddingValues)
     ) {
-        SearchBox(
-            search = search,
-            onValueChange = {
-                search = it
-            },
-            onSubmit = {
-                search = search.trim()
-                if ((!hasSearched && search != "") || hasSearched) {
-                    if (!hasSearched) {
-                        hasSearched = true
-                    }
-                    searchBoxState.setText(search, true)
-                    if (search != "") {
-                        loadingState.setIsLoading(true)
-                    } else {
-                        hasSearched = false
-                    }
-                }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            if (hasSearched) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(25.dp)
+                        .clickable {
+                            search = ""
+                            hasSearched = false
+                            recipesViewModel.cancelSearch()
+                        }
+                )
             }
-        )
+            SearchBox(
+                search = search,
+                onValueChange = {
+                    search = it
+                },
+                onSubmit = {
+                    search = search.trim()
+                    if ((!hasSearched && search != "") || hasSearched) {
+                        if (!hasSearched) {
+                            hasSearched = true
+                        }
+                        searchBoxState.setText(search, true)
+                        if (search != "") {
+                            loadingState.setIsLoading(true)
+                        } else {
+                            hasSearched = false
+                        }
+                    }
+                },
+                clearSearch = {
+                    search = ""
+                }
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         if (hasSearched) {
             if (loadingState.loading) {
@@ -129,7 +151,15 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(categories.entries.toList()) {
-                        SearchCategoryCard(title = it.key, drawable = it.value)
+                        SearchCategoryCard(
+                            title = it.key,
+                            drawable = it.value,
+                            onClick = {
+                                recipesViewModel.searchCategory(it.key)
+                                hasSearched = true
+                                search = it.key
+                            }
+                        )
                     }
                 }
             }
@@ -138,12 +168,12 @@ fun SearchScreen(
 }
 
 @Composable
-fun SearchCategoryCard(title: String, drawable: Int) {
+fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
     Box(modifier = Modifier
         .clip(RoundedCornerShape(10.dp))
         .wrapContentSize()
         .clickable {
-
+            onClick()
         }
     ) {
         Image(
