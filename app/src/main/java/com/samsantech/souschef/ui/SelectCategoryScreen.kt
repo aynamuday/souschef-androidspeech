@@ -61,7 +61,7 @@ fun CategoryCard() {
             .clickable {  }
     ) {
         Image(
-            painter = painterResource(id = R.drawable.category_pork),
+            painter = painterResource(id = R.drawable.chicken_adobo),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
