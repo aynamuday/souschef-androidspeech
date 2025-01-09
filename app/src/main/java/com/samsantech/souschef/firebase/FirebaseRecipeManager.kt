@@ -69,9 +69,10 @@ class FirebaseRecipeManager(
             "serving" to recipe.serving,
             "difficulty" to recipe.difficulty,
             "mealTypes" to recipe.mealTypes,
-            "categories" to recipe.categories,
+//            "categories" to recipe.categories,
             "ingredients" to recipe.ingredients,
             "instructions" to recipe.instructions,
+            "audience" to recipe.audience
         )
 
         if (recipe.description.isNotEmpty()) data["description"] = recipe.description
@@ -79,6 +80,7 @@ class FirebaseRecipeManager(
         if (recipe.prepTimeMin.isNotEmpty()) data["prepTimeMin"] = recipe.prepTimeMin
         if (recipe.cookTimeHr.isNotEmpty()) data["cookTimeHr"] = recipe.cookTimeHr
         if (recipe.cookTimeMin.isNotEmpty()) data["cookTimeMin"] = recipe.cookTimeMin
+        if (recipe.categories.isNotEmpty()) data["categories"] = recipe.categories
         if (recipe.tags.isNotEmpty()) data["tags"] = recipe.tags
 
         db.collection("recipes")

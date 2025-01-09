@@ -1,16 +1,8 @@
 package com.samsantech.souschef.ui
 
 import androidx.compose.runtime.getValue
-import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.os.Build
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -32,44 +24,472 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import kotlinx.coroutines.delay
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.zIndex
-import androidx.navigation.NavController
-import com.samsantech.souschef.ui.components.FormOutlinedTextField
-
+//<<<<<<< master
+import androidx.compose.ui.text.style.TextAlign
+import com.samsantech.souschef.ui.components.FiveStarRate
+import com.samsantech.souschef.ui.components.KebabMenu
+import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
+import com.samsantech.souschef.ui.components.ProgressSpinner
+import com.samsantech.souschef.ui.components.UserNamePhoto
+import com.samsantech.souschef.utils.getRecipeTimeText
+import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
+import com.samsantech.souschef.viewmodel.UserViewModel
 
 //val sharedViewModel = SharedViewModel()
 @Composable
+fun RecipeScreen(
+    activity: Activity,
+    context: Context,
+    recipesViewModel: RecipesViewModel,
+    onNavigateToPreviousScreen: () -> Unit,
+    userViewModel: UserViewModel,
+    ownRecipesViewModel: OwnRecipesViewModel,
+    onNavigateToCreateRecipeOne: () -> Unit
+) {
+
+    val user by userViewModel.user.collectAsState()
+    val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
+//    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
+
+//    val displayVoiceCommandPopUp = remember {
+//        mutableStateOf(false)
+//    }
+    var showRecipeActionMenu by remember {
+        mutableStateOf(false)
+    }
+    var recipeWithAction: Recipe? by remember {
+        mutableStateOf(null)
+    }
+    var loading by remember {
+        mutableStateOf(false)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+//            .padding(bottom = if (cookingAssistantState.isCooking) 130.dp else 40.dp)
+            .padding(bottom = 32.dp)
+            .pointerInput(Unit) {
+                detectTapGestures {
+//                    displayVoiceCommandPopUp.value = false
+                }
+            }
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ){
+            AsyncImage(
+                model = if (recipe.photosUrl["square"] != null) "${recipe.photosUrl["square"]}" else "${recipe.photosUrl["portrait"]}",
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .height(320.dp)
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.arrowback),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier
+                    .offset(y = 30.dp, x = 10.dp)
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable { onNavigateToPreviousScreen() }
+            )
+            if (recipe.userId == user?.uid) {
+                KebabMenu(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(y = 30.dp, x = -(10.dp)),
+                    onClick = {
+                            showRecipeActionMenu = !showRecipeActionMenu
+                            recipeWithAction = if (recipeWithAction == null) recipe else null
+                        }
+                )
+            }
+        }
+
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp, start = 20.dp, end = 20.dp)
+        ) {
+
+            RecipeMetadata(recipe = recipe)
+            Spacer(modifier = Modifier.height(20.dp))
+            RecipeIngredients(recipe.ingredients)
+            Spacer(modifier = Modifier.height(20.dp))
+            RecipeInstructions(instructions = recipe.instructions)
+        }
+    }
+
+//    if (displayVoiceCommandPopUp.value) {
+//        VoiceCommandsPopUp(
+//            isWhereToViewTextIsVisible = false,
+//            isGoBackIconVisible = false,
+//            isGoBackIconClicked = {}
+//        ) { isCloseIconClicked ->
+//            if (isCloseIconClicked) {
+//                displayVoiceCommandPopUp.value = false
+//            }
+//        }
+//    }
+
+    if (recipe.userId == user?.uid) {
+        OwnRecipeActionMenu(
+            showRecipeActionMenu = showRecipeActionMenu,
+            setShowRecipeActionMenu = { showRecipeActionMenu = it },
+            recipeWithAction = recipeWithAction,
+            setRecipeWithAction = { recipeWithAction = it },
+            ownRecipesViewModel = ownRecipesViewModel,
+            onNavigateToCreateRecipeOne = { onNavigateToCreateRecipeOne() },
+            setLoading = {
+                loading = it
+            }
+        )
+    }
+
+    if (loading) {
+        ProgressSpinner()
+    }
+}
+
+@Composable
+fun RecipeMetadata(recipe: Recipe) {
+    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+        Column(modifier = Modifier.weight(.65f)) {
+            Text(
+                text = recipe.title,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Green,
+                modifier = Modifier
+                    .fillMaxHeight(),
+            )
+            if (recipe.description.isNotEmpty()) {
+                Text(
+                    text = recipe.description,
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FiveStarRate(rate = 3.7f)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "(1 ratings)", fontSize = 12.sp)
+            }
+            Text(
+                text = "Leave a rating", // or edit rating if rated already
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .clickable { }
+                    .padding(top = 8.dp),
+                fontStyle = FontStyle.Italic
+            )
+        }
+        Spacer(modifier = Modifier.width(32.dp))
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(.2f)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "7.5k",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                    )
+                    Text(
+                        text = "likes",
+                        modifier = Modifier
+                            .offset(y = -(3.dp)),
+                        fontSize = 12.sp,
+                    )
+                }
+                Column {
+                    Icon(
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clickable { },
+                        tint = Color(0xfff73056)
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Filled.BookmarkBorder,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(0.dp, top = 12.dp)
+                    .size(28.dp)
+                    .clickable { },
+//                    tint = Color(255, 207, 81, 255)
+            )
+        }
+    }
+    Spacer(modifier = Modifier.height(24.dp))
+    UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
+    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier
+        .fillMaxWidth()
+        .height(1.dp)
+        .background(Color(255, 207, 81))
+    )
+    Spacer(modifier = Modifier.height(20.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        TimeOrServing(title = "Serving", text = recipe.serving, modifier = Modifier.weight(1f))
+        if (recipe.prepTimeHr.trim() != "0" || recipe.prepTimeMin.trim() != "0") {
+            TimeOrServing(title = "Prep Time", text = getRecipeTimeText(recipe.prepTimeHr, recipe.prepTimeMin), modifier = Modifier.weight(1f))
+        }
+        if (recipe.cookTimeHr.trim() != "0" || recipe.cookTimeMin.trim() != "0") {
+            TimeOrServing(title = "Cook Time", text = getRecipeTimeText(recipe.cookTimeHr, recipe.cookTimeMin), modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 12.sp,
+        )
+        Text(
+            text = text,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+//=======
+//import androidx.compose.foundation.text.BasicTextField
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.Menu
+//import kotlinx.coroutines.delay
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.text.TextStyle
+//import androidx.compose.ui.viewinterop.AndroidView
+//import androidx.compose.ui.zIndex
+//import androidx.navigation.NavController
+//import com.samsantech.souschef.ui.components.FormOutlinedTextField
+
+//>>>>>>> nico
+
+//val sharedViewModel = SharedViewModel()
+@Composable
+//<<<<<<< master
+fun RecipeIngredients(ingredients: List<String>) {
+    Column {
+        Text(
+            text = "Ingredients",
+            fontWeight = FontWeight(600),
+            fontSize = 18.sp
+        )
+        for (ingredient in ingredients) {
+            Text(
+                text = ingredient,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+            )
+        }
+    }
+}
+
+//displayVoiceCommandPopUp: (Boolean) -> Unit,
+//recipe: Recipe?, activity: Activity,
+//context: Context, cookingAssistantViewModel: CookingAssistantViewModel
+@Composable
+fun RecipeInstructions(instructions: List<String>) {
+//    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
+
+//    val instructions = recipe?.instructions?.sortedBy { it.orderNo }
+
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Instructions",
+                fontWeight = FontWeight(600),
+                fontSize = 18.sp
+            )
+
+//            val showRecordAudioRationaleDialog = remember {
+//                mutableStateOf(false)
+//            }
+//
+//            val showBluetoothConnectRationaleDialog = remember {
+//                mutableStateOf(false)
+//            }
+//
+//            val recordAudioPermissionResultLauncher = rememberLauncherForActivityResult(
+//                contract = ActivityResultContracts.RequestPermission(),
+//                onResult = { isGranted ->
+//                    if (isGranted) {
+//                        if (!NetworkUtils.isNetworkAvailable(context)) {
+//                            Toast.makeText(context, "No connection", Toast.LENGTH_SHORT).show()
+//                        }
+//                        else if(!cookingAssistantState.isCooking) {
+//                            if (recipe != null) {
+//                                if (recipe.instructions.isNotEmpty()) {
+//                                    sharedViewModel.startCookingAssistantService(context, recipe)
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            )
+
+//            IconButton(onClick = {
+//                when {
+//                    ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+//                            == PackageManager.PERMISSION_GRANTED-> {
+//                        if (!NetworkUtils.isNetworkAvailable(context)) {
+//                            Toast.makeText(context, "No connection", Toast.LENGTH_SHORT).show()
+//                        }
+//                        else if(!cookingAssistantState.isCooking) {
+//                            if (recipe != null) {
+//                                if (recipe.instructions.isNotEmpty()) {
+//                                    sharedViewModel.startCookingAssistantService(context, recipe)
+//                                }
+//                            }
+//                        } else {
+//                            Toast.makeText(context, "Cooking assistant is running.\nTo cook anew, click the Stop icon.", Toast.LENGTH_SHORT).show()
+//                        }
+//                    }
+//                    ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) -> {
+//                        showRecordAudioRationaleDialog.value = true
+//                    } else -> {
+//                    recordAudioPermissionResultLauncher.launch(Manifest.permission.RECORD_AUDIO)
+//                }
+//                }
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//                    when {
+//                        PreferencesManager.getDismissBluetoothConnectPermissionCount(context) < 1 && ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
+//                                != PackageManager.PERMISSION_GRANTED-> {
+//                            showBluetoothConnectRationaleDialog.value = true
+//                        }
+//                    }
+//                }
+//            }) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.voice_icon),
+//                    contentDescription = null,
+//                    tint = Color(22, 166, 55, 255),
+//                    modifier = Modifier
+//                        .size(35.dp)
+//                )
+//            }
+
+//            IconButton(onClick = {
+//                displayVoiceCommandPopUp(true)
+//            }) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.manual_icon),
+//                    contentDescription = null,
+//                    tint = Color(22, 166, 55, 255),
+//                    modifier = Modifier
+//                        .size(25.dp)
+//                )
+//            }
+
+//            if (showRecordAudioRationaleDialog.value) {
+//                PermissionRationaleDialog(
+//                    title = "Allow SousChef to access your microphone?",
+//                    description = "SousChef uses this to recognize voice commands for hands-free cooking experience.",
+//                    onDismiss = { showRecordAudioRationaleDialog.value = false },
+//                    onAllow = {
+//                        showRecordAudioRationaleDialog.value = false
+//                        sharedViewModel.openAppSettings(context)
+//                    }
+//                )
+//            }
+
+//            if (showBluetoothConnectRationaleDialog.value) {
+//                PermissionRationaleDialog(
+//                    title = "Allow SousChef to access Bluetooth (nearby devices)?",
+//                    description = "If you intend to use wireless earphone for voice-activated cooking assistance, this permission must be enabled.",
+//                    onDismiss = {
+//                        showBluetoothConnectRationaleDialog.value = false
+//                        PreferencesManager.incrementDismissBluetoothConnectPermissionCount(context)
+//                    },
+//                    onAllow = {
+//                        showBluetoothConnectRationaleDialog.value = false
+//                        sharedViewModel.openAppSettings(context)
+//                    }
+//                )
+//            }
+        }
+
+        instructions.forEachIndexed { index, instruction ->
+            RecipeInstructionsItem(index = index+1, instruction = instruction)
+        }
+    }
+}
+
+@Composable
+fun RecipeInstructionsItem(index: Int, instruction: String) {
+    Row(
+        modifier = Modifier
+            .padding(top = 10.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .size(25.dp)
+                .clip(CircleShape)
+                .background(Color(255, 207, 81, 255)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "$index",
+                color = Color.White,
+                fontWeight = FontWeight(600),
+                fontSize = 14.sp
+            )
+        }
+
+        Text(
+            text = instruction,
+            modifier = Modifier
+                .padding(start = 10.dp)
+        )
+    }
+}
+//=======
 fun RecipeScreen(){
 
 }
+//>>>>>>> nico

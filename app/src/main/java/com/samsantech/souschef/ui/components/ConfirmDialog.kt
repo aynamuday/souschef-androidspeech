@@ -34,12 +34,15 @@ fun ConfirmDialog(
     subMessage: String? = null,
     buttonOkayName: String,
     onClickCancel: () -> Unit,
-    onClickOkay: () -> Unit
+    onClickOkay: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)),
+            .background(Color.Black.copy(alpha = 0.5f))
+            .pointerInput(Unit) {
+                detectTapGestures()
+            },
         contentAlignment = Alignment.Center,
     ){
         Column(
@@ -71,16 +74,16 @@ fun ConfirmDialog(
                 ColoredButton(
                     onClick = onClickCancel,
                     text = "Cancel",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    containerColor = Color.White,
+                    contentColor = Green,
+                    border = BorderStroke(1.dp, Green)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 ColoredButton(
                     onClick = onClickOkay,
                     text = buttonOkayName,
-                    modifier = Modifier.weight(1f),
-                    containerColor = Color.White,
-                    contentColor = Green,
-                    border = BorderStroke(1.dp, Green)
+                    modifier = Modifier.weight(1f)
                 )
             }
         }

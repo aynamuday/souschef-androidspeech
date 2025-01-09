@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.client.sdk)
     implementation(libs.androidx.paging.compose.android)     // this
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -95,7 +96,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-functions:20.0.")
+    implementation("com.google.firebase:firebase-functions:20.0")
 
 //    implementation("com.algolia:algoliasearch-client-kotlin:3.12.1")
 //    implementation("io.ktor:ktor-client-android:3.0.3")

@@ -68,7 +68,7 @@ fun CreateRecipeScreenTwo(
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .padding(start = 24.dp, end = 24.dp)
+                    .padding(start = 24.dp, end = 24.dp, top = 10.dp)
                     .fillMaxWidth()
                     .defaultMinSize(Dp.Unspecified, maxHeight)
                     .verticalScroll(rememberScrollState())

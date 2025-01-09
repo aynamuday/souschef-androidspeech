@@ -1,9 +1,14 @@
 package com.samsantech.souschef.utils
 
-fun getCookTimePhrase(cookTimeHr: String, cookTimeMin: String, prepTimeHr: String, prepTimeMin: String) {
-    var phrase = ""
-    if (cookTimeHr.toInt() > 0) {
+fun getRecipeTimeText(hr: String, min: String): String {
+    var text = ""
 
-        phrase += cookTimeHr
+    if (hr.trim() != "0") {
+        text = hr + "h"
     }
+    if (min.trim() != "0") {
+        text += " $min" + "m"
+    }
+
+    return text
 }

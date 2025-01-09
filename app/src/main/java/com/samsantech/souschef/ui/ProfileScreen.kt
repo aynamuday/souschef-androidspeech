@@ -11,7 +11,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,11 +30,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -50,27 +47,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import coil3.compose.AsyncImage
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.ColoredButton
-import com.samsantech.souschef.ui.components.ConfirmDialog
 import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.DisplayProfileImage
 import com.samsantech.souschef.ui.components.Header
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
+import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
+import com.samsantech.souschef.ui.components.ProfilePhoto
+import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
-import com.samsantech.souschef.utils.OwnRecipeAction
 import com.samsantech.souschef.utils.convertUriToBitmap
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -113,12 +108,6 @@ fun ProfileScreen(
     var recipeWithAction: Recipe? by remember {
         mutableStateOf(null)
     }
-    var showDeleteConfirmation by remember {
-        mutableStateOf(false)
-    }
-    var successDelete by remember {
-        mutableStateOf(false)
-    }
     var error:String? by remember {
         mutableStateOf(null)
     }
@@ -138,6 +127,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
+                    .padding(top = 16.dp)
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -145,21 +135,13 @@ fun ProfileScreen(
                 Box {
                     Box(
                         modifier = Modifier
-                            .clip(CircleShape)
                             .size(133.dp)
-                            .background(Color.LightGray)
+                            .background(Color.White)
+                            .clip(CircleShape)
                             .clickable { showProfileImage = true },
                         contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
-                            model = "${user?.photoUrl}",
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(130.dp)
-                                .background(Color.LightGray)
-                        )
+                        ProfilePhoto(uri = user?.photoUrl, size = 130.dp)
                     }
                     IconButton(
                         onClick = {
@@ -197,20 +179,24 @@ fun ProfileScreen(
                     )
                 }
                 user?.let {
-                    Text(
-                        text = it.username,
-                        fontStyle = FontStyle.Italic
-                    )
+                    Column(
+                        modifier = Modifier
+                            .offset(y = -(8.dp)),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = it.username,
+                            fontStyle = FontStyle.Italic,
+                        )
+                        Text(
+                            text = it.email,
+                        )
+                    }
                 }
-                user?.let {
-                    Text(
-                        text = it.email
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(5.dp))
 
                 ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -266,7 +252,7 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                ownRecipes.forEachIndexed { index, recipe ->
+                                ownRecipes.forEach { recipe ->
                                     val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
                                         Uri.parse("${recipe.photosUrl["portrait"]}")
                                     } else if (recipe.photosUrl["square"] != null) {
@@ -275,8 +261,22 @@ fun ProfileScreen(
                                         Uri.parse("${recipe.photosUrl["landscape"]}")
                                     }
 
-                                    Box(
+                                    RecipeCard(
+                                        photoUrl = photoUrl,
                                         modifier = Modifier
+//<<<<<<< master
+                                            .width((maxWidth / 3) - 10.dp),
+                                        onClick = {
+                                            recipesViewModel.displayRecipe.value = recipe
+                                            onNavigateToRecipe()
+                                        },
+                                        showKebabMenu = true,
+                                        onClickKebabMenu = {
+                                            showRecipeActionMenu = !showRecipeActionMenu
+                                            recipeWithAction = if (recipeWithAction == null) recipe else null
+                                        }
+                                    )
+//=======
                                             .zIndex(-1f)
                                             .height(180.dp)
                                             .width((maxWidth / 3) - 10.dp)
@@ -315,6 +315,7 @@ fun ProfileScreen(
                                                 }
                                         )
                                     }
+//>>>>>>> nico
                                 }
                             }
                         }
@@ -395,67 +396,17 @@ fun ProfileScreen(
         )
     }
 
-    if (showRecipeActionMenu) {
-        BottomActionMenuPopUp(
-            options = hashMapOf("Edit" to R.drawable.pencil_icon, "Delete" to R.drawable.delete_icon),
-            onClick = { key ->
-                if (key == "Delete") {
-                    showDeleteConfirmation = true
-                    showRecipeActionMenu = false
-                } else if (key == "Edit") {
-                    showRecipeActionMenu = false
-                    ownRecipesViewModel.action.value = OwnRecipeAction.EDIT
-                    ownRecipesViewModel.recipe.value = recipeWithAction!!
-                    ownRecipesViewModel.originalData.value = recipeWithAction!!
-                    onNavigateToCreateRecipeOne()
-                }
-            },
-            onOutsideClick = {
-                showRecipeActionMenu = false
-                recipeWithAction = null
-            }
-        )
-    }
-
-    if (showDeleteConfirmation) {
-        ConfirmDialog(
-            message = "Are you sure you want to delete this recipe?",
-            buttonOkayName = "Yes",
-            onClickCancel = {
-                showDeleteConfirmation = false
-                recipeWithAction = null
-            },
-            onClickOkay = {
-                showDeleteConfirmation = false
-
-                if (recipeWithAction != null) {
-                    loading = true
-
-                    ownRecipesViewModel.deleteRecipe(recipeWithAction!!.id!!, recipeWithAction!!.photosUrl) { isSuccess, err ->
-                        loading = false
-
-                        if (isSuccess) {
-                            successDelete = true
-                        } else {
-                            error = err
-                        }
-                    }
-
-                    recipeWithAction = null
-                }
-            }
-        )
-    }
-
-    if (successDelete) {
-        Dialog(
-            icon = "success",
-            message = "Recipe successfully deleted!",
-            onCloseClick = {
-                successDelete = false
-            }
-        )
-    }
+    OwnRecipeActionMenu(
+        showRecipeActionMenu = showRecipeActionMenu,
+        setShowRecipeActionMenu = { showRecipeActionMenu = it },
+        recipeWithAction = recipeWithAction,
+        setRecipeWithAction = { recipeWithAction = it },
+        ownRecipesViewModel = ownRecipesViewModel,
+        onNavigateToCreateRecipeOne = { onNavigateToCreateRecipeOne() },
+        setLoading = {
+            loading = it
+        }
+    )
 
     if (error != null) {
         Dialog(

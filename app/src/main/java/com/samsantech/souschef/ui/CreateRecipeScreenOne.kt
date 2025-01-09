@@ -11,10 +11,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,7 +66,6 @@ import com.samsantech.souschef.ui.components.OwnRecipeHeader
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.OwnRecipeAction
-import com.samsantech.souschef.utils.convertUriToBitmap
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 @SuppressLint("MutableCollectionMutableState")
@@ -79,7 +81,8 @@ fun CreateRecipeScreenOne(
 
     var categories by remember {
 //        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Dessert", "Drink"))
-        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Other Meat", "Seafood", "Rice", "Vegetables", "Fruits", "Dessert", "Drink", "Others"))
+        // Rice, Others, Other Meat
+        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Fruits", "Dessert", "Drink"))
     }
     val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
@@ -87,11 +90,11 @@ fun CreateRecipeScreenOne(
     var portrait by remember {
         mutableStateOf<Uri?>(null)
     }
-    var landscape by remember {
-        mutableStateOf<Uri?>(null)
-    }
+//    var landscape by remember {
+//        mutableStateOf<Uri?>(null)
+//    }
     var square by remember {
-        mutableStateOf<Uri?>(null)
+        mutableStateOf<Uri?>(recipe.photosUri["square"])
     }
 
     var showDifficultyDropdown by remember {
@@ -117,19 +120,19 @@ fun CreateRecipeScreenOne(
             ownRecipesViewModel.addPhoto("portrait", uri)
         }
     }
-    val pickImageLandscape = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) {
-            clearError("photos", errors) { newErrors ->
-                errors = newErrors
-            }
-
-            landscape = uri
-//            landscape = convertUriToBitmap(context, uri)
-            ownRecipesViewModel.addPhoto("landscape", uri)
-        }
-    }
+//    val pickImageLandscape = rememberLauncherForActivityResult(
+//        ActivityResultContracts.PickVisualMedia()
+//    ) { uri ->
+//        if (uri != null) {
+//            clearError("photos", errors) { newErrors ->
+//                errors = newErrors
+//            }
+//
+//            landscape = uri
+////            landscape = convertUriToBitmap(context, uri)
+//            ownRecipesViewModel.addPhoto("landscape", uri)
+//        }
+//    }
     val pickImageSquare = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -153,11 +156,9 @@ fun CreateRecipeScreenOne(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
-
                 // GALLERY
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    CreateImageContainer(
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    CreateRecipeImageContainer(
                         height = 200.dp,
                         width = 113.dp,
                         image  = if (action == OwnRecipeAction.EDIT)
@@ -167,7 +168,7 @@ fun CreateRecipeScreenOne(
                                     } else {
                                         null
                                     }
-                                else portrait,
+                                else recipe.photosUri["portrait"],
                         pickImage = pickImagePortrait,
                         onRemoveClick = {
                             portrait = null
@@ -175,43 +176,43 @@ fun CreateRecipeScreenOne(
                         }
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        CreateImageContainer(
-                            height = 113.dp,
-                            width = 200.dp,
-                            image  = if (action == OwnRecipeAction.EDIT)
-                                        if (landscape != null) landscape
-                                        else if (recipe.photosUrl["landscape"] != null) {
-                                            Uri.parse(recipe.photosUrl["landscape"].toString())
-                                        } else {
-                                            null
-                                        }
-                                    else landscape,
-                            pickImage = pickImageLandscape,
-                            onRemoveClick = {
-                                landscape = null
-                                ownRecipesViewModel.removePhoto("landscape")
+                    CreateRecipeImageContainer(
+                        height = 150.dp,
+                        width = 150.dp,
+                        image  = if (action == OwnRecipeAction.EDIT)
+                            if (square != null) square
+                            else if (recipe.photosUrl["square"] != null) {
+                                Uri.parse(recipe.photosUrl["square"].toString())
+                            } else {
+                                null
                             }
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        CreateImageContainer(
-                            height = 150.dp,
-                            width = 150.dp,
-                            image  = if (action == OwnRecipeAction.EDIT)
-                                        if (square != null) square
-                                        else if (recipe.photosUrl["square"] != null) {
-                                            Uri.parse(recipe.photosUrl["square"].toString())
-                                        } else {
-                                            null
-                                        }
-                                    else square,
-                            pickImage = pickImageSquare,
-                            onRemoveClick = {
-                                square = null
-                                ownRecipesViewModel.removePhoto("square")
-                            }
-                        )
-                    }
+                        else recipe.photosUri["square"],
+                        pickImage = pickImageSquare,
+                        onRemoveClick = {
+                            square = null
+                            ownRecipesViewModel.removePhoto("square")
+                        }
+                    )
+//                    Column {
+//                        CreateImageContainer(
+//                            height = 113.dp,
+//                            width = 200.dp,
+//                            image  = if (action == OwnRecipeAction.EDIT)
+//                                        if (landscape != null) landscape
+//                                        else if (recipe.photosUrl["landscape"] != null) {
+//                                            Uri.parse(recipe.photosUrl["landscape"].toString())
+//                                        } else {
+//                                            null
+//                                        }
+//                                    else landscape,
+//                            pickImage = pickImageLandscape,
+//                            onRemoveClick = {
+//                                landscape = null
+//                                ownRecipesViewModel.removePhoto("landscape")
+//                            }
+//                        )
+//                        Spacer(modifier = Modifier.height(16.dp))
+//                    }
                 }
                 if (errors["photos"] != null && errors["photos"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
@@ -267,12 +268,18 @@ fun CreateRecipeScreenOne(
                         clearError("prepTime", errors) { newErrors ->
                             errors = newErrors
                         }
+                        clearError("cookTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
 
                         ownRecipesViewModel.setPrepTimeHr(it)
                     },
                     min = recipe.prepTimeMin,
                     onMinChange = {
                         clearError("prepTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
+                        clearError("cookTime", errors) { newErrors ->
                             errors = newErrors
                         }
 
@@ -296,6 +303,9 @@ fun CreateRecipeScreenOne(
                     hr = recipe.cookTimeHr,
                     maxHr = 48,
                     onHrChange = {
+                        clearError("prepTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
                         clearError("cookTime", errors) { newErrors ->
                             errors = newErrors
                         }
@@ -304,6 +314,9 @@ fun CreateRecipeScreenOne(
                     },
                     min = recipe.cookTimeMin,
                     onMinChange = {
+                        clearError("prepTime", errors) { newErrors ->
+                            errors = newErrors
+                        }
                         clearError("cookTime", errors) { newErrors ->
                             errors = newErrors
                         }
@@ -356,7 +369,7 @@ fun CreateRecipeScreenOne(
                 Column {
                     Text(text = "Difficulty", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(10.dp))
-                    Box {
+                    Box(modifier = Modifier.clickable { showDifficultyDropdown = !showDifficultyDropdown }) {
                         Text(
                             text = if (recipe.difficulty != "") recipe.difficulty else "Select difficulty",
                             modifier = Modifier
@@ -371,7 +384,6 @@ fun CreateRecipeScreenOne(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .padding(end = 10.dp)
-                                .clickable { showDifficultyDropdown = !showDifficultyDropdown }
                         )
                     }
                     BoxWithConstraints(
@@ -478,7 +490,7 @@ fun CreateRecipeScreenOne(
                 }
 
                 // NEXT BUTTON
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 if (errors["general"] != null && errors["general"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
                     ErrorText(text = errors["general"]!!, textAlign = TextAlign.Center)
@@ -488,7 +500,8 @@ fun CreateRecipeScreenOne(
                     onClick = {
                         val newErrors = hashMapOf<String, String>()
 
-                        if (action != OwnRecipeAction.EDIT && (recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null && recipe.photosUri["square"] == null)) {
+                        // recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null &&
+                        if (action != OwnRecipeAction.EDIT && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null)) {
                             newErrors["photos"] = "At least one photo is required."
                         }
 
@@ -510,9 +523,9 @@ fun CreateRecipeScreenOne(
                             newErrors["mealTypes"] = "Select at least one meal type."
                         }
 
-                        if (recipe.categories.isEmpty()) {
-                            newErrors["categories"] = "Select at least one category."
-                        }
+//                        if (recipe.categories.isEmpty()) {
+//                            newErrors["categories"] = "Select at least one category."
+//                        }
 
                         if (newErrors.size != 0) {
                             newErrors["general"] = "Check your inputs for errors."
@@ -525,7 +538,7 @@ fun CreateRecipeScreenOne(
                     containerColor = Green,
                     contentColor = Color.White
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
 
@@ -546,14 +559,14 @@ fun CreateRecipeScreenOne(
 }
 
 @Composable
-fun CreateImageContainer(
+fun CreateRecipeImageContainer(
     height: Dp,
     width: Dp,
     image: Uri?,
     pickImage: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
     onRemoveClick: () -> Unit
 ) {
-    Box {
+    Box(modifier = Modifier.padding(top = 10.dp)) {
         Box(
             modifier = Modifier
                 .height(height)
@@ -630,6 +643,11 @@ fun CreateCategory(onCloseClick: () -> Unit, onAddCategory: (String) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(.5f))
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    onCloseClick()
+                }
+            }
     ) {
         Column(
             modifier = Modifier
@@ -804,7 +822,7 @@ fun NumberFieldWithPlusMinusButtons(
             modifier = Modifier.width(60.dp),
             placeholderAlign = TextAlign.Center,
             borderColor = Color.Gray,
-            padding = 8.dp
+            paddingValues = PaddingValues(8.dp)
         )
         Spacer(modifier = Modifier.width(5.dp))
         Icon(

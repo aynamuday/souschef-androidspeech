@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Yellow
@@ -31,7 +30,7 @@ import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 @Composable
 fun BottomNavigationBar(
-    systemNavigationBarHeight: Dp,
+//    systemNavigationBarHeight: Dp,
     name: String,
     onNavigateToHome: () -> Unit,
     onNavigateToCreateRecipe: () -> Unit,
@@ -55,7 +54,7 @@ fun BottomNavigationBar(
         BottomNavigation(
             backgroundColor = Green,
             modifier = modifier
-                .padding(bottom = systemNavigationBarHeight)
+//                .padding(bottom = systemNavigationBarHeight)
                 .height(60.dp)
                 .fillMaxWidth()
         ) {

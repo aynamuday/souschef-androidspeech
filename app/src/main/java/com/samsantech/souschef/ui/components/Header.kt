@@ -26,24 +26,24 @@ fun Header() {
         modifier = Modifier
             .background(Color(22, 166, 55, 255))
             .fillMaxWidth()
-            .height(110.dp)
-            .padding(16.dp),
+            .height(90.dp)
+            .padding(16.dp, bottom = 12.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = "SOUSCHEF",
-            fontSize = 28.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight(700),
             color = Color(255, 207, 81, 255)
         )
-        Icon(
-            imageVector = Icons.Filled.Menu,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier
-                .size(40.dp)
-        )
+//        Icon(
+//            imageVector = Icons.Filled.Menu,
+//            contentDescription = null,
+//            tint = Color.White,
+//            modifier = Modifier
+//                .size(40.dp)
+//        )
     }
-    Spacer(modifier = Modifier.height(16.dp))
+//    Spacer(modifier = Modifier.height(16.dp))
 }

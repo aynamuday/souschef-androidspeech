@@ -35,12 +35,14 @@ import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.viewmodel.AuthViewModel
+import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
+    ownRecipesViewModel: OwnRecipesViewModel,
     onNavigateToSignUp: () -> Unit,
     onNavigateToVerifyEmail: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
@@ -150,6 +152,7 @@ fun LoginScreen(
                                             onNavigateToSelectCuisines()
                                         }
                                     }
+                                    ownRecipesViewModel.getOwnRecipes()
                                 }
                             } else {
                                 loginError = err ?: "Unable to login"
