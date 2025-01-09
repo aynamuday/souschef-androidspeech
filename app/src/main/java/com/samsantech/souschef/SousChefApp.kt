@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -22,9 +21,9 @@ import com.samsantech.souschef.ui.HomeScreen
 import com.samsantech.souschef.ui.LoginScreen
 import com.samsantech.souschef.ui.OpeningScreen
 import com.samsantech.souschef.ui.ProfileScreen
-import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.ChangePasswordScreen
 import com.samsantech.souschef.ui.CreateRecipeScreenFour
+import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.SearchScreen
 import com.samsantech.souschef.ui.SelectCategoryScreen
 import com.samsantech.souschef.ui.SelectCuisinesScreen
@@ -38,6 +37,7 @@ import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.serialization.Serializable
 
@@ -50,7 +50,8 @@ fun SousChefApp(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
-    recipesViewModel: RecipesViewModel
+    recipesViewModel: RecipesViewModel,
+    searchRecipesViewModel: SearchRecipesViewModel
 ) {
     Box(
         modifier = Modifier.padding(bottom = systemNavigationBarHeight)
@@ -278,14 +279,13 @@ fun SousChefApp(
                 ) { paddingValues ->
                     SearchScreen(
                         paddingValues,
-                        recipesViewModel
+                        searchRecipesViewModel
                     )
                 }
             }
             composable<SelectCategory> {
                 SelectCategoryScreen()
             }
-//<<<<<<< master
             composable<Recipe> {
                 RecipeScreen(
                     activity,
@@ -297,21 +297,6 @@ fun SousChefApp(
                     onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
                 )
             }
-//=======
-            composable<RecipeBrowser> {
-                RecipeBrowserScreen()
-            }
-//            composable<Recipe> {
-//                RecipeScreen(
-//                    activity,
-//                    context,
-//                    recipesViewModel,
-//                ) { navController.popBackStack() }
-//            }
-//            composable<Recipe> {
-//                RecipeScreen()
-//            }
-//>>>>>>> nico
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
                     context,

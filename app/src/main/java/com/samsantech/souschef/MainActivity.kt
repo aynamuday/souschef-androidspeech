@@ -20,6 +20,7 @@ import com.samsantech.souschef.ui.theme.SousChefTheme
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
@@ -57,6 +58,7 @@ class MainActivity : ComponentActivity() {
                 val userViewModel = UserViewModel(firebaseAuthManager, firebaseUserManager)
                 val ownRecipesViewModel = OwnRecipesViewModel(userViewModel, firebaseRecipeManager)
                 val recipesViewModel = RecipesViewModel(firebaseRecipeManager)
+                val searchRecipesViewModel = SearchRecipesViewModel()
 
                 SousChefApp(
                     systemNavigationBarHeight,
@@ -66,7 +68,8 @@ class MainActivity : ComponentActivity() {
                     authViewModel,
                     userViewModel,
                     ownRecipesViewModel,
-                    recipesViewModel
+                    recipesViewModel,
+                    searchRecipesViewModel
                 )
             }
         }
