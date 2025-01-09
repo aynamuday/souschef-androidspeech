@@ -298,9 +298,9 @@ fun SousChefApp(
                 )
             }
 //=======
-            composable<RecipeBrowser> {
-                RecipeBrowserScreen()
-            }
+//            composable<RecipeBrowser> {
+//                RecipeBrowserScreen()
+//            }
 //            composable<Recipe> {
 //                RecipeScreen(
 //                    activity,

@@ -30,9 +30,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -47,12 +49,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.ColoredButton
@@ -277,44 +281,44 @@ fun ProfileScreen(
                                         }
                                     )
 //=======
-                                            .zIndex(-1f)
-                                            .height(180.dp)
-                                            .width((maxWidth / 3) - 10.dp)
-                                            .background(Color.White)
-                                            .border(
-                                                if (photoUrl != null) 0.dp else 1.dp,
-                                                if (photoUrl != null) Color.Transparent else Color.Gray,
-                                                RoundedCornerShape(5.dp)
-                                            )
-                                            .clickable {
+//                                            .zIndex(-1f)
+//                                            .height(180.dp)
+//                                            .width((maxWidth / 3) - 10.dp)
+//                                            .background(Color.White)
+//                                            .border(
+//                                                if (photoUrl != null) 0.dp else 1.dp,
+//                                                if (photoUrl != null) Color.Transparent else Color.Gray,
+//                                                RoundedCornerShape(5.dp)
+//                                            )
+//                                            .clickable {
                                                 //recipesViewModel.displayRecipe.value = recipe
                                                 //onNavigateToRecipe()
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        AsyncImage(
-                                            model = "$photoUrl",
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .clip(RoundedCornerShape(5.dp))
-                                        )
-                                        Icon(
-                                            imageVector = Icons.Filled.MoreVert,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .offset(5.dp, 3.dp)
-                                                .clip(RoundedCornerShape(100))
-                                                .clickable {
-                                                    showRecipeActionMenu = !showRecipeActionMenu
-                                                    recipeWithAction =
-                                                        if (recipeWithAction == null) recipe else null
-                                                }
-                                        )
-                                    }
+//                                            },
+//                                        contentAlignment = Alignment.Center
+//                                    ) {
+//                                        AsyncImage(
+//                                            model = "$photoUrl",
+//                                            contentDescription = null,
+//                                            contentScale = ContentScale.Crop,
+//                                            modifier = Modifier
+//                                                .fillMaxSize()
+//                                                .clip(RoundedCornerShape(5.dp))
+//                                        )
+//                                        Icon(
+//                                            imageVector = Icons.Filled.MoreVert,
+//                                            contentDescription = null,
+//                                            tint = Color.White,
+//                                            modifier = Modifier
+//                                                .align(Alignment.TopEnd)
+//                                                .offset(5.dp, 3.dp)
+//                                                .clip(RoundedCornerShape(100))
+//                                                .clickable {
+//                                                    showRecipeActionMenu = !showRecipeActionMenu
+//                                                    recipeWithAction =
+//                                                        if (recipeWithAction == null) recipe else null
+//                                                }
+//                                        )
+//                                    }
 //>>>>>>> nico
                                 }
                             }

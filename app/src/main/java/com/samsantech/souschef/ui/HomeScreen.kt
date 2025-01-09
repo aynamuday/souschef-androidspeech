@@ -51,7 +51,7 @@ import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel, userViewModel: UserViewModel) {
-    val recipes by viewModel.displayRecipe.collectAsState()
+    val recipes by viewModel.displayAllRecipe.collectAsState()
     val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
 
     Box(

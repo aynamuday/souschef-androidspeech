@@ -26,9 +26,13 @@ import com.algolia.search.model.filter.Filter
 import com.samsantech.souschef.data.Recipe
 //<<<<<<< master
 import com.samsantech.souschef.data.SearchRecipe
+import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class RecipesViewModel: ViewModel() {
+class RecipesViewModel(
+    private val firebaseRecipeManager: FirebaseRecipeManager
+) : ViewModel() {
+    val displayAllRecipe = MutableStateFlow<List<Recipe>>(emptyList())
     val displayRecipe = MutableStateFlow(Recipe())
     private var category: String = ""
     private val categoriesId = FilterGroupID("categoriesId", FilterOperator.Or)
@@ -83,6 +87,8 @@ class RecipesViewModel: ViewModel() {
                 )
             )
         }
+
+        refreshRecipes()
     }
 
     override fun onCleared() {
@@ -108,6 +114,12 @@ class RecipesViewModel: ViewModel() {
 
         searchBoxState.setText(" ")
         loadingState.setIsLoading(true)
+    }
+
+    fun refreshRecipes() {
+        firebaseRecipeManager.getAllRecipes { recipes ->
+            displayAllRecipe.value = recipes
+        }
     }
 }
 //=======
