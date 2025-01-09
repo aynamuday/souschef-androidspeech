@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                 val authViewModel = AuthViewModel(firebaseAuthManager)
                 val userViewModel = UserViewModel(firebaseAuthManager, firebaseUserManager)
                 val ownRecipesViewModel = OwnRecipesViewModel(userViewModel, firebaseRecipeManager)
-                val recipesViewModel = RecipesViewModel()
+                val recipesViewModel = RecipesViewModel(firebaseRecipeManager)
 
                 SousChefApp(
                     systemNavigationBarHeight,

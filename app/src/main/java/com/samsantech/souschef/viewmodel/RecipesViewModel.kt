@@ -24,6 +24,7 @@ import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
 import com.samsantech.souschef.data.Recipe
+//<<<<<<< master
 import com.samsantech.souschef.data.SearchRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -109,3 +110,24 @@ class RecipesViewModel: ViewModel() {
         loadingState.setIsLoading(true)
     }
 }
+//=======
+//import com.samsantech.souschef.firebase.FirebaseRecipeManager
+//import kotlinx.coroutines.flow.MutableStateFlow
+
+//class RecipesViewModel(
+//    private val firebaseRecipeManager: FirebaseRecipeManager
+//) {
+//    val displayRecipe = MutableStateFlow<List<Recipe>>(emptyList())
+
+//    init {
+//        refreshRecipes()
+//    }
+
+//    fun refreshRecipes() {
+//        firebaseRecipeManager.getAllRecipes { recipes ->
+//            displayRecipe.value = recipes
+//        }
+//    }
+
+//}
+//>>>>>>> nico

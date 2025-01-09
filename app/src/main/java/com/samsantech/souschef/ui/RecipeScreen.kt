@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +50,7 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+//<<<<<<< master
 import androidx.compose.ui.text.style.TextAlign
 import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.KebabMenu
@@ -290,8 +292,23 @@ fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
         )
     }
 }
+//=======
+//import androidx.compose.foundation.text.BasicTextField
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.Menu
+//import kotlinx.coroutines.delay
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.text.TextStyle
+//import androidx.compose.ui.viewinterop.AndroidView
+//import androidx.compose.ui.zIndex
+//import androidx.navigation.NavController
+//import com.samsantech.souschef.ui.components.FormOutlinedTextField
 
+//>>>>>>> nico
+
+//val sharedViewModel = SharedViewModel()
 @Composable
+//<<<<<<< master
 fun RecipeIngredients(ingredients: List<String>) {
     Column {
         Text(
@@ -471,3 +488,8 @@ fun RecipeInstructionsItem(index: Int, instruction: String) {
         )
     }
 }
+//=======
+fun RecipeScreen(){
+
+}
+//>>>>>>> nico

@@ -166,4 +166,35 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                 isExists(!it.isEmpty)
             }
     }
+
+    fun addFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
+        val user = auth.currentUser
+        if (user != null) {
+            val userDocRef = db.collection("users").document(user.uid)
+
+            userDocRef.get().addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val currentFavorites = document.get("favoriteRecipes") as? List<String> ?: listOf()
+                    val updatedFavorites = if (isAdd) {
+                        currentFavorites + recipeId  // Add recipeId to the list
+                    } else {
+                        currentFavorites - recipeId  // Remove recipeId from the list
+                    }
+
+                    userDocRef.update("favoriteRecipes", updatedFavorites)
+                        .addOnSuccessListener {
+                            callback(true)
+                        }
+                        .addOnFailureListener {
+                            callback(false)
+                        }
+                } else {
+                    callback(false)
+                }
+            }
+        } else {
+            callback(false)
+        }
+    }
+
 }

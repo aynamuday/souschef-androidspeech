@@ -6,5 +6,6 @@ data class User(
     var username: String = "",
     var email: String = "",
     var photoUrl: String? = null,
-    var password: String = ""
+    var password: String = "",
+    var favoriteRecipes: List<String> = listOf()
 )

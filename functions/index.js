@@ -1,17 +1,11 @@
 const functions = require("firebase-functions");
-const nodemailer = require("nodemailer");
 const admin = require("firebase-admin");
+const sgMail = require("@sendgrid/mail");
 
 admin.initializeApp();
 
-// Configure email transport using Gmail
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "souschef.samsantech@gmail.com",
-    pass: "Pass12**12345678",
-  },
-});
+// Set your SendGrid API Key
+sgMail.setApiKey("lLXIV3N5SJSSutIIafXDRw");
 
 // Send OTP email function
 exports.sendOtpEmail = functions.https.onCall(async (data, context) => {
@@ -20,17 +14,19 @@ exports.sendOtpEmail = functions.https.onCall(async (data, context) => {
 
   console.log(`Sending OTP ${otp} to ${email}`);
 
-  // Send OTP to the provided email address
-  const mailOptions = {
-    from: "souschef.samsantech@gmail.com",
+  // Email content
+  const msg = {
     to: email,
+    from: "nicoampoloquio2003@gmail.com",
     subject: "Your OTP Code",
     text: `Your OTP code is: ${otp}`,
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    // Save the OTP to Firestore or another secure storage for validation
+    // Send OTP email
+    await sgMail.send(msg);
+
+    // Save the OTP to Firestore for later validation
     await admin.firestore().collection("otpRequests").add({
       email: email,
       otp: otp,
@@ -39,6 +35,7 @@ exports.sendOtpEmail = functions.https.onCall(async (data, context) => {
 
     return {success: true, message: "OTP sent to email."};
   } catch (error) {
+    console.error("Error sending email:", error);
     return {success: false, message: error.message};
   }
 });
@@ -48,23 +45,29 @@ exports.verifyOtp = functions.https.onCall(async (data, context) => {
   const email = data.email;
   const otpEntered = data.otp;
 
-  // Check OTP from Firestore
-  const otpDoc = await admin.firestore().collection("otpRequests")
-      .where("email", "==", email)
-      .orderBy("timestamp", "desc")
-      .limit(1)
-      .get();
+  try {
+    // Check OTP from Firestore
+    const otpDoc = await admin.firestore()
+        .collection("otpRequests")
+        .where("email", "==", email)
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .get();
 
-  if (otpDoc.empty) {
-    return {success: false, message: "OTP not found or expired."};
-  }
+    if (otpDoc.empty) {
+      return {success: false, message: "OTP not found or expired."};
+    }
 
-  const otpData = otpDoc.docs[0].data();
-  const otpStored = otpData.otp;
+    const otpData = otpDoc.docs[0].data();
+    const otpStored = otpData.otp;
 
-  if (otpEntered === otpStored) {
-    return {success: true, message: "OTP verified successfully."};
-  } else {
-    return {success: false, message: "Incorrect OTP."};
+    if (parseInt(otpEntered) === otpStored) {
+      return {success: true, message: "OTP verified successfully."};
+    } else {
+      return {success: false, message: "Incorrect OTP."};
+    }
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return {success: false, message: error.message};
   }
 });

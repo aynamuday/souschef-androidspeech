@@ -264,6 +264,7 @@ fun ProfileScreen(
                                     RecipeCard(
                                         photoUrl = photoUrl,
                                         modifier = Modifier
+//<<<<<<< master
                                             .width((maxWidth / 3) - 10.dp),
                                         onClick = {
                                             recipesViewModel.displayRecipe.value = recipe
@@ -275,6 +276,46 @@ fun ProfileScreen(
                                             recipeWithAction = if (recipeWithAction == null) recipe else null
                                         }
                                     )
+//=======
+                                            .zIndex(-1f)
+                                            .height(180.dp)
+                                            .width((maxWidth / 3) - 10.dp)
+                                            .background(Color.White)
+                                            .border(
+                                                if (photoUrl != null) 0.dp else 1.dp,
+                                                if (photoUrl != null) Color.Transparent else Color.Gray,
+                                                RoundedCornerShape(5.dp)
+                                            )
+                                            .clickable {
+                                                //recipesViewModel.displayRecipe.value = recipe
+                                                //onNavigateToRecipe()
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        AsyncImage(
+                                            model = "$photoUrl",
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clip(RoundedCornerShape(5.dp))
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Filled.MoreVert,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .offset(5.dp, 3.dp)
+                                                .clip(RoundedCornerShape(100))
+                                                .clickable {
+                                                    showRecipeActionMenu = !showRecipeActionMenu
+                                                    recipeWithAction =
+                                                        if (recipeWithAction == null) recipe else null
+                                                }
+                                        )
+                                    }
+//>>>>>>> nico
                                 }
                             }
                         }

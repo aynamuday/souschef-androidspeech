@@ -220,4 +220,43 @@ class FirebaseRecipeManager(
             }
         }
     }
+
+    fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
+        db.collection("recipes")
+            .get()
+            .addOnSuccessListener { documents ->
+                val recipesList = mutableListOf<Recipe>()
+
+                documents.forEach { document ->
+                    val data = document.data
+                    recipesList.add(
+                        Recipe(
+                            id = document.id,
+                            userId = data["userId"].toString(),
+                            userName = data["userName"].toString(),
+                            userPhotoUrl = data["userPhotoUrl"].toString(),
+                            photosUrl = data["photosUrl"] as? HashMap<String, Uri> ?: hashMapOf(),
+                            title = data["title"].toString(),
+                            description = data["description"].toString(),
+                            cookTimeHr = data["cookTimeHr"].toString(),
+                            cookTimeMin = data["cookTimeMin"].toString(),
+                            prepTimeHr = data["prepTimeHr"].toString(),
+                            prepTimeMin = data["prepTimeMin"].toString(),
+                            serving = data["serving"].toString(),
+                            difficulty = data["difficulty"].toString(),
+                            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
+                            categories = data["categories"] as? List<String> ?: listOf(),
+                            ingredients = data["ingredients"] as? List<String> ?: listOf(),
+                            instructions = data["instructions"] as? List<String> ?: listOf(),
+                            tags = data["tags"] as? List<String> ?: listOf()
+                        )
+                    )
+                }
+
+                recipes(recipesList)
+            }
+            .addOnFailureListener {
+                println(it)
+            }
+    }
 }
