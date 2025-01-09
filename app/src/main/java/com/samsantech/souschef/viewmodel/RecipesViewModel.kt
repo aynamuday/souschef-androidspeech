@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class RecipesViewModel (
     private val firebaseRecipeManager: FirebaseRecipeManager
 ) {
+    val favoriteRecipes: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
     val allRecipes = MutableStateFlow<List<Recipe>>(emptyList())
     val displayRecipe = MutableStateFlow(Recipe())
 
@@ -25,4 +26,24 @@ class RecipesViewModel (
             callback(isSuccess, error, recipe)
         }
     }
+
+    fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
+        val updatedFavorites = if (isAdd) {
+            favoriteRecipes.value + recipeId
+        } else {
+            favoriteRecipes.value - recipeId
+        }
+
+        favoriteRecipes.value = updatedFavorites
+
+        firebaseRecipeManager.addFavoriteRecipe(recipeId.toString(), isAdd) { isSuccess ->
+            callback(isSuccess)
+        }
+    }
+//    fun loadFavoriteRecipes() {
+//        firebaseUserManager.getFavoriteRecipes { recipes ->
+//            favoriteRecipes.value = recipes.toSet()  // Convert to Set
+//
+//        }
+//    }
 }
