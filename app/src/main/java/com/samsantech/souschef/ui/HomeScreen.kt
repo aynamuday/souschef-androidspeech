@@ -22,14 +22,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,9 +53,10 @@ import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
-fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel, userViewModel: UserViewModel) {
+fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel, recipesViewModel: RecipesViewModel) {
     val recipes by viewModel.displayAllRecipe.collectAsState()
-    val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
+    //val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
+    val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
     Box(
         modifier = Modifier
@@ -110,28 +114,28 @@ fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewM
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            RecipeFeed(navController, recipes, userViewModel, favoriteRecipes)
+            RecipeFeed(navController, recipes, recipesViewModel, favoriteRecipes)
         }
     }
 }
 
 @Composable
-fun RecipeFeed(navController: NavController, recipes: List<Recipe>, userViewModel: UserViewModel, favoriteRecipes: Set<Int>) {
+fun RecipeFeed(navController: NavController, recipes: List<Recipe>, recipesViewModel: RecipesViewModel, favoriteRecipes: Set<String>) {
     // Horizontal scrolling layout using LazyRow
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(recipes) { recipe ->
-            RecipeCard(recipe = recipe, navController = navController, userViewModel = userViewModel, favoriteRecipes = favoriteRecipes)
+            RecipeCard(recipe = recipe, navController = navController, recipesViewModel = recipesViewModel, favoriteRecipes = favoriteRecipes)
         }
     }
 }
 
 
 @Composable
-fun RecipeCard(recipe: Recipe, navController: NavController, userViewModel: UserViewModel, favoriteRecipes: Set<Int>) {
-    var isFavorite by remember { mutableStateOf(false) }
+fun RecipeCard(recipe: Recipe, navController: NavController, recipesViewModel: RecipesViewModel, favoriteRecipes: Set<String>) {
+    val isFavorite = recipe.id in favoriteRecipes
     var rating by remember { mutableStateOf(0) }
 
     // Determine the photo URL based on available keys
@@ -226,18 +230,14 @@ fun RecipeCard(recipe: Recipe, navController: NavController, userViewModel: User
                     }
                 }
                 Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                    imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                     contentDescription = "Bookmark",
-                    tint = if (isFavorite) Color.Red else Color.Gray,
+                    tint = if (isFavorite) Color.Yellow else Color.Gray,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
-                            // Check if recipe.id is not null before passing it to the function
-                            val id = recipe.id ?: return@clickable // Exit if id is null
-                            userViewModel.toggleFavoriteRecipe(id, !isFavorite) { isSuccess ->
-                                if (isSuccess) {
-                                    isFavorite = !isFavorite
-                                }
+                            recipe.id?.let { id ->
+                                recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {}
                             }
                         }
                 )
