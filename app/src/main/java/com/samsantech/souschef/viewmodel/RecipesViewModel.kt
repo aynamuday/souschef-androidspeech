@@ -36,7 +36,7 @@ class RecipesViewModel (
 
         favoriteRecipes.value = updatedFavorites
 
-        firebaseRecipeManager.addFavoriteRecipe(recipeId.toString(), isAdd) { isSuccess ->
+        firebaseRecipeManager.addFavoriteRecipe(recipeId, isAdd) { isSuccess ->
             callback(isSuccess)
         }
     }

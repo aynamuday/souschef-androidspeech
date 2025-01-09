@@ -31,6 +31,7 @@ import com.samsantech.souschef.ui.SelectDislikesScreen
 import com.samsantech.souschef.ui.SelectSkillLevelScreen
 import com.samsantech.souschef.ui.SignUpOrLoginScreen
 import com.samsantech.souschef.ui.SignUpScreen
+import com.samsantech.souschef.ui.TiktokVideosScreen
 import com.samsantech.souschef.ui.UpdateEmailScreen
 import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
@@ -216,7 +217,7 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    HomeScreen(navController, paddingValues, recipesViewModel, recipesViewModel)
+                    HomeScreen(navController, paddingValues, recipesViewModel)
                 }
             }
             composable<Profile> {
@@ -279,7 +280,11 @@ fun SousChefApp(
                 ) { paddingValues ->
                     SearchScreen(
                         paddingValues,
-                        searchRecipesViewModel
+                        searchRecipesViewModel,
+                        recipesViewModel,
+                        onNavigateToRecipe = {
+                            navController.navigate(route = Recipe)
+                        }
                     )
                 }
             }
@@ -374,12 +379,20 @@ fun SousChefApp(
                     }
                 )
             }
-//            composable<TiktokVideos> {
-//                TiktokVideosScreen()
-//            }
+
+
+
+
+
+            composable<TiktokVideos> {
+                TiktokVideosScreen()
+            }
         }
     }
 }
+
+@Serializable
+object TiktokVideos
 
 @Serializable
 object Opening
