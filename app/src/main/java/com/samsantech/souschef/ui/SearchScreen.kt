@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -41,19 +42,20 @@ import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.components.SearchBox
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
-import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 
 @Composable
 //<<<<<<< master
 fun SearchScreen(
     paddingValues: PaddingValues,
-    recipesViewModel: RecipesViewModel
+    searchRecipesViewModel: SearchRecipesViewModel
 ) {
-    val searchBoxState = recipesViewModel.searchBoxState
-    val paginator = recipesViewModel.hitsPaginator
+    val searchBoxState = searchRecipesViewModel.searchBoxState
+    val paginator = searchRecipesViewModel.hitsPaginator
     val pagingHits = paginator.flow.collectAsLazyPagingItems()
     val gridState = rememberLazyGridState()
-    val loadingState = recipesViewModel.loadingState
+    val categoriesRowState = rememberLazyListState()
+    val loadingState = searchRecipesViewModel.loadingState
 
     var search by remember {
         mutableStateOf("")
@@ -87,7 +89,7 @@ fun SearchScreen(
                         .clickable {
                             search = ""
                             hasSearched = false
-                            recipesViewModel.cancelSearch()
+                            searchRecipesViewModel.cancelSearch()
                         }
                 )
             }
@@ -158,13 +160,16 @@ fun SearchScreen(
                     fontSize = 20.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    state = categoriesRowState
+                ) {
                     items(categories.entries.toList()) {
                         SearchCategoryCard(
                             title = it.key,
                             drawable = it.value,
                             onClick = {
-                                recipesViewModel.searchCategory(it.key)
+                                searchRecipesViewModel.searchCategory(it.key)
                                 hasSearched = true
                                 search = it.key
                             }

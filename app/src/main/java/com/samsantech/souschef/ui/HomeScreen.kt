@@ -47,13 +47,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
-fun HomeScreen(navController: NavController, paddingValues: PaddingValues, viewModel: RecipesViewModel, recipesViewModel: RecipesViewModel) {
+fun HomeScreen(
+    navController: NavController, 
+    paddingValues: PaddingValues, 
+    viewModel: RecipesViewModel, 
+    recipesViewModel: RecipesViewModel
+) {
     val recipes by viewModel.displayAllRecipe.collectAsState()
     //val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()

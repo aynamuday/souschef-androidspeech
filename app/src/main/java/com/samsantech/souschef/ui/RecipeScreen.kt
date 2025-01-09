@@ -9,7 +9,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,8 +48,6 @@ import coil3.compose.AsyncImage
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
-import com.samsantech.souschef.viewmodel.RecipesViewModel
-//<<<<<<< master
 import androidx.compose.ui.text.style.TextAlign
 import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.KebabMenu
@@ -59,6 +56,7 @@ import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.utils.getRecipeTimeText
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
+import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 //val sharedViewModel = SharedViewModel()
