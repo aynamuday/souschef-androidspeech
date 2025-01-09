@@ -22,5 +22,6 @@ data class Recipe(
     var ingredients: List<String> = listOf(""),
     var instructions: List<String> = listOf(""),
     var tags: List<String> = listOf(),
-    var audience: String = "Public"
+    var audience: String = "Public",
+    var favoriteRecipes: List<String> = listOf()
 )

@@ -216,7 +216,7 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    HomeScreen(navController, paddingValues, recipesViewModel, userViewModel)
+                    HomeScreen(navController, paddingValues, recipesViewModel, recipesViewModel)
                 }
             }
             composable<Profile> {
@@ -297,6 +297,21 @@ fun SousChefApp(
                     onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
                 )
             }
+
+//            composable<RecipeBrowser> {
+//                RecipeBrowserScreen()
+//            }
+//            composable<Recipe> {
+//                RecipeScreen(
+//                    activity,
+//                    context,
+//                    recipesViewModel,
+//                ) { navController.popBackStack() }
+//            }
+//            composable<Recipe> {
+//                RecipeScreen()
+//            }
+
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
                     context,

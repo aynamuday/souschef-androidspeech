@@ -11,7 +11,7 @@ class UserViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
     private val firebaseUserManager: FirebaseUserManager
 ) {
-    val favoriteRecipes: MutableStateFlow<Set<Int>> = MutableStateFlow(emptySet())
+    val favoriteRecipes: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
     val user = MutableStateFlow<User?>(User())
     val signUpPreferences = MutableStateFlow<UserPreferences>(UserPreferences())
     val otherCuisine = MutableStateFlow<String>("")
@@ -138,20 +138,24 @@ class UserViewModel(
         signUpPreferences.value = signUpPreferences.value.copy(skillLevel = "")
     }
 
-    fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
-        // Update the favorite recipe set
-        val updatedFavorites = if (isAdd) {
-            favoriteRecipes.value + recipeId // Add the recipe to favorites
-        } else {
-            favoriteRecipes.value - recipeId // Remove the recipe from favorites
-        }
+//    fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
+//        val updatedFavorites = if (isAdd) {
+//            favoriteRecipes.value + recipeId
+//        } else {
+//            favoriteRecipes.value - recipeId
+//        }
+//
+//        favoriteRecipes.value = updatedFavorites
+//
+//        firebaseUserManager.addFavoriteRecipe(recipeId.toString(), isAdd) { isSuccess ->
+//            callback(isSuccess)
+//        }
+//    }
 
-        favoriteRecipes.value = updatedFavorites as Set<Int> // Update the state flow
-
-        // Now update the user's favorites in the backend (Firebase)
-        firebaseUserManager.addFavoriteRecipe(recipeId.toString(), isAdd) { isSuccess ->
-            callback(isSuccess)
-        }
-    }
-
+//    fun loadFavoriteRecipes() {
+//        firebaseUserManager.getFavoriteRecipes { recipes ->
+//            favoriteRecipes.value = recipes.toSet()  // Convert to Set
+//
+//        }
+//    }
 }
