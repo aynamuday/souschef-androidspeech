@@ -19,4 +19,10 @@ class RecipesViewModel (
             allRecipes.value = recipes
         }
     }
+
+    fun getRecipe(id: String, callback: (Boolean, String?, Recipe?) -> Unit) {
+        firebaseRecipeManager.getRecipe(id) { isSuccess, error, recipe ->
+            callback(isSuccess, error, recipe)
+        }
+    }
 }

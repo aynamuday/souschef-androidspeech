@@ -12,6 +12,42 @@ class FirebaseRecipeManager(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
+    fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
+        db.collection("recipes")
+            .get()
+            .addOnSuccessListener { documents ->
+                val recipesList = mutableListOf<Recipe>()
+
+                documents.forEach { document ->
+                    val data = document.data
+                    recipesList.add(
+                        convertDocumentDataToRecipe(document.id, data)
+                    )
+                }
+
+                recipes(recipesList)
+            }
+            .addOnFailureListener {
+                println(it)
+            }
+    }
+
+    fun getRecipe(id: String, callback: (Boolean, String?, Recipe?) -> Unit) {
+        db.collection("recipes").document(id)
+            .get()
+            .addOnSuccessListener { document ->
+                val data = document.data
+                if (data != null) {
+                    callback(true, null, convertDocumentDataToRecipe(document.id, data))
+                } else {
+                    callback(false, "Recipe document is null.", null)
+                }
+            }
+            .addOnFailureListener {
+                callback(false, getErrorMessage(it), null)
+            }
+    }
+
     fun getOwnRecipes(recipes: (List<Recipe>) -> Unit) {
         val currentUser = auth.currentUser
 
@@ -25,26 +61,9 @@ class FirebaseRecipeManager(
                     documents.forEach { document ->
                         val data = document.data
 
-                        recipesList.add(Recipe(
-                            id = document.id,
-                            userId = data["userId"].toString(),
-                            userName = data["userName"].toString(),
-                            userPhotoUrl = data["userPhotoUrl"].toString(),
-                            photosUrl = data["photosUrl"] as? HashMap<String, Uri> ?: hashMapOf(),
-                            title = data["title"].toString(),
-                            description = if (data["description"] != null) data["description"].toString() else "",
-                            prepTimeHr = data["prepTimeHr"].toString(),
-                            prepTimeMin = data["prepTimeMin"].toString(),
-                            cookTimeHr = data["cookTimeHr"].toString(),
-                            cookTimeMin = data["cookTimeMin"].toString(),
-                            serving = data["serving"].toString(),
-                            difficulty = data["difficulty"].toString(),
-                            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
-                            categories = data["categories"] as? List<String> ?: listOf(),
-                            ingredients = data["ingredients"] as? List<String> ?: listOf(),
-                            instructions = data["instructions"] as? List<String> ?: listOf(),
-                            tags = data["tags"] as? List<String> ?: listOf(),
-                        ))
+                        recipesList.add(
+                            convertDocumentDataToRecipe(document.id, data)
+                        )
                     }
 
                     recipes(recipesList)
@@ -221,42 +240,26 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
-        db.collection("recipes")
-            .get()
-            .addOnSuccessListener { documents ->
-                val recipesList = mutableListOf<Recipe>()
-
-                documents.forEach { document ->
-                    val data = document.data
-                    recipesList.add(
-                        Recipe(
-                            id = document.id,
-                            userId = data["userId"].toString(),
-                            userName = data["userName"].toString(),
-                            userPhotoUrl = data["userPhotoUrl"].toString(),
-                            photosUrl = data["photosUrl"] as? HashMap<String, Uri> ?: hashMapOf(),
-                            title = data["title"].toString(),
-                            description = data["description"].toString(),
-                            cookTimeHr = data["cookTimeHr"].toString(),
-                            cookTimeMin = data["cookTimeMin"].toString(),
-                            prepTimeHr = data["prepTimeHr"].toString(),
-                            prepTimeMin = data["prepTimeMin"].toString(),
-                            serving = data["serving"].toString(),
-                            difficulty = data["difficulty"].toString(),
-                            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
-                            categories = data["categories"] as? List<String> ?: listOf(),
-                            ingredients = data["ingredients"] as? List<String> ?: listOf(),
-                            instructions = data["instructions"] as? List<String> ?: listOf(),
-                            tags = data["tags"] as? List<String> ?: listOf()
-                        )
-                    )
-                }
-
-                recipes(recipesList)
-            }
-            .addOnFailureListener {
-                println(it)
-            }
+    private fun convertDocumentDataToRecipe(id: String, data: MutableMap<String, Any>): Recipe {
+        return Recipe(
+            id = id,
+            userId = data["userId"].toString(),
+            userName = data["userName"].toString(),
+            userPhotoUrl = data["userPhotoUrl"].toString(),
+            photosUrl = data["photosUrl"] as? HashMap<String, Uri> ?: hashMapOf(),
+            title = data["title"].toString(),
+            description = data["description"].toString(),
+            cookTimeHr = data["cookTimeHr"].toString(),
+            cookTimeMin = data["cookTimeMin"].toString(),
+            prepTimeHr = data["prepTimeHr"].toString(),
+            prepTimeMin = data["prepTimeMin"].toString(),
+            serving = data["serving"].toString(),
+            difficulty = data["difficulty"].toString(),
+            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
+            categories = data["categories"] as? List<String> ?: listOf(),
+            ingredients = data["ingredients"] as? List<String> ?: listOf(),
+            instructions = data["instructions"] as? List<String> ?: listOf(),
+            tags = data["tags"] as? List<String> ?: listOf()
+        )
     }
 }
