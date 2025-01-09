@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun UserNamePhoto(
+    modifier: Modifier = Modifier,
     photoUri: String?,
     userName: String?,
     photoSize: Dp = 40.dp,
@@ -23,12 +24,11 @@ fun UserNamePhoto(
     fontColor: Color = Color.Black,
     fontSize: TextUnit = 16.sp,
     spacer: Dp = 8.dp,
-    modifier: Modifier = Modifier
 ) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacer),
-        modifier = modifier
     ) {
         ProfilePhoto(
             uri = photoUri,
