@@ -154,9 +154,7 @@ class FirebaseRecipeManager(
         if (data.isNotEmpty()) {
             db.collection("recipes")
                 .document(document)
-                .update(
-                    data
-                )
+                .update(data)
                 .addOnSuccessListener {
                     callback(true, null)
                 }
@@ -259,7 +257,8 @@ class FirebaseRecipeManager(
             categories = data["categories"] as? List<String> ?: listOf(),
             ingredients = data["ingredients"] as? List<String> ?: listOf(),
             instructions = data["instructions"] as? List<String> ?: listOf(),
-            tags = data["tags"] as? List<String> ?: listOf()
+            tags = data["tags"] as? List<String> ?: listOf(),
+            audience = data["audience"].toString(),
         )
     }
 

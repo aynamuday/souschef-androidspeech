@@ -248,7 +248,7 @@ fun CreateRecipeScreenOne(
 //                    Text(text = "Description", fontWeight = FontWeight.Bold)
 //                    Spacer(modifier = Modifier.height(10.dp))
                     FormBasicTextField(
-                        value = recipe.description,
+                        value = if (recipe.description != "null") recipe.description else "",
                         onValueChange = {
                             ownRecipesViewModel.setDescription(it)
                         },

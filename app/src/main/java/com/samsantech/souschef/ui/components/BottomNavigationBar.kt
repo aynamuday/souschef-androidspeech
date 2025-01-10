@@ -35,7 +35,6 @@ fun BottomNavigationBar(
     onNavigateToHome: () -> Unit,
     onNavigateToCreateRecipe: () -> Unit,
     onNavigateToSearch: () -> Unit,
-    //onNavigateToTiktokVideos: () -> Unit,
     onNavigateToProfile: () -> Unit,
     ownRecipesViewModel: OwnRecipesViewModel,
     modifier: Modifier = Modifier
@@ -44,7 +43,6 @@ fun BottomNavigationBar(
         hashMapOf("name" to "Home", "imageVector" to Icons.Filled.Home),
         hashMapOf("name" to "Search", "imageVector" to Icons.Filled.Search),
         hashMapOf("name" to "Create recipe", "imageVector" to Icons.Filled.AddCircle),
-        //hashMapOf("name" to "Tiktok videos", "imageVector" to Icons.Filled.PlayArrow),
         hashMapOf("name" to "Profile", "imageVector" to Icons.Filled.Person),
     )
 
@@ -55,7 +53,7 @@ fun BottomNavigationBar(
             backgroundColor = Green,
             modifier = modifier
 //                .padding(bottom = systemNavigationBarHeight)
-                .height(60.dp)
+                .height(45.dp)
                 .fillMaxWidth()
         ) {
             bottomNavigationItems.forEach { item ->
@@ -70,7 +68,6 @@ fun BottomNavigationBar(
                                 ownRecipesViewModel.action.value = OwnRecipeAction.ADD
                             }
                             "Search" -> onNavigateToSearch()
-                            //"Tiktok videos" -> onNavigateToTiktokVideos()
                             "Profile" -> onNavigateToProfile()
                         }
                     },

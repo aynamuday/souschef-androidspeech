@@ -186,7 +186,7 @@ fun RecipeMetadata(recipe: Recipe) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = recipe.title,
-                fontSize = 28.sp,
+                fontSize = if (recipe.title.length < 13) 22.sp else 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Green,
                 modifier = Modifier
