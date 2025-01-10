@@ -82,7 +82,7 @@ fun CreateRecipeScreenOne(
     var categories by remember {
 //        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Dessert", "Drink"))
         // Rice, Others, Other Meat
-        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Fruits", "Dessert", "Drink"))
+        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink"))
     }
     val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
