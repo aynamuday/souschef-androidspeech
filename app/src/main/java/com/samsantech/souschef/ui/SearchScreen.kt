@@ -31,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,7 @@ import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.components.SearchBox
+import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -82,7 +84,7 @@ fun SearchScreen(
 
     Column(
         modifier = Modifier
-            .padding(start = 20.dp, end = 20.dp, top = 40.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 40.dp)
             .padding(paddingValues)
     ) {
         Row(
@@ -258,8 +260,8 @@ fun RecipesList(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier,
         state = lazyGridState
     ) {
@@ -268,8 +270,18 @@ fun RecipesList(
 
             val itemWidth = (maxWidth/2) - 8.dp
 
-            if (item.isTiktok == true) {
-                println(item)
+            if (item.isTikTok == true) {
+                val width = itemWidth.value.toInt()
+                Column(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
+                    TikTokWebView(postId = item.postId, width = width, height = (width/10)+width)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = item.title,
+                        fontWeight = FontWeight(500),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             } else {
                 SearchRecipeItem(
                     itemWidth = itemWidth,
