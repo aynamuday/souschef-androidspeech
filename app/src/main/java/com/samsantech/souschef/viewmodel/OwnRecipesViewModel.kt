@@ -47,7 +47,6 @@ class OwnRecipesViewModel(
 
     fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
         firebaseRecipeManager.updateRecipe(
-            recipe.value.id!!,
             data,
             recipe.value,
             updatedRecipe = {updatedRecipe ->

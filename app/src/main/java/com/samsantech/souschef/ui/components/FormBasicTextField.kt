@@ -65,8 +65,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
             modifier = modifier
                 .border(1.dp, borderColor, RoundedCornerShape(roundCorner))
                 .background(backgroundColor, RoundedCornerShape(roundCorner))
-                .padding(paddingValues)
-                .fillMaxWidth(),
+                .padding(paddingValues),
             decorationBox = { innerTextField ->
                 if (placeholder != null) {
                     if (value.isEmpty()) {

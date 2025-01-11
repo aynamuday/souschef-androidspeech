@@ -75,7 +75,8 @@ class SearchRecipesViewModel: ViewModel() {
             add(
                 audienceId,
                 setOf(
-                    Filter.Facet(Attribute("audience"), "Public")
+                    Filter.Facet(Attribute("audience"), "Public"),
+                    Filter.Facet(Attribute("isTikTok"), true)
                 )
             )
         }

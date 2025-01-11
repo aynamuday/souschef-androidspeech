@@ -235,6 +235,7 @@ fun CreateRecipeScreenOne(
                         },
                         placeholder = "What's the title of your recipe?",
                         borderColor = Color.Gray,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
                 if (errors["title"] != null && errors["title"] != "") {
@@ -254,7 +255,8 @@ fun CreateRecipeScreenOne(
                         },
                         minLines = 3,
                         placeholder = "Tell us something more about this recipe.",
-                        borderColor = Color.Gray
+                        borderColor = Color.Gray,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))

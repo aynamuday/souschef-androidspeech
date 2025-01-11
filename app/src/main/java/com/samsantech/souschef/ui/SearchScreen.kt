@@ -84,7 +84,7 @@ fun SearchScreen(
 
     Column(
         modifier = Modifier
-            .padding(start = 12.dp, end = 12.dp, top = 40.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 40.dp, bottom = 20.dp)
             .padding(paddingValues)
     ) {
         Row(
@@ -201,7 +201,8 @@ fun SearchScreen(
                                         error = "A problem occurred while getting the recipe information. Please try again later."
                                     }
                                 }
-                            }
+                            },
+                            type = "list"
                         )
                     }
                 }
@@ -253,13 +254,14 @@ fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
 @Composable
 fun RecipesList(
     modifier: Modifier = Modifier,
+    maxWidth: Dp,
     lazyPagingItems: LazyPagingItems<SearchRecipe>,
     lazyGridState: LazyGridState,
-    maxWidth: Dp,
-    onDisplayRecipe: (id: String) -> Unit
+    onDisplayRecipe: (id: String) -> Unit,
+    type: String = "grid" // or list
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(if (type == "grid") 2 else 1),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier,
@@ -268,12 +270,13 @@ fun RecipesList(
         items(lazyPagingItems.itemCount) { index ->
             val item = lazyPagingItems[index] ?: return@items
 
-            val itemWidth = (maxWidth/2) - 8.dp
-
             if (item.isTikTok == true) {
-                val width = itemWidth.value.toInt()
-                Column(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
-                    TikTokWebView(postId = item.postId, width = width, height = (width/10)+width)
+                val width = if (type == "grid") ((maxWidth/2) - 8.dp).value.toInt() else maxWidth.value.toInt()
+                val height = if (type == "grid") (width/10)+width else 400
+                Column {
+                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
+                        TikTokWebView(postId = item.postId, width = width, height = height)
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = item.title,
@@ -283,8 +286,11 @@ fun RecipesList(
                     )
                 }
             } else {
+                val width = if (type == "grid") ((maxWidth/2) - 8.dp) else maxWidth
+                val height = if (type == "grid") (width/10)+width else 300.dp
                 SearchRecipeItem(
-                    itemWidth = itemWidth,
+                    itemWidth = maxWidth,
+                    itemHeight = height,
                     item = item,
                     onDisplayRecipe = {
                         item.objectID?.let { onDisplayRecipe(it) }
@@ -299,6 +305,7 @@ fun RecipesList(
 @Composable
 fun SearchRecipeItem(
     itemWidth: Dp,
+    itemHeight: Dp,
     item: SearchRecipe,
     onDisplayRecipe: () -> Unit
 ) {
@@ -316,7 +323,7 @@ fun SearchRecipeItem(
             },
             modifier = Modifier
                 .width(itemWidth)
-                .height(itemWidth + itemWidth / 10)
+                .height(itemHeight)
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(

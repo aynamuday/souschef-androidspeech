@@ -61,7 +61,8 @@ fun SearchBox(
                     .clickable {
                         clearSearch()
                     },
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 

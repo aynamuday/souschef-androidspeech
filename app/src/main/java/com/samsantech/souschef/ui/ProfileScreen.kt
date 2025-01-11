@@ -287,7 +287,7 @@ fun ProfileScreen(
                         if (favoriteRecipes.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
-                                modifier = Modifier.padding(top = 20.dp),
+                                modifier = Modifier.padding(top = 8.dp),
                                 fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
                                 color = Color.Black.copy(.7f)
