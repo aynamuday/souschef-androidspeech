@@ -32,6 +32,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,9 +86,11 @@ fun ProfileScreen(
     onNavigateToCreateRecipeOne: () -> Unit
 ) {
     val user by userViewModel.user.collectAsState()
+    val allRecipes by recipesViewModel.allRecipes.collectAsState()
     val ownRecipes by ownRecipesViewModel.recipes.collectAsState()
-    //val favoriteRecipes = remember { mutableStateOf<List<String>>(emptyList()) }
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState(emptyList())
+
+    val favoriteRecipeList = allRecipes.filter { favoriteRecipes.contains(it.id) }
 
     var loading by remember {
         mutableStateOf(false)
@@ -283,14 +286,19 @@ fun ProfileScreen(
                     }
                 }
                 if (show == "favorites") {
-                    Box {
-                        if (favoriteRecipes.isEmpty()) {
+                    BoxWithConstraints {
+                        val maxWidth = maxWidth
+
+                        if (favoriteRecipeList.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
-                                modifier = Modifier.padding(top = 20.dp),
+                                modifier = Modifier
+                                    .padding(top = 8.dp)
+                                    .fillMaxWidth(),
                                 fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
-                                color = Color.Black.copy(.7f)
+                                color = Color.Black.copy(.7f),
+                                textAlign = TextAlign.Center
                             )
                         } else {
                             FlowRow(
@@ -299,34 +307,57 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                favoriteRecipes.forEach { recipeId ->
-                                    val recipe = ownRecipes.find { it.id == recipeId }
-                                    recipe?.let {
-                                        val photoUrl: Uri? = if (it.photosUrl["portrait"] != null) {
-                                            Uri.parse("${it.photosUrl["portrait"]}")
-                                        } else if (it.photosUrl["square"] != null) {
-                                            Uri.parse("${it.photosUrl["square"]}")
-                                        } else {
-                                            Uri.parse("${it.photosUrl["landscape"]}")
-                                        }
+                                favoriteRecipeList.forEach { recipe ->
+                                    val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
+                                        Uri.parse("${recipe.photosUrl["portrait"]}")
+                                    } else if (recipe.photosUrl["square"] != null) {
+                                        Uri.parse("${recipe.photosUrl["square"]}")
+                                    } else {
+                                        Uri.parse("${recipe.photosUrl["landscape"]}")
+                                    }
 
+                                    Box(
+                                        modifier = Modifier
+                                    ) {
                                         RecipeCard(
                                             photoUrl = photoUrl,
+                                            modifier = Modifier
+                                                .width((maxWidth / 3) - 10.dp),
                                             onClick = {
-                                                recipesViewModel.displayRecipe.value = it
+                                                recipesViewModel.displayRecipe.value = recipe
                                                 onNavigateToRecipe()
                                             },
-                                            showKebabMenu = true,
+                                            //showKebabMenu = true,
                                             onClickKebabMenu = {
-                                                // handle actions for the recipe
+                                                //showRecipeActionMenu = !showRecipeActionMenu
+                                                recipeWithAction = if (recipeWithAction == null) recipe else null
                                             }
                                         )
+
+                                        IconButton(
+                                            onClick = {
+                                                recipe.id?.let {
+                                                    recipesViewModel.removeFromFavorites(it) { isSuccess ->
+                                                        if (isSuccess) {
+                                                            Toast.makeText(context, "Recipe removed from favorites", Toast.LENGTH_SHORT).show()
+                                                        } else {
+                                                            Toast.makeText(context, "Failed to remove from favorites", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                        ) {
+                                            Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove from favorites")
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(20.dp))
             }

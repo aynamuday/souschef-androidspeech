@@ -291,7 +291,26 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun getFavoriteRecipes(callback: (List<String>) -> Unit) {
+    fun getUserFavoriteRecipes(callback: (List<String>) -> Unit) {
+        val user = auth.currentUser
+        if (user != null) {
+            val userDocRef = db.collection("users").document(user.uid)
+            userDocRef.get().addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
+                    callback(favoriteRecipes)
+                } else {
+                    callback(emptyList())
+                }
+            }.addOnFailureListener {
+                callback(emptyList())
+            }
+        } else {
+            callback(emptyList())
+        }
+    }
+
+    fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
         val user = auth.currentUser
         if (user != null) {
             val userDocRef = db.collection("users").document(user.uid)
@@ -299,9 +318,15 @@ class FirebaseRecipeManager(
             userDocRef.get().addOnSuccessListener { document ->
                 if (document.exists()) {
                     val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
-                    callback(favoriteRecipes)
+                    val updatedFavorites = favoriteRecipes.toMutableList().apply { remove(recipeId) }
+
+                    userDocRef.update("favoriteRecipes", updatedFavorites).addOnSuccessListener {
+                        callback(true)
+                    }.addOnFailureListener {
+                        callback(false)
+                    }
                 } else {
-                    callback(emptyList())
+                    callback(false)
                 }
             }
         }

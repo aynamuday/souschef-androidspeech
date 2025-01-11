@@ -13,11 +13,18 @@ class RecipesViewModel (
 
     init {
         refreshRecipes()
+        refreshFavoriteRecipes()
     }
 
     private fun refreshRecipes() {
         firebaseRecipeManager.getAllRecipes { recipes ->
             allRecipes.value = recipes
+        }
+    }
+
+    fun refreshFavoriteRecipes() {
+        firebaseRecipeManager.getUserFavoriteRecipes { favorites ->
+            favoriteRecipes.value = favorites.toSet()
         }
     }
 
@@ -40,10 +47,15 @@ class RecipesViewModel (
             callback(isSuccess)
         }
     }
-//    fun loadFavoriteRecipes() {
-//        firebaseUserManager.getFavoriteRecipes { recipes ->
-//            favoriteRecipes.value = recipes.toSet()  // Convert to Set
-//
-//        }
-//    }
+
+    fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
+        firebaseRecipeManager.removeFromFavorites(recipeId) { isSuccess ->
+            if (isSuccess) {
+                // Update the favoriteRecipes state after removal
+                favoriteRecipes.value = favoriteRecipes.value - recipeId
+            }
+            callback(isSuccess)
+        }
+    }
+
 }
