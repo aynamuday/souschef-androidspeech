@@ -240,7 +240,6 @@ fun CreateRecipeScreenFour(
                                 closeCreateRecipe()
                             } else {
                                 saveRecipe = true
-                                changes = hashMapOf()
                             }
                         } else {
                             saveRecipe = true
@@ -296,6 +295,7 @@ fun CreateRecipeScreenFour(
                 message = if (action == OwnRecipeAction.EDIT) "Recipe updated successfully!" else "Recipe uploaded successfully!",
                 subMessage = null,
                 onCloseClick = {
+                    ownRecipesViewModel.action.value = OwnRecipeAction.ADD
                     closeCreateRecipe()
                     success = false
                 }
@@ -345,6 +345,9 @@ fun getRecipesDifference(recipeOne: Recipe, recipeTwo: Recipe): HashMap<String, 
     }
     if (recipeOne.tags != recipeTwo.tags) {
         data["tags"] = recipeTwo.tags
+    }
+    if (recipeOne.audience != recipeTwo.audience) {
+        data["audience"] = recipeTwo.audience
     }
 
     return data

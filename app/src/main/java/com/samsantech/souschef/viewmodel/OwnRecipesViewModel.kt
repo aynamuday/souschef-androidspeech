@@ -58,7 +58,6 @@ class OwnRecipesViewModel(
                 if (isSuccess) {
                     updateRecipes(recipe.value)
                     resetRecipe()
-                    action.value = OwnRecipeAction.ADD
                 }
             }
         )

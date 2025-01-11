@@ -206,9 +206,6 @@ fun SousChefApp(
                     onNavigateToSearch = {
                         navController.navigate(route = Search)
                     },
-//                    onNavigateToTiktokVideos = {
-//                        navController.navigate(route = TiktokVideos)
-//                    },
                     onNavigateToProfile = {
                         navController.navigate(route = Profile) {
                             popUpTo(Profile) { inclusive = true }
@@ -216,7 +213,7 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    HomeScreen(navController, paddingValues, recipesViewModel, recipesViewModel)
+                    HomeScreen(navController, paddingValues, recipesViewModel)
                 }
             }
             composable<Profile> {
@@ -232,9 +229,6 @@ fun SousChefApp(
                     onNavigateToSearch = {
                         navController.navigate(route = Search)
                     },
-//                    onNavigateToTiktokVideos = {
-//                        navController.navigate(route = TiktokVideos)
-//                    },
                     onNavigateToProfile = {
                         navController.navigate(route = Profile) {
                             popUpTo(Profile) { inclusive = true }
@@ -267,9 +261,6 @@ fun SousChefApp(
                     onNavigateToSearch = {
                         navController.navigate(route = Search)
                     },
-//                    onNavigateToTiktokVideos = {
-//                        navController.navigate(route = TiktokVideos)
-//                    },
                     onNavigateToProfile = {
                         navController.navigate(route = Profile) {
                             popUpTo(Profile) { inclusive = true }
@@ -279,7 +270,11 @@ fun SousChefApp(
                 ) { paddingValues ->
                     SearchScreen(
                         paddingValues,
-                        searchRecipesViewModel
+                        searchRecipesViewModel,
+                        recipesViewModel,
+                        onNavigateToRecipe = {
+                            navController.navigate(route = Recipe)
+                        }
                     )
                 }
             }
@@ -297,20 +292,6 @@ fun SousChefApp(
                     onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
                 )
             }
-
-//            composable<RecipeBrowser> {
-//                RecipeBrowserScreen()
-//            }
-//            composable<Recipe> {
-//                RecipeScreen(
-//                    activity,
-//                    context,
-//                    recipesViewModel,
-//                ) { navController.popBackStack() }
-//            }
-//            composable<Recipe> {
-//                RecipeScreen()
-//            }
 
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
@@ -374,9 +355,6 @@ fun SousChefApp(
                     }
                 )
             }
-//            composable<TiktokVideos> {
-//                TiktokVideosScreen()
-//            }
         }
     }
 }

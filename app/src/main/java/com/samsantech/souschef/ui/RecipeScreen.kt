@@ -183,23 +183,25 @@ fun RecipeScreen(
 @Composable
 fun RecipeMetadata(recipe: Recipe) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
-        Column(modifier = Modifier.weight(.65f)) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = recipe.title,
-                fontSize = 28.sp,
+                fontSize = if (recipe.title.length < 13) 22.sp else 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Green,
                 modifier = Modifier
                     .fillMaxHeight(),
             )
-            if (recipe.description.isNotEmpty()) {
+            if (recipe.description.isNotEmpty() && recipe.description != "null") {
                 Text(
                     text = recipe.description,
                     modifier = Modifier
                         .padding(top = 8.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(
+                if (recipe.description.isNotEmpty() && recipe.description != "null") 16.dp else 8.dp
+            ))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 FiveStarRate(rate = 3.7f)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -215,7 +217,7 @@ fun RecipeMetadata(recipe: Recipe) {
             )
         }
         Spacer(modifier = Modifier.width(32.dp))
-        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(.2f)) {
+        Column(horizontalAlignment = Alignment.End) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
@@ -245,22 +247,21 @@ fun RecipeMetadata(recipe: Recipe) {
                 imageVector = Icons.Filled.BookmarkBorder,
                 contentDescription = null,
                 modifier = Modifier
-                    .padding(0.dp, top = 12.dp)
+                    .padding(0.dp, top = 8.dp)
                     .size(28.dp)
                     .clickable { },
-//                    tint = Color(255, 207, 81, 255)
             )
         }
     }
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(20.dp))
     UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
     Spacer(modifier = Modifier.height(20.dp))
     Spacer(modifier = Modifier
         .fillMaxWidth()
-        .height(1.dp)
+        .height(2.dp)
         .background(Color(255, 207, 81))
     )
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(16.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
         TimeOrServing(title = "Serving", text = recipe.serving, modifier = Modifier.weight(1f))
         if (recipe.prepTimeHr.trim() != "0" || recipe.prepTimeMin.trim() != "0") {
@@ -274,7 +275,20 @@ fun RecipeMetadata(recipe: Recipe) {
 
 @Composable
 fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+//            .background(Color(255, 207, 81).copy(.2f), RoundedCornerShape(8.dp))
+            .padding(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            painter = painterResource(id = if (title == "Serving") R.drawable.ladle else R.drawable.deadline),
+            contentDescription = null,
+            modifier = Modifier
+                .size(22.dp),
+            tint = Color(0xffea632e)
+        )
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = title,
             textAlign = TextAlign.Center,
@@ -290,23 +304,9 @@ fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
         )
     }
 }
-//=======
-//import androidx.compose.foundation.text.BasicTextField
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.Menu
-//import kotlinx.coroutines.delay
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.text.TextStyle
-//import androidx.compose.ui.viewinterop.AndroidView
-//import androidx.compose.ui.zIndex
-//import androidx.navigation.NavController
-//import com.samsantech.souschef.ui.components.FormOutlinedTextField
-
-//>>>>>>> nico
 
 //val sharedViewModel = SharedViewModel()
 @Composable
-//<<<<<<< master
 fun RecipeIngredients(ingredients: List<String>) {
     Column {
         Text(
@@ -315,11 +315,17 @@ fun RecipeIngredients(ingredients: List<String>) {
             fontSize = 18.sp
         )
         for (ingredient in ingredients) {
-            Text(
-                text = ingredient,
-                modifier = Modifier
-                    .padding(top = 8.dp)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(8.dp)
+//                        .background(Color(255, 207, 81, 255), RoundedCornerShape(50)),
+//                )
+//                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = ingredient
+                )
+            }
         }
     }
 }

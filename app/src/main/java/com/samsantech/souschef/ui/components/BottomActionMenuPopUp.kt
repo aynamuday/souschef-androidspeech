@@ -50,7 +50,7 @@ fun BottomActionMenuPopUp(
                 .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                 .align(Alignment.BottomCenter)
                 .background(Color.White)
-                .padding(bottom = 50.dp, top = 20.dp)
+                .padding(bottom = 30.dp, top = 16.dp)
         ) {
             options.forEach { option ->
                 Row(
@@ -60,7 +60,7 @@ fun BottomActionMenuPopUp(
                         .clickable {
                             onClick(option.key)
                         }
-                        .padding(vertical = 10.dp, horizontal = 20.dp)
+                        .padding(vertical = 8.dp, horizontal = 20.dp)
                 ) {
                     Box(
                         modifier = Modifier

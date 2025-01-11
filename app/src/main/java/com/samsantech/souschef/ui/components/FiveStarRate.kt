@@ -20,12 +20,12 @@ import androidx.compose.ui.unit.dp
 import com.samsantech.souschef.R
 
 @Composable
-fun FiveStarRate(rate: Float) {
-    Star(size = 20.dp, fillPercentage = getStarRatePercentage(rate, 1))
-    Star(size = 20.dp, fillPercentage = getStarRatePercentage(rate, 2))
-    Star(size = 20.dp, fillPercentage = getStarRatePercentage(rate, 3))
-    Star(size = 20.dp, fillPercentage = getStarRatePercentage(rate, 4))
-    Star(size = 20.dp, fillPercentage = getStarRatePercentage(rate, 5))
+fun FiveStarRate(rate: Float, size: Dp = 20.dp) {
+    Star(size = size, fillPercentage = getStarRatePercentage(rate, 1))
+    Star(size = size, fillPercentage = getStarRatePercentage(rate, 2))
+    Star(size = size, fillPercentage = getStarRatePercentage(rate, 3))
+    Star(size = size, fillPercentage = getStarRatePercentage(rate, 4))
+    Star(size = size, fillPercentage = getStarRatePercentage(rate, 5))
 }
 
 fun getStarRatePercentage(rate: Float, order: Int): Float {
