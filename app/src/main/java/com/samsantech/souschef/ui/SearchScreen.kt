@@ -10,15 +10,16 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
@@ -37,13 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.algolia.instantsearch.android.paging3.flow
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.data.SearchRecipe
 import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.RecipeCard
+import com.samsantech.souschef.ui.components.SearchBottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.SearchBox
 import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
@@ -58,27 +59,26 @@ fun SearchScreen(
     recipesViewModel: RecipesViewModel,
     onNavigateToRecipe: () -> Unit
 ) {
-    val searchBoxState = searchRecipesViewModel.searchBoxState
-    val paginator = searchRecipesViewModel.hitsPaginator
-    val pagingHits = paginator.flow.collectAsLazyPagingItems()
-    val gridState = rememberLazyGridState()
+    val pagingHits = searchRecipesViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
+    val gridState by searchRecipesViewModel.gridState.collectAsState()
     val categoriesRowState = rememberLazyListState()
     val loadingState = searchRecipesViewModel.loadingState
-
-    var search by remember {
-        mutableStateOf("")
-    }
-    var hasSearched by remember {
-        mutableStateOf(false)
-    }
+    val search by searchRecipesViewModel.search.collectAsState()
+    val hasSearched by searchRecipesViewModel.hasSearched.collectAsState()
     var error by remember {
         mutableStateOf<String?>(null)
+    }
+    var view by remember {
+        mutableStateOf("grid")
+    }
+    var displayBottomActionMenuPopUp by remember {
+        mutableStateOf(false)
     }
 
     BackHandler {
         if (hasSearched) {
-            hasSearched = false
-            search = ""
+            searchRecipesViewModel.hasSearched.value = false
+            searchRecipesViewModel.search.value = ""
         }
     }
 
@@ -98,35 +98,51 @@ fun SearchScreen(
                     modifier = Modifier
                         .size(25.dp)
                         .clickable {
-                            search = ""
-                            hasSearched = false
+                            searchRecipesViewModel.search.value = ""
+                            searchRecipesViewModel.hasSearched.value = false
                             searchRecipesViewModel.cancelSearch()
+                            searchRecipesViewModel.clearCategories()
                         }
                 )
             }
             SearchBox(
                 search = search,
                 onValueChange = {
-                    search = it
+                    searchRecipesViewModel.search.value = it
                 },
                 onSubmit = {
-                    search = search.trim()
+                    searchRecipesViewModel.clearCategories()
+
+                    searchRecipesViewModel.search.value = search.trim()
                     if ((!hasSearched && search != "") || hasSearched) {
                         if (!hasSearched) {
-                            hasSearched = true
+                            searchRecipesViewModel.hasSearched.value = true
                         }
-                        searchBoxState.setText(search, true)
+                        searchRecipesViewModel.search(search)
                         if (search != "") {
                             loadingState.setIsLoading(true)
                         } else {
-                            hasSearched = false
+                            searchRecipesViewModel.hasSearched.value = false
                         }
                     }
                 },
                 clearSearch = {
-                    search = ""
-                }
+                    searchRecipesViewModel.search.value = ""
+                },
+                modifier = Modifier.weight(1f)
             )
+            if (hasSearched) {
+                Icon(
+                    imageVector = if (view.lowercase() == "grid") Icons.Filled.GridView else Icons.AutoMirrored.Filled.List,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            displayBottomActionMenuPopUp = true
+                        },
+                    tint = Color.Black.copy(.6f)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
         if (!hasSearched) {
@@ -152,8 +168,8 @@ fun SearchScreen(
                             drawable = it.value,
                             onClick = {
                                 searchRecipesViewModel.searchCategory(it.key)
-                                hasSearched = true
-                                search = it.key
+                                searchRecipesViewModel.hasSearched.value = true
+                                searchRecipesViewModel.search.value = it.key
                             }
                         )
                     }
@@ -188,6 +204,7 @@ fun SearchScreen(
                             lazyPagingItems = pagingHits,
                             lazyGridState = gridState,
                             maxWidth = maxWidth,
+                            maxHeight = maxHeight,
                             onDisplayRecipe = { id ->
                                 recipesViewModel.displayRecipe.value = Recipe()
 
@@ -202,7 +219,7 @@ fun SearchScreen(
                                     }
                                 }
                             },
-                            type = "list"
+                            view = view
                         )
                     }
                 }
@@ -216,6 +233,17 @@ fun SearchScreen(
         }
     }
 
+    if (displayBottomActionMenuPopUp) {
+        SearchBottomActionMenuPopUp(
+            view = view,
+            onSelectView = {
+                view = it
+            },
+            onOutsideClick = {
+                displayBottomActionMenuPopUp = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -255,13 +283,14 @@ fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
 fun RecipesList(
     modifier: Modifier = Modifier,
     maxWidth: Dp,
+    maxHeight: Dp,
     lazyPagingItems: LazyPagingItems<SearchRecipe>,
     lazyGridState: LazyGridState,
     onDisplayRecipe: (id: String) -> Unit,
-    type: String = "grid" // or list
+    view: String = "grid" // or list
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(if (type == "grid") 2 else 1),
+        columns = GridCells.Fixed(if (view == "grid") 2 else 1),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier,
@@ -270,12 +299,26 @@ fun RecipesList(
         items(lazyPagingItems.itemCount) { index ->
             val item = lazyPagingItems[index] ?: return@items
 
+            val width = if (view == "grid") ((maxWidth/2) - 8.dp) else maxWidth
+            val height = if (view == "grid") (width/2)+width else 300.dp
+
             if (item.isTikTok == true) {
-                val width = if (type == "grid") ((maxWidth/2) - 8.dp).value.toInt() else maxWidth.value.toInt()
-                val height = if (type == "grid") (width/10)+width else 400
+
                 Column {
                     Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
-                        TikTokWebView(postId = item.postId, width = width, height = height)
+                        if (view == "grid") {
+                            TikTokWebView(
+                                postId = item.postId,
+                                width = width.value.toInt(),
+                                height = height.value.toInt()
+                            )
+                        } else {
+                            TikTokWebView(
+                                postId = item.postId,
+                                width = width.value.toInt(),
+                                height = maxHeight.value.toInt()-32
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -286,10 +329,8 @@ fun RecipesList(
                     )
                 }
             } else {
-                val width = if (type == "grid") ((maxWidth/2) - 8.dp) else maxWidth
-                val height = if (type == "grid") (width/10)+width else 300.dp
                 SearchRecipeItem(
-                    itemWidth = maxWidth,
+                    itemWidth = width,
                     itemHeight = height,
                     item = item,
                     onDisplayRecipe = {

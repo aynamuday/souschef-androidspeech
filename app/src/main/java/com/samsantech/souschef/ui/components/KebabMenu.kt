@@ -13,11 +13,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun KebabMenu(modifier: Modifier, onClick: () -> Unit) {
+fun KebabMenu(modifier: Modifier, onClick: () -> Unit, tint: Color = Color.White) {
     Icon(
         imageVector = Icons.Filled.MoreVert,
         contentDescription = null,
-        tint = Color.White,
+        tint = tint,
         modifier = modifier
             .size(30.dp)
             .clip(RoundedCornerShape(100))
