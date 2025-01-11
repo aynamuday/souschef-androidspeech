@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,7 +52,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .offset(x = 5.dp),
-                tint = Color.Black.copy(.8f)
+                tint = Color.Black.copy(.4f)
             )
         }
         BasicTextField(

@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class OwnRecipesViewModel(
     private val userViewModel: UserViewModel,
-    private val firebaseRecipeManager: FirebaseRecipeManager
+    private val firebaseRecipeManager: FirebaseRecipeManager,
+    private val recipesViewModel: RecipesViewModel
 ) {
     val recipe = MutableStateFlow(Recipe())
     val recipes = MutableStateFlow<List<Recipe>>(listOf())
@@ -56,6 +57,9 @@ class OwnRecipesViewModel(
                 callback(isSuccess, error)
                 if (isSuccess) {
                     updateRecipes(recipe.value)
+                    if (recipesViewModel.displayRecipe.value.id == recipe.value.id) {
+                        recipesViewModel.displayRecipe.value = recipe.value
+                    }
                     resetRecipe()
                 }
             }
