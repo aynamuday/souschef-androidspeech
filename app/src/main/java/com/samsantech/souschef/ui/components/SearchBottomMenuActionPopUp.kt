@@ -1,18 +1,14 @@
 package com.samsantech.souschef.ui.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun SearchBottomActionMenuPopUp(
@@ -26,15 +22,16 @@ fun SearchBottomActionMenuPopUp(
         },
         content = {
             Column {
-                Text(
-                    text = "View",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    textAlign = TextAlign.Center
-                )
+//                Text(
+//                    text = "View",
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = 18.sp,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 16.dp),
+//                    textAlign = TextAlign.Center
+//                )
+                Spacer(modifier = Modifier.height(12.dp))
                 BottomActionMenuItemContainer(onClick = { onSelectView("grid") }) {
                     BottomActionMenuRadioButtonItem(
                         title = "Grid",
