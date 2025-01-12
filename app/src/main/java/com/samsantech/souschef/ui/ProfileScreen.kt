@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,9 +31,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -53,6 +58,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.ColoredButton
@@ -86,7 +92,6 @@ fun ProfileScreen(
 ) {
     val user by userViewModel.user.collectAsState()
     val ownRecipes by ownRecipesViewModel.recipes.collectAsState()
-    //val favoriteRecipes = remember { mutableStateOf<List<String>>(emptyList()) }
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState(emptyList())
 
     var loading by remember {
@@ -112,6 +117,9 @@ fun ProfileScreen(
     }
     var error:String? by remember {
         mutableStateOf(null)
+    }
+    val showMenuBar by remember {
+        mutableStateOf(true)
     }
 
     val activityResultLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
@@ -197,8 +205,8 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(5.dp))
 
-                ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
-                Spacer(modifier = Modifier.height(12.dp))
+//                ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
+//                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -316,10 +324,7 @@ fun ProfileScreen(
                                                 recipesViewModel.displayRecipe.value = it
                                                 onNavigateToRecipe()
                                             },
-                                            showKebabMenu = true,
-                                            onClickKebabMenu = {
-                                                // handle actions for the recipe
-                                            }
+                                            showKebabMenu = false
                                         )
                                     }
                                 }
@@ -327,8 +332,68 @@ fun ProfileScreen(
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
+            }
+        }
+    }
+
+    if (showMenuBar) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(.4f))
+                .zIndex(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .width(250.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                    .background(Color.White)
+                    .padding(top = 50.dp)
+            ) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+
+                            }
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+
+                val menu = mapOf(
+                    "Edit Profile" to Icons.Filled.EditNote,
+                    "Change Password" to Icons.Filled.Lock,
+                )
+                menu.entries.forEach {
+                    Row(
+                        modifier = Modifier
+                            .clickable {
+
+                            }
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = it.value,
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = it.key,
+                            modifier = Modifier
+                                .weight(1f)
+                        )
+                    }
+                }
             }
         }
     }
