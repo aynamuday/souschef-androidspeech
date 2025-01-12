@@ -292,7 +292,7 @@ fun RecipesList(
     LazyVerticalGrid(
         columns = GridCells.Fixed(if (view == "grid") 2 else 1),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(if (view == "grid") 10.dp else 20.dp),
         modifier = modifier,
         state = lazyGridState
     ) {
@@ -321,12 +321,26 @@ fun RecipesList(
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = item.title,
-                        fontWeight = FontWeight(500),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = item.title,
+                            fontWeight = FontWeight(500),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                            fontSize = if (view == "grid") 14.sp else 16.sp
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Icon(
+                            imageVector = Icons.Filled.BookmarkBorder,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(if (view == "grid") 18.dp else 22.dp)
+                                .clickable {
+
+                                },
+                        )
+                    }
                 }
             } else {
                 SearchRecipeItem(
@@ -335,7 +349,8 @@ fun RecipesList(
                     item = item,
                     onDisplayRecipe = {
                         item.objectID?.let { onDisplayRecipe(it) }
-                    }
+                    },
+                    view = view
                 )
             }
 
@@ -348,7 +363,8 @@ fun SearchRecipeItem(
     itemWidth: Dp,
     itemHeight: Dp,
     item: SearchRecipe,
-    onDisplayRecipe: () -> Unit
+    onDisplayRecipe: () -> Unit,
+    view: String = "grid"
 ) {
     val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
         Uri.parse("${item.photosUrl["portrait"]}")
@@ -369,7 +385,10 @@ fun SearchRecipeItem(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = item.title,
-            fontWeight = FontWeight(500)
+            fontWeight = FontWeight(500),
+            fontSize = if (view == "grid") 14.sp else 16.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(2.dp))
         Row(
@@ -378,21 +397,21 @@ fun SearchRecipeItem(
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FiveStarRate(rate = 3.7f, size = 12.dp)
+                FiveStarRate(rate = 3.7f, size = if (view == "grid") 12.dp else 14.dp)
                 Spacer(modifier = Modifier.width(5.dp))
                 androidx.compose.material3.Text(text = "(1)", fontSize = 12.sp)
             }
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Favorite,
                     contentDescription = null,
                     modifier = Modifier
-                        .size(16.dp)
+                        .size(if (view == "grid") 16.dp else 22.dp)
                         .clickable { },
                     tint = Color(0xfff73056)
                 )
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(text = "999k", fontSize = 12.sp)
+                Spacer(modifier = Modifier.width(if (view == "grid") 2.dp else 5.dp))
+                Text(text = "999k", fontSize = if (view == "grid") 12.sp else 14.sp)
             }
         }
         Spacer(modifier = Modifier.height(5.dp))
@@ -402,9 +421,9 @@ fun SearchRecipeItem(
             UserNamePhoto(
                 photoUri = item.userPhotoUrl,
                 userName = item.userName,
-                photoSize = 20.dp,
+                photoSize = if (view == "grid") 20.dp else 26.dp,
                 fontColor = Color.Gray,
-                fontSize = 12.sp,
+                fontSize = if (view == "grid") 12.sp else 14.sp,
                 modifier = Modifier.weight(1f),
                 spacer = 8.dp
             )
@@ -412,9 +431,9 @@ fun SearchRecipeItem(
                 imageVector = Icons.Filled.BookmarkBorder,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(18.dp)
+                    .size(if (view == "grid") 18.dp else 22.dp)
                     .clickable {
-                        onDisplayRecipe()
+
                     },
             )
         }
