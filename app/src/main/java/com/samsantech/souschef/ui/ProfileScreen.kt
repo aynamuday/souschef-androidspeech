@@ -9,9 +9,15 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,7 +43,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -52,6 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -118,8 +125,8 @@ fun ProfileScreen(
     var error:String? by remember {
         mutableStateOf(null)
     }
-    val showMenuBar by remember {
-        mutableStateOf(true)
+    var showMenuBar by remember {
+        mutableStateOf(false)
     }
 
     val activityResultLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
@@ -132,7 +139,9 @@ fun ProfileScreen(
 
     Box {
         Column {
-            Header()
+            Header(onClickMenuBar = {
+                showMenuBar = true
+            })
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -337,12 +346,34 @@ fun ProfileScreen(
         }
     }
 
-    if (showMenuBar) {
+    AnimatedVisibility(
+        visible = showMenuBar,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = Modifier
+            .zIndex(1f)
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(.4f))
-                .zIndex(1f)
+                .animateEnterExit(
+                    enter = slideInHorizontally(
+                        initialOffsetX = {
+                            it
+                        }
+                    ),
+                    exit = slideOutHorizontally(
+                        targetOffsetX = {
+                            it
+                        }
+                    )
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        showMenuBar = false
+                    }
+                }
         ) {
             Column(
                 modifier = Modifier
@@ -362,33 +393,32 @@ fun ProfileScreen(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .clickable {
-
+                                showMenuBar = false
                             }
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
 
-                val menu = mapOf(
-                    "Edit Profile" to Icons.Filled.EditNote,
-                    "Change Password" to Icons.Filled.Lock,
+                val menu = arrayOf<Menu>(
+                    Menu("Edit Profile", Icons.Filled.EditNote, onNavigateToEditProfile)
                 )
-                menu.entries.forEach {
+
+
+                menu.forEach {
                     Row(
                         modifier = Modifier
-                            .clickable {
-
-                            }
+                            .clickable(onClick = it.onClick)
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Icon(
-                            imageVector = it.value,
+                            imageVector = it.icon,
                             contentDescription = null,
                             tint = Color.Black
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = it.key,
+                            text = it.title,
                             modifier = Modifier
                                 .weight(1f)
                         )
@@ -396,6 +426,7 @@ fun ProfileScreen(
                 }
             }
         }
+
     }
 
     if (showGetImageOptions) {
@@ -481,3 +512,9 @@ fun ProfileScreen(
         ProgressSpinner()
     }
 }
+
+data class Menu(
+    val title: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit
+)

@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -32,6 +33,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                        maxLines: Int = minLines,
                        placeholder: String? = null,
                        textAlign: TextAlign = TextAlign.Start,
+                       placeholderFontSize: TextUnit = 14.sp,
                        borderColor: Color = Color.Black,
                        backgroundColor: Color = Color.White,
                        roundCorner: Dp = 10.dp,
@@ -72,7 +74,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                             text = placeholder,
                             color = Color.Gray,
                             textAlign = placeholderAlign,
-                            fontSize = 14.sp
+                            fontSize = placeholderFontSize
                         )
                     }
                 }

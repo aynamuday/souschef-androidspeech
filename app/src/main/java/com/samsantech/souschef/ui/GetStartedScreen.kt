@@ -38,7 +38,6 @@ fun GetStartedScreen(activity: ComponentActivity, onNavigateToSignUpOrLogin: () 
     Box(
         modifier = Modifier
             .fillMaxSize()
-
     ) {
         Image(
             painter = painterResource(id = R.drawable.start_bg),
@@ -54,7 +53,7 @@ fun GetStartedScreen(activity: ComponentActivity, onNavigateToSignUpOrLogin: () 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 200.dp, bottom = 80.dp, start = 32.dp, end = 32.dp),
+                .padding(top = 200.dp, bottom = 30.dp, start = 32.dp, end = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {

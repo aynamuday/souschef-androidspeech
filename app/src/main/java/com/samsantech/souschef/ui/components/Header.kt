@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun Header() {
+fun Header(
+    onClickMenuBar: () -> Unit = {}
+) {
     Box {
         Row(
             modifier = Modifier
@@ -49,7 +51,7 @@ fun Header() {
                     .size(30.dp)
                     .clip(CircleShape)
                     .clickable {
-
+                        onClickMenuBar()
                     }
             )
         }
