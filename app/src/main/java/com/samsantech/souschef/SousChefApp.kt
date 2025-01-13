@@ -213,7 +213,14 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    HomeScreen(navController, paddingValues, recipesViewModel)
+                    HomeScreen(
+                        navController,
+                        paddingValues,
+                        recipesViewModel,
+                        onNavigateToRecipe = {
+                            navController.navigate(route = Recipe)
+                        }
+                    )
                 }
             }
             composable<Profile> {

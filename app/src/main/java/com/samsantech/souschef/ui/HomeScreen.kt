@@ -56,7 +56,8 @@ import com.samsantech.souschef.viewmodel.UserViewModel
 fun HomeScreen(
     navController: NavController, 
     paddingValues: PaddingValues,
-    recipesViewModel: RecipesViewModel
+    recipesViewModel: RecipesViewModel,
+    onNavigateToRecipe: () -> Unit
 ) {
     val recipes by recipesViewModel.allRecipes.collectAsState()
     //val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
@@ -118,27 +119,45 @@ fun HomeScreen(
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            RecipeFeed(navController, recipes, recipesViewModel, favoriteRecipes)
+            RecipeFeed(navController, recipes, recipesViewModel, favoriteRecipes, onNavigateToRecipe)
         }
     }
 }
 
 @Composable
-fun RecipeFeed(navController: NavController, recipes: List<Recipe>, recipesViewModel: RecipesViewModel, favoriteRecipes: Set<String>) {
+fun RecipeFeed(
+    navController: NavController,
+    recipes: List<Recipe>,
+    recipesViewModel: RecipesViewModel,
+    favoriteRecipes: Set<String>,
+    onNavigateToRecipe: () -> Unit
+) {
     // Horizontal scrolling layout using LazyRow
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(recipes) { recipe ->
-            RecipeCard(recipe = recipe, navController = navController, recipesViewModel = recipesViewModel, favoriteRecipes = favoriteRecipes)
+            RecipeCard(
+                recipe = recipe,
+                navController = navController,
+                recipesViewModel = recipesViewModel,
+                favoriteRecipes = favoriteRecipes,
+                onNavigateToRecipe = onNavigateToRecipe
+            )
         }
     }
 }
 
 
 @Composable
-fun RecipeCard(recipe: Recipe, navController: NavController, recipesViewModel: RecipesViewModel, favoriteRecipes: Set<String>) {
+fun RecipeCard(
+    recipe: Recipe,
+    navController: NavController,
+    recipesViewModel: RecipesViewModel,
+    favoriteRecipes: Set<String>,
+    onNavigateToRecipe: () -> Unit
+) {
     val isFavorite = recipe.id in favoriteRecipes
     var rating by remember { mutableStateOf(0) }
 
@@ -156,7 +175,8 @@ fun RecipeCard(recipe: Recipe, navController: NavController, recipesViewModel: R
             .clip(RoundedCornerShape(10.dp))
             .background(Color(245, 245, 220))
             .clickable {
-                // navController.navigate("recipe/${recipe.title}")
+                recipesViewModel.displayRecipe.value = recipe
+                onNavigateToRecipe()
             }
     ) {
         Column(

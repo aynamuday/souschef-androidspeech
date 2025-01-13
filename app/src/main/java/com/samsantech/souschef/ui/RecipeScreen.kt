@@ -3,6 +3,7 @@ package com.samsantech.souschef.ui
 import androidx.compose.runtime.getValue
 import android.app.Activity
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -24,9 +25,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -73,6 +79,7 @@ fun RecipeScreen(
 
     val user by userViewModel.user.collectAsState()
     val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
+    val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 //    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
 
 //    val displayVoiceCommandPopUp = remember {
@@ -87,6 +94,8 @@ fun RecipeScreen(
     var loading by remember {
         mutableStateOf(false)
     }
+
+    val isFavorite = recipe.id in favoriteRecipes
 
     Column(
         modifier = Modifier
@@ -141,7 +150,7 @@ fun RecipeScreen(
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp)
         ) {
 
-            RecipeMetadata(recipe = recipe)
+            RecipeMetadata(recipe = recipe, isFavorite = isFavorite, recipesViewModel)
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
             Spacer(modifier = Modifier.height(20.dp))
@@ -181,7 +190,7 @@ fun RecipeScreen(
 }
 
 @Composable
-fun RecipeMetadata(recipe: Recipe) {
+fun RecipeMetadata(recipe: Recipe, isFavorite: Boolean, recipesViewModel: RecipesViewModel) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -225,12 +234,19 @@ fun RecipeMetadata(recipe: Recipe) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
                     )
-                    Text(
-                        text = "likes",
-                        modifier = Modifier
-                            .offset(y = -(3.dp)),
-                        fontSize = 12.sp,
-                    )
+                    IconButton(
+                        onClick = {
+                            viewModel.likeRecipe(recipeId) { isSuccess ->
+                                if (isSuccess) {
+                                    Toast.makeText(LocalContext.current, "Recipe liked!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(LocalContext.current, "Failed to like recipe", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Favorite, contentDescription = "Like Recipe")
+                    }
                 }
                 Column {
                     Icon(
@@ -244,12 +260,17 @@ fun RecipeMetadata(recipe: Recipe) {
                 }
             }
             Icon(
-                imageVector = Icons.Filled.BookmarkBorder,
+                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                 contentDescription = null,
+                tint = if (isFavorite) Color.Yellow else Color.Gray,
                 modifier = Modifier
                     .padding(0.dp, top = 8.dp)
                     .size(28.dp)
-                    .clickable { },
+                    .clickable {
+                        recipe.id?.let { id ->
+                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {}
+                        }
+                    },
             )
         }
     }
