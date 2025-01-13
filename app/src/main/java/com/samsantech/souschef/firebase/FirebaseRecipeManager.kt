@@ -331,4 +331,27 @@ class FirebaseRecipeManager(
             }
         }
     }
+
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return callback(false)
+        val recipeRef = db.collection("recipes").document(recipeId)
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(recipeRef)
+            val ratings = snapshot.get("ratings") as? HashMap<String, Double> ?: hashMapOf()
+
+            ratings[userId] = rating.toDouble()
+
+            val averageRating = if (ratings.isNotEmpty()) {
+                ratings.values.average().toFloat()
+            } else 0f
+
+            transaction.update(recipeRef, "ratings", ratings)
+            transaction.update(recipeRef, "averageRating", averageRating)
+        }.addOnSuccessListener {
+            callback(true)
+        }.addOnFailureListener {
+            callback(false)
+        }
+    }
 }

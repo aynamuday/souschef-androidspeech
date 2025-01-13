@@ -3,7 +3,6 @@ package com.samsantech.souschef.ui
 import androidx.compose.runtime.getValue
 import android.app.Activity
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -28,10 +27,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -95,7 +93,10 @@ fun RecipeScreen(
         mutableStateOf(false)
     }
 
+    var rating by remember { mutableStateOf(recipe.userRating ?: 0f) }
+    val averagaRating by remember { mutableStateOf(recipe.averageRating ?: 0f) }
     val isFavorite = recipe.id in favoriteRecipes
+
 
     Column(
         modifier = Modifier
@@ -150,7 +151,25 @@ fun RecipeScreen(
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp)
         ) {
 
-            RecipeMetadata(recipe = recipe, isFavorite = isFavorite, recipesViewModel)
+            RecipeMetadata(
+                recipe = recipe,
+                isFavorite = isFavorite,
+                recipesViewModel,
+                rating = rating,
+                averageRating = averagaRating,
+                onRateRecipe = { newRating ->
+                    recipe.id?.let {
+                        recipesViewModel.rateRecipe(it, newRating) { success ->
+                            if (success) {
+                                rating = newRating
+                            }
+                        }
+                    }
+                },
+                onLikeRecipe = {
+
+                }
+            )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
             Spacer(modifier = Modifier.height(20.dp))
@@ -190,7 +209,15 @@ fun RecipeScreen(
 }
 
 @Composable
-fun RecipeMetadata(recipe: Recipe, isFavorite: Boolean, recipesViewModel: RecipesViewModel) {
+fun RecipeMetadata(
+    recipe: Recipe,
+    isFavorite: Boolean,
+    recipesViewModel: RecipesViewModel,
+    rating: Float,
+    averageRating: Float,
+    onRateRecipe: (Float) -> Unit,
+    onLikeRecipe: () -> Unit
+) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -211,16 +238,19 @@ fun RecipeMetadata(recipe: Recipe, isFavorite: Boolean, recipesViewModel: Recipe
             Spacer(modifier = Modifier.height(
                 if (recipe.description.isNotEmpty() && recipe.description != "null") 16.dp else 8.dp
             ))
+            //Star Rating
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FiveStarRate(rate = 3.7f)
+                FiveStarRate(
+                    rating = rating,
+                    onRateRecipe = onRateRecipe)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "(1 ratings)", fontSize = 12.sp)
+                Text(text = "( ${"%.1f".format(rating)} ratings)", fontSize = 12.sp)
             }
             Text(
                 text = "Leave a rating", // or edit rating if rated already
                 fontSize = 12.sp,
                 modifier = Modifier
-                    .clickable { }
+                    //.clickable { }
                     .padding(top = 8.dp),
                 fontStyle = FontStyle.Italic
             )
@@ -234,19 +264,12 @@ fun RecipeMetadata(recipe: Recipe, isFavorite: Boolean, recipesViewModel: Recipe
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
                     )
-                    IconButton(
-                        onClick = {
-                            viewModel.likeRecipe(recipeId) { isSuccess ->
-                                if (isSuccess) {
-                                    Toast.makeText(LocalContext.current, "Recipe liked!", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(LocalContext.current, "Failed to like recipe", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                    ) {
-                        Icon(Icons.Default.Favorite, contentDescription = "Like Recipe")
-                    }
+                    Text(
+                        text = "likes",
+                        modifier = Modifier
+                            .offset(y = -(3.dp)),
+                        fontSize = 12.sp,
+                    )
                 }
                 Column {
                     Icon(
@@ -290,6 +313,29 @@ fun RecipeMetadata(recipe: Recipe, isFavorite: Boolean, recipesViewModel: Recipe
         }
         if (recipe.cookTimeHr.trim() != "0" || recipe.cookTimeMin.trim() != "0") {
             TimeOrServing(title = "Cook Time", text = getRecipeTimeText(recipe.cookTimeHr, recipe.cookTimeMin), modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun FiveStarRate(
+    rating: Float,
+    onRateRecipe: (Float) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        for (i in 1..5) {
+            val starColor = if (rating >= i) Color(0xFFFFA500) else Color.Gray
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = starColor,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onRateRecipe(i.toFloat()) }
+            )
         }
     }
 }
@@ -513,8 +559,5 @@ fun RecipeInstructionsItem(index: Int, instruction: String) {
         )
     }
 }
-//=======
-fun RecipeScreen(){
 
-}
-//>>>>>>> nico
+

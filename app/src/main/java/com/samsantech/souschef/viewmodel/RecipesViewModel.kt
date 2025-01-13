@@ -1,5 +1,6 @@
 package com.samsantech.souschef.viewmodel
 
+import com.google.firebase.auth.FirebaseAuth
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,11 +52,24 @@ class RecipesViewModel (
     fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
         firebaseRecipeManager.removeFromFavorites(recipeId) { isSuccess ->
             if (isSuccess) {
-                // Update the favoriteRecipes state after removal
                 favoriteRecipes.value = favoriteRecipes.value - recipeId
             }
             callback(isSuccess)
         }
     }
 
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean) -> Unit) {
+        firebaseRecipeManager.rateRecipe(recipeId, rating) { isSuccess ->
+            if (isSuccess) {
+                // Update the local recipe list with the new rating
+                val updatedRecipes = allRecipes.value.map { recipe ->
+                    if (recipe.id == recipeId) {
+                        recipe.copy(userRating = rating)
+                    } else recipe
+                }
+                allRecipes.value = updatedRecipes
+            }
+            callback(isSuccess)
+        }
+    }
 }
