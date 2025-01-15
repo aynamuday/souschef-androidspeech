@@ -23,5 +23,8 @@ data class Recipe(
     var instructions: List<String> = listOf(""),
     var tags: List<String> = listOf(),
     var audience: String = "Public",
-    var favoriteRecipes: List<String> = listOf()
+    var favoriteRecipes: List<String> = listOf(),
+    var ratings: HashMap<String, Float>? = null,
+    var averageRating: Float? = null,
+    var userRating: Float? = null
 )

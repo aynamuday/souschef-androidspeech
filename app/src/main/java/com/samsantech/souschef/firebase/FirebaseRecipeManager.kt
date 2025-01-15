@@ -298,11 +298,10 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun getFavoriteRecipes(callback: (List<String>) -> Unit) {
+    fun getUserFavoriteRecipes(callback: (List<String>) -> Unit) {
         val user = auth.currentUser
         if (user != null) {
             val userDocRef = db.collection("users").document(user.uid)
-
             userDocRef.get().addOnSuccessListener { document ->
                 if (document.exists()) {
                     val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
@@ -310,7 +309,56 @@ class FirebaseRecipeManager(
                 } else {
                     callback(emptyList())
                 }
+            }.addOnFailureListener {
+                callback(emptyList())
             }
+        } else {
+            callback(emptyList())
+        }
+    }
+
+    fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
+        val user = auth.currentUser
+        if (user != null) {
+            val userDocRef = db.collection("users").document(user.uid)
+
+            userDocRef.get().addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
+                    val updatedFavorites = favoriteRecipes.toMutableList().apply { remove(recipeId) }
+
+                    userDocRef.update("favoriteRecipes", updatedFavorites).addOnSuccessListener {
+                        callback(true)
+                    }.addOnFailureListener {
+                        callback(false)
+                    }
+                } else {
+                    callback(false)
+                }
+            }
+        }
+    }
+
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return callback(false)
+        val recipeRef = db.collection("recipes").document(recipeId)
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(recipeRef)
+            val ratings = snapshot.get("ratings") as? HashMap<String, Double> ?: hashMapOf()
+
+            ratings[userId] = rating.toDouble()
+
+            val averageRating = if (ratings.isNotEmpty()) {
+                ratings.values.average().toFloat()
+            } else 0f
+
+            transaction.update(recipeRef, "ratings", ratings)
+            transaction.update(recipeRef, "averageRating", averageRating)
+        }.addOnSuccessListener {
+            callback(true)
+        }.addOnFailureListener {
+            callback(false)
         }
     }
 }

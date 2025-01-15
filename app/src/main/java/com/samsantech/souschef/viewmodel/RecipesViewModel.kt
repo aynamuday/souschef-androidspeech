@@ -1,5 +1,6 @@
 package com.samsantech.souschef.viewmodel
 
+import com.google.firebase.auth.FirebaseAuth
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,11 +14,18 @@ class RecipesViewModel (
 
     init {
         refreshRecipes()
+        refreshFavoriteRecipes()
     }
 
     private fun refreshRecipes() {
         firebaseRecipeManager.getAllRecipes { recipes ->
             allRecipes.value = recipes
+        }
+    }
+
+    fun refreshFavoriteRecipes() {
+        firebaseRecipeManager.getUserFavoriteRecipes { favorites ->
+            favoriteRecipes.value = favorites.toSet()
         }
     }
 
@@ -40,10 +48,28 @@ class RecipesViewModel (
             callback(isSuccess)
         }
     }
-//    fun loadFavoriteRecipes() {
-//        firebaseUserManager.getFavoriteRecipes { recipes ->
-//            favoriteRecipes.value = recipes.toSet()  // Convert to Set
-//
-//        }
-//    }
+
+    fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
+        firebaseRecipeManager.removeFromFavorites(recipeId) { isSuccess ->
+            if (isSuccess) {
+                favoriteRecipes.value = favoriteRecipes.value - recipeId
+            }
+            callback(isSuccess)
+        }
+    }
+
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean) -> Unit) {
+        firebaseRecipeManager.rateRecipe(recipeId, rating) { isSuccess ->
+            if (isSuccess) {
+                // Update the local recipe list with the new rating
+                val updatedRecipes = allRecipes.value.map { recipe ->
+                    if (recipe.id == recipeId) {
+                        recipe.copy(userRating = rating)
+                    } else recipe
+                }
+                allRecipes.value = updatedRecipes
+            }
+            callback(isSuccess)
+        }
+    }
 }
