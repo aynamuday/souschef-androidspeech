@@ -159,7 +159,9 @@ fun RecipeCard(
     onNavigateToRecipe: () -> Unit
 ) {
     val isFavorite = recipe.id in favoriteRecipes
-    var rating by remember { mutableStateOf(0) }
+    //var rating by remember { mutableStateOf(0) }
+    val userRating = recipe.userRating ?: 0f
+    val averageRating = recipe.averageRating ?: 0f
 
     // Determine the photo URL based on available keys
     val photoUrl: Uri? = when {
@@ -242,17 +244,24 @@ fun RecipeCard(
                 ) {
                     (1..5).forEach { star ->
                         Icon(
-                            imageVector = if (star <= rating) Icons.Filled.Star else Icons.Outlined.Star,
+                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
                             contentDescription = "Rate $star stars",
-                            tint = if (star <= rating) Color.Yellow else Color.Gray,
+                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
                             modifier = Modifier
                                 .size(16.dp)
                                 .clickable {
-                                    rating = star
+                                    recipesViewModel.rateRecipe(recipe.id ?: "", star.toFloat()) {
+
+                                    }
                                 }
                         )
                     }
                 }
+                Text(
+                    text = "${String.format("%.1f", averageRating)}",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                     contentDescription = "Bookmark",

@@ -94,8 +94,8 @@ fun RecipeScreen(
         mutableStateOf(false)
     }
 
-    var rating by remember { mutableStateOf(recipe.userRating ?: 0f) }
-    val averagaRating by remember { mutableStateOf(recipe.averageRating ?: 0f) }
+    val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
+    val averageRating = recipe.averageRating ?: 0f
     val isFavorite = recipe.id in favoriteRecipes
 
 
@@ -156,20 +156,18 @@ fun RecipeScreen(
                 recipe = recipe,
                 isFavorite = isFavorite,
                 recipesViewModel,
-                rating = rating,
-                averageRating = averagaRating,
+                rating = userRating.value,
+                averageRating = averageRating,
                 onRateRecipe = { newRating ->
                     recipe.id?.let {
                         recipesViewModel.rateRecipe(it, newRating) { success ->
                             if (success) {
-                                rating = newRating
+                                userRating.value = newRating
                             }
                         }
                     }
                 },
-                onLikeRecipe = {
-
-                }
+                onLikeRecipe = {}
             )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
@@ -250,7 +248,7 @@ fun RecipeMetadata(
                     rating = rating,
                     onRateRecipe = onRateRecipe)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "( ${"%.1f".format(rating)} ratings)", fontSize = 12.sp)
+                Text(text = "( ${"%.1f".format(averageRating)} ratings)", fontSize = 12.sp)
             }
             Text(
                 text = "Leave a rating", // or edit rating if rated already
