@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -50,12 +54,14 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun HomeScreen(
-    navController: NavController, 
+    navController: NavController,
     paddingValues: PaddingValues,
+    searchRecipesViewModel: SearchRecipesViewModel,
     recipesViewModel: RecipesViewModel,
     onNavigateToRecipe: () -> Unit
 ) {
@@ -63,12 +69,12 @@ fun HomeScreen(
     //val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(paddingValues)
-    ) {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(paddingValues)
+//    ) {
         Spacer(
             modifier = Modifier
                 .background(Color(22, 166, 55, 255))
@@ -119,22 +125,29 @@ fun HomeScreen(
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            RecipeFeed(navController, recipes, recipesViewModel, favoriteRecipes, onNavigateToRecipe)
+            RecipeList(
+                navController,
+                recipes,
+                recipesViewModel,
+                favoriteRecipes,
+                onNavigateToRecipe
+            )
         }
     }
-}
+//}
 
 @Composable
-fun RecipeFeed(
+fun RecipeList(
     navController: NavController,
     recipes: List<Recipe>,
     recipesViewModel: RecipesViewModel,
     favoriteRecipes: Set<String>,
     onNavigateToRecipe: () -> Unit
 ) {
-    // Horizontal scrolling layout using LazyRow
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(recipes) { recipe ->
@@ -146,6 +159,7 @@ fun RecipeFeed(
                 onNavigateToRecipe = onNavigateToRecipe
             )
         }
+
     }
 }
 
@@ -159,11 +173,9 @@ fun RecipeCard(
     onNavigateToRecipe: () -> Unit
 ) {
     val isFavorite = recipe.id in favoriteRecipes
-    //var rating by remember { mutableStateOf(0) }
     val userRating = recipe.userRating ?: 0f
     val averageRating = recipe.averageRating ?: 0f
 
-    // Determine the photo URL based on available keys
     val photoUrl: Uri? = when {
         recipe.photosUrl["portrait"] != null -> Uri.parse("${recipe.photosUrl["portrait"]}")
         recipe.photosUrl["square"] != null -> Uri.parse("${recipe.photosUrl["square"]}")
@@ -171,26 +183,30 @@ fun RecipeCard(
         else -> null
     }
 
-    Box(
-        modifier = Modifier
-            .width(200.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(245, 245, 220))
-            .clickable {
-                recipesViewModel.displayRecipe.value = recipe
-                onNavigateToRecipe()
-            }
-    ) {
+//    Box(
+//        modifier = Modifier
+//            .width(200.dp)
+//            .clip(RoundedCornerShape(10.dp))
+//            .background(Color(245, 245, 220))
+//            .clickable {
+//                recipesViewModel.displayRecipe.value = recipe
+//                onNavigateToRecipe()
+//            }
+//    ) {
         Column(
             modifier = Modifier
-                .padding(10.dp)
+//                .padding(10.dp)
                 .fillMaxWidth()
-                .align(Alignment.Center)
+//                .align(Alignment.Center)
+                .clickable {
+                    recipesViewModel.displayRecipe.value = recipe
+                    onNavigateToRecipe()
+            }
         ) {
             Box(
                 modifier = Modifier
-                    .height(120.dp)
-                    .width(200.dp)
+//                    .height(120.dp)
+//                    .width(200.dp)
                     .background(Color.White)
                     .clip(RoundedCornerShape(10.dp))
                     .border(
@@ -208,14 +224,16 @@ fun RecipeCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
+                            .align(Alignment.Center)
                     )
                 } else {
-                    // Placeholder text or icon when no image is available
                     Text(
                         text = "No Image",
                         color = Color.Gray,
                         fontSize = 14.sp,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.Center)
                     )
                 }
             }
@@ -248,7 +266,7 @@ fun RecipeCard(
                             contentDescription = "Rate $star stars",
                             tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
                             modifier = Modifier
-                                .size(16.dp)
+                                .size(12.dp)
                                 .clickable {
                                     recipesViewModel.rateRecipe(recipe.id ?: "", star.toFloat()) {
 
@@ -277,4 +295,4 @@ fun RecipeCard(
             }
         }
     }
-}
+//}

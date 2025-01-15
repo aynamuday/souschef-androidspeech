@@ -216,6 +216,7 @@ fun SousChefApp(
                     HomeScreen(
                         navController,
                         paddingValues,
+                        searchRecipesViewModel,
                         recipesViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe)
