@@ -36,14 +36,14 @@ import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 
 @Composable
 fun Dialog(
-    icon: String,
+    icon: String = "success",
     message: String,
     subMessage: String? = null,
     onCloseClick: () -> Unit
 ) {
-    val iconId: Int = R.drawable.successful_vector
+    var iconId: Int = R.drawable.successful_vector
     if (icon == "warning") {
-        R.drawable.exclamation_icon
+        iconId = R.drawable.exclamation_icon
     }
 
     Box(

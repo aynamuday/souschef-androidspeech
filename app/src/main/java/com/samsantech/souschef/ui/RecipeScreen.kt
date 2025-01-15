@@ -72,7 +72,8 @@ fun RecipeScreen(
     onNavigateToPreviousScreen: () -> Unit,
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
-    onNavigateToCreateRecipeOne: () -> Unit
+    onNavigateToCreateRecipeOne: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
 
     val user by userViewModel.user.collectAsState()
@@ -199,6 +200,11 @@ fun RecipeScreen(
             onNavigateToCreateRecipeOne = { onNavigateToCreateRecipeOne() },
             setLoading = {
                 loading = it
+            },
+            onDeleted = {
+                if (it) {
+                    onNavigateToProfile()
+                }
             }
         )
     }

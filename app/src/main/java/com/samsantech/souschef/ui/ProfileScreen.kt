@@ -9,9 +9,15 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,6 +27,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,10 +37,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+//<<<<<<< master
+import androidx.compose.material.icons.filled.Close
+//=======
 import androidx.compose.material.icons.filled.Delete
+//>>>>>>> nico
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -48,12 +61,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.ColoredButton
@@ -116,6 +132,9 @@ fun ProfileScreen(
     var error:String? by remember {
         mutableStateOf(null)
     }
+    var showMenuBar by remember {
+        mutableStateOf(false)
+    }
 
     val activityResultLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -127,7 +146,9 @@ fun ProfileScreen(
 
     Box {
         Column {
-            Header()
+            Header(onClickMenuBar = {
+                showMenuBar = true
+            })
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -200,8 +221,8 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(5.dp))
 
-                ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
-                Spacer(modifier = Modifier.height(12.dp))
+//                ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
+//                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -292,9 +313,13 @@ fun ProfileScreen(
                         if (favoriteRecipeList.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
+//<<<<<<< master
+                                modifier = Modifier.padding(top = 8.dp),
+//=======
                                 modifier = Modifier
                                     .padding(top = 8.dp)
-                                    .fillMaxWidth(),
+//                                    .fillMaxWidth(),
+//>>>>>>> nico
                                 fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
                                 color = Color.Black.copy(.7f),
@@ -327,11 +352,15 @@ fun ProfileScreen(
                                                 recipesViewModel.displayRecipe.value = recipe
                                                 onNavigateToRecipe()
                                             },
+//<<<<<<< master
+//                                            showKebabMenu = false
+//=======
                                             //showKebabMenu = true,
                                             onClickKebabMenu = {
                                                 //showRecipeActionMenu = !showRecipeActionMenu
                                                 recipeWithAction = if (recipeWithAction == null) recipe else null
                                             }
+//>>>>>>> nico
                                         )
 
                                         IconButton(
@@ -357,11 +386,92 @@ fun ProfileScreen(
                         }
                     }
                 }
-
-
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
+    }
+
+    AnimatedVisibility(
+        visible = showMenuBar,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = Modifier
+            .zIndex(1f)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(.4f))
+                .animateEnterExit(
+                    enter = slideInHorizontally(
+                        initialOffsetX = {
+                            it
+                        }
+                    ),
+                    exit = slideOutHorizontally(
+                        targetOffsetX = {
+                            it
+                        }
+                    )
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        showMenuBar = false
+                    }
+                }
+        ) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .width(250.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                    .background(Color.White)
+                    .padding(top = 50.dp)
+            ) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+                                showMenuBar = false
+                            }
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+
+                val menu = arrayOf<Menu>(
+                    Menu("Edit Profile", Icons.Filled.EditNote, onNavigateToEditProfile)
+                )
+
+
+                menu.forEach {
+                    Row(
+                        modifier = Modifier
+                            .clickable(onClick = it.onClick)
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = it.icon,
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = it.title,
+                            modifier = Modifier
+                                .weight(1f)
+                        )
+                    }
+                }
+            }
+        }
+
     }
 
     if (showGetImageOptions) {
@@ -447,3 +557,9 @@ fun ProfileScreen(
         ProgressSpinner()
     }
 }
+
+data class Menu(
+    val title: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit
+)

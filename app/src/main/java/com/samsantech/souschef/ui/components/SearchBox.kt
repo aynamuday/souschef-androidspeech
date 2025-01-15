@@ -21,10 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.samsantech.souschef.ui.theme.Green
 
 @Composable
 fun SearchBox(
+    modifier: Modifier,
     search: String,
     onValueChange: (String) -> Unit,
     onSubmit: () -> Unit,
@@ -33,8 +35,7 @@ fun SearchBox(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
     ) {
         Box(modifier = Modifier.weight(1f)) {
             FormBasicTextField(
@@ -49,6 +50,7 @@ fun SearchBox(
                         onSubmit()
                     }
                 ),
+                placeholderFontSize = 12.sp,
                 paddingValues = PaddingValues(start = 35.dp, top = 8.dp, bottom = 8.dp, end = 25.dp),
                 roundCorner = 5.dp,
                 backgroundColor = Color.Gray.copy(.2f),
@@ -61,7 +63,8 @@ fun SearchBox(
                     .clickable {
                         clearSearch()
                     },
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 

@@ -128,7 +128,8 @@ fun CreateRecipeScreenFour(
                                     newTag = it.lowercase()
                                 },
                                 paddingValues = PaddingValues(10.dp),
-                                borderColor = Green
+                                borderColor = Green,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
 
@@ -151,7 +152,6 @@ fun CreateRecipeScreenFour(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Yellow)
                                 .padding(12.dp, 5.dp)
-                                .weight(.3f)
                         )
                     }
                     if (errors["tags"] != null && errors["tags"] != "") {

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -33,6 +33,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                        maxLines: Int = minLines,
                        placeholder: String? = null,
                        textAlign: TextAlign = TextAlign.Start,
+                       placeholderFontSize: TextUnit = 14.sp,
                        borderColor: Color = Color.Black,
                        backgroundColor: Color = Color.White,
                        roundCorner: Dp = 10.dp,
@@ -53,7 +54,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .offset(x = 5.dp),
-                tint = Color.Black.copy(.8f)
+                tint = Color.Black.copy(.4f)
             )
         }
         BasicTextField(
@@ -65,8 +66,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
             modifier = modifier
                 .border(1.dp, borderColor, RoundedCornerShape(roundCorner))
                 .background(backgroundColor, RoundedCornerShape(roundCorner))
-                .padding(paddingValues)
-                .fillMaxWidth(),
+                .padding(paddingValues),
             decorationBox = { innerTextField ->
                 if (placeholder != null) {
                     if (value.isEmpty()) {
@@ -74,7 +74,7 @@ fun FormBasicTextField(modifier: Modifier = Modifier,
                             text = placeholder,
                             color = Color.Gray,
                             textAlign = placeholderAlign,
-                            fontSize = 14.sp
+                            fontSize = placeholderFontSize
                         )
                     }
                 }

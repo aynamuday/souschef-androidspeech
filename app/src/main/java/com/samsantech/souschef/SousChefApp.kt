@@ -297,6 +297,9 @@ fun SousChefApp(
                     userViewModel,
                     ownRecipesViewModel,
                     onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
+                    onNavigateToProfile = { navController.navigate(route = Profile) {
+                        popUpTo(Recipe) {inclusive = true}
+                    } }
                 )
             }
 

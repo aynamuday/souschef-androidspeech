@@ -73,7 +73,7 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 80.dp, bottom = 70.dp, start = 25.dp, end = 25.dp),
+            .padding(top = 80.dp, bottom = 30.dp, start = 25.dp, end = 25.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(
