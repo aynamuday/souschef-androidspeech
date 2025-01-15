@@ -12,6 +12,10 @@ class FirebaseRecipeManager(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
+    fun getCurrentUser(): String? {
+        return auth.currentUser?.uid
+    }
+
     fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
         db.collection("recipes")
             .get()
@@ -259,6 +263,9 @@ class FirebaseRecipeManager(
             instructions = data["instructions"] as? List<String> ?: listOf(),
             tags = data["tags"] as? List<String> ?: listOf(),
             audience = data["audience"].toString(),
+            ratings = data["ratings"] as? HashMap<String, Float>,
+            averageRating = (data["averageRating"] as? Double)?.toFloat(),
+            userRating = null
         )
     }
 
@@ -338,15 +345,15 @@ class FirebaseRecipeManager(
 
         db.runTransaction { transaction ->
             val snapshot = transaction.get(recipeRef)
-            val ratings = snapshot.get("ratings") as? HashMap<String, Double> ?: hashMapOf()
+            val currentRatings = snapshot.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
 
-            ratings[userId] = rating.toDouble()
+            currentRatings[userId] = rating
 
-            val averageRating = if (ratings.isNotEmpty()) {
-                ratings.values.average().toFloat()
+            val averageRating = if (currentRatings.isNotEmpty()) {
+                currentRatings.values.sum() / currentRatings.size
             } else 0f
 
-            transaction.update(recipeRef, "ratings", ratings)
+            transaction.update(recipeRef, "ratings", currentRatings)
             transaction.update(recipeRef, "averageRating", averageRating)
         }.addOnSuccessListener {
             callback(true)
