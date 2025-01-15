@@ -316,11 +316,11 @@ fun ProfileScreen(
 //<<<<<<< master
                                 modifier = Modifier.padding(top = 8.dp),
 //=======
-                                modifier = Modifier
-                                    .padding(top = 8.dp)
+//                                modifier = Modifier
+//                                    .padding(top = 8.dp)
 //                                    .fillMaxWidth(),
 //>>>>>>> nico
-                                fontSize = 14.sp,
+//                                fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
                                 color = Color.Black.copy(.7f),
                                 textAlign = TextAlign.Center
