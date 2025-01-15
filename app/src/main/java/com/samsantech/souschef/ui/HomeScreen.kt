@@ -205,8 +205,8 @@ fun RecipeCard(
         ) {
             Box(
                 modifier = Modifier
-//                    .height(120.dp)
-//                    .width(200.dp)
+                    .height(200.dp)
+                    .width(185.dp)
                     .background(Color.White)
                     .clip(RoundedCornerShape(10.dp))
                     .border(
@@ -238,7 +238,7 @@ fun RecipeCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+//            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = recipe.title,
@@ -246,11 +246,11 @@ fun RecipeCard(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 8.dp)
             )
-            Text(
-                text = "Learn to cook ${recipe.title}!",
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+//            Text(
+//                text = "Learn to cook ${recipe.title}!",
+//                fontSize = 12.sp,
+//                color = Color.Gray
+//            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
