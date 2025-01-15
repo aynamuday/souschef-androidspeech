@@ -2,7 +2,9 @@ package com.samsantech.souschef.firebase
 
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.data.User
@@ -58,6 +60,7 @@ class FirebaseRecipeManager(
         if (currentUser != null) {
             db.collection("recipes")
                 .whereEqualTo("userId", currentUser.uid)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener { documents ->
                     val recipesList = mutableListOf<Recipe>()
@@ -105,16 +108,20 @@ class FirebaseRecipeManager(
         if (recipe.cookTimeMin.isNotEmpty()) data["cookTimeMin"] = recipe.cookTimeMin
         if (recipe.categories.isNotEmpty()) data["categories"] = recipe.categories
         if (recipe.tags.isNotEmpty()) data["tags"] = recipe.tags
+        data["createdAt"] = FieldValue.serverTimestamp()
+        data["updatedAt"] = FieldValue.serverTimestamp()
 
         db.collection("recipes")
             .add(data)  // adds the recipe to db
             .addOnSuccessListener { recipeDocRef ->
-                val recipeDocRefId = recipeDocRef.id
+                recipe.id = recipeDocRef.id
+                recipe.userId = user.uid
+                recipe.userName = user.username
+                recipe.userPhotoUrl = user.photoUrl
 
                 // on success, upload the recipe photos
                 if (recipe.photosUri.size > 0) {
                     uploadRecipePhotos(
-                        recipeDocRefId,
                         recipe.photosUri,
                         recipe,
                         updatedRecipe = {
@@ -125,6 +132,7 @@ class FirebaseRecipeManager(
                         }
                     )
                 } else {
+                    updatedRecipe(recipe)
                     callback(true, null)
                 }
             }
@@ -134,7 +142,6 @@ class FirebaseRecipeManager(
     }
 
     fun updateRecipe(
-        document: String,
         data: HashMap<String, Any>,
         recipe: Recipe,
         updatedRecipe: (Recipe) -> Unit,
@@ -142,7 +149,6 @@ class FirebaseRecipeManager(
     ) {
         if (recipe.photosUri.size > 0) {
             uploadRecipePhotos(
-                document,
                 recipe.photosUri,
                 recipe,
                 updatedRecipe = {
@@ -156,15 +162,19 @@ class FirebaseRecipeManager(
             )
         }
         if (data.isNotEmpty()) {
-            db.collection("recipes")
-                .document(document)
-                .update(data)
-                .addOnSuccessListener {
-                    callback(true, null)
-                }
-                .addOnFailureListener {
-                    callback(false, getErrorMessage(it))
-                }
+            data["updatedAt"] = FieldValue.serverTimestamp()
+
+            recipe.id?.let { recipeId ->
+                db.collection("recipes")
+                    .document(recipeId)
+                    .update(data)
+                    .addOnSuccessListener {
+                        callback(true, null)
+                    }
+                    .addOnFailureListener {
+                        callback(false, getErrorMessage(it))
+                    }
+            }
         }
     }
 
@@ -193,14 +203,13 @@ class FirebaseRecipeManager(
     }
 
     private fun uploadRecipePhotos(
-        document: String,
         photosUri: Map<String, Uri>,
         recipe: Recipe,
         updatedRecipe: (Recipe) -> Unit,
         callback: (Boolean, String?) -> Unit
     ) {
         val storageRef = storage.reference
-        val recipesRef = storageRef.child("recipes/${document}")
+        val recipesRef = storageRef.child("recipes/${recipe.id}")
 
         photosUri.forEach { photo ->
             val uploadRef = recipesRef.child("${photo.key}.jpg")
@@ -218,23 +227,21 @@ class FirebaseRecipeManager(
                     val url = Uri.parse("$downloadUri")
 
                     // update the recipe in db - adds the url of photos
-                    val recipeRef = db.collection("recipes").document(document)
-                    recipeRef.update(
+                    val recipeRef = recipe.id?.let { db.collection("recipes").document(it) }
+                    recipeRef?.update(
                         mapOf(
-                            "photosUrl.${photo.key}" to url
+                            "photosUrl.${photo.key}" to url,
+                            "updatedAt" to FieldValue.serverTimestamp()
                         )
-                    )
-                        .addOnSuccessListener {
-                            recipe.photosUrl[photo.key] = url
-                            recipe.photosUri.remove(photo.key)
-                            updatedRecipe(recipe)
-                        }
-                        .addOnFailureListener {
-                            println(it)
-                        }
-                        .addOnCompleteListener {
-                            callback(true, null)
-                        }
+                    )?.addOnSuccessListener {
+                        recipe.photosUrl[photo.key] = url
+                        recipe.photosUri.remove(photo.key)
+                        updatedRecipe(recipe)
+                    }?.addOnFailureListener {
+                        println(it)
+                    }?.addOnCompleteListener {
+                        callback(true, null)
+                    }
                 } else {
                     callback(true, null)
                 }

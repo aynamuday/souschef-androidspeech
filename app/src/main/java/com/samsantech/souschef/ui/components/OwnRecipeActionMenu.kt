@@ -18,7 +18,8 @@ fun OwnRecipeActionMenu(
     setRecipeWithAction: (Recipe?) -> Unit,
     ownRecipesViewModel: OwnRecipesViewModel,
     onNavigateToCreateRecipeOne: () -> Unit,
-    setLoading: (Boolean) -> Unit
+    setLoading: (Boolean) -> Unit,
+    onDeleted: (Boolean) -> Unit = {}
 ) {
     var showDeleteConfirmation by remember {
         mutableStateOf(false)
@@ -72,6 +73,7 @@ fun OwnRecipeActionMenu(
                                 setLoading(false)
 
                                 if (isSuccess) {
+                                    onDeleted(true)
                                     successDelete = true
                                 } else {
                                     error = err

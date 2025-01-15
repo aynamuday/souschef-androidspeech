@@ -79,7 +79,7 @@ fun BottomNavigationBar(
                         Box(
                             contentAlignment = Alignment.Center
                         ) {
-                            imageVector?.let { Icon(imageVector = imageVector, contentDescription = null, modifier = Modifier.size(30.dp)) }
+                            imageVector?.let { Icon(imageVector = imageVector, contentDescription = null, modifier = Modifier.size(27.dp)) }
                         }
                     },
                 )

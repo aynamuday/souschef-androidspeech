@@ -80,18 +80,21 @@ fun CreateRecipeScreenTwo(
 
                         recipe.ingredients.forEachIndexed { index, ingredient ->
                             Row(
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                FormBasicTextField(
-                                    value = ingredient,
-                                    maxLines = 3,
-                                    onValueChange = {
-                                        error = ""
-                                        ownRecipesViewModel.updateIngredients(index, it)
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    borderColor = Color.Gray
-                                )
+                                Box(modifier = Modifier.weight(1f)) {
+                                    FormBasicTextField(
+                                        value = ingredient,
+                                        maxLines = 2,
+                                        onValueChange = {
+                                            error = ""
+                                            ownRecipesViewModel.updateIngredients(index, it)
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        borderColor = Color.Gray
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Icon(
                                     imageVector = Icons.Filled.Close,

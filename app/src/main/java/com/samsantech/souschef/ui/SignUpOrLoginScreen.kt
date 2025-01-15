@@ -26,7 +26,7 @@ fun SignUpOrLoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(22, 166, 55, 255))
-            .padding(top = 130.dp, bottom = 70.dp, start = 32.dp, end = 32.dp),
+            .padding(top = 130.dp, bottom = 30.dp, start = 32.dp, end = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
