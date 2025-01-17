@@ -25,11 +25,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
-import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,7 +51,6 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import androidx.compose.ui.text.style.TextAlign
-import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.KebabMenu
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.ProgressSpinner
@@ -95,9 +92,9 @@ fun RecipeScreen(
     }
 
     val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
-    val averageRating = recipe.averageRating ?: 0f
+    //val averageRating = recipe.averageRating ?: 0f
     val isFavorite = recipe.id in favoriteRecipes
-
+    val averageRating = remember { mutableStateOf(recipe.averageRating ?: 0f) }
 
     Column(
         modifier = Modifier
@@ -157,12 +154,13 @@ fun RecipeScreen(
                 isFavorite = isFavorite,
                 recipesViewModel,
                 rating = userRating.value,
-                averageRating = averageRating,
+                averageRating = averageRating.value,
                 onRateRecipe = { newRating ->
                     recipe.id?.let {
-                        recipesViewModel.rateRecipe(it, newRating) { success ->
+                        recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
                             if (success) {
                                 userRating.value = newRating
+                                averageRating.value = (updatedAverageRating ?: averageRating.value) as Float
                             }
                         }
                     }

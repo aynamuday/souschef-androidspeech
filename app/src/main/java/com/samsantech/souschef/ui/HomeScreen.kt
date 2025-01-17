@@ -16,32 +16,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
-import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,9 +42,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
-import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun HomeScreen(
@@ -69,12 +58,12 @@ fun HomeScreen(
     //val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
 //            .verticalScroll(rememberScrollState())
 //            .padding(paddingValues)
-//    ) {
+    ) {
         Spacer(
             modifier = Modifier
                 .background(Color(22, 166, 55, 255))
@@ -125,43 +114,42 @@ fun HomeScreen(
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
-            RecipeList(
-                navController,
-                recipes,
-                recipesViewModel,
-                favoriteRecipes,
-                onNavigateToRecipe
-            )
-        }
-    }
-//}
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(recipes) { recipe ->
+                        RecipeCard(
+                            recipe = recipe,
+                            navController = navController,
+                            recipesViewModel = recipesViewModel,
+                            favoriteRecipes = favoriteRecipes,
+                            onNavigateToRecipe = onNavigateToRecipe
+                        )
+                    }
+                }
+            }
 
-@Composable
-fun RecipeList(
-    navController: NavController,
-    recipes: List<Recipe>,
-    recipesViewModel: RecipesViewModel,
-    favoriteRecipes: Set<String>,
-    onNavigateToRecipe: () -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(recipes) { recipe ->
-            RecipeCard(
-                recipe = recipe,
-                navController = navController,
-                recipesViewModel = recipesViewModel,
-                favoriteRecipes = favoriteRecipes,
-                onNavigateToRecipe = onNavigateToRecipe
-            )
+            Spacer(modifier = Modifier.height(60.dp))
         }
-
     }
 }
+
+//@Composable
+//fun RecipeList(
+//    navController: NavController,
+//    recipes: List<Recipe>,
+//    recipesViewModel: RecipesViewModel,
+//    favoriteRecipes: Set<String>,
+//    onNavigateToRecipe: () -> Unit
+//) {
+//
+//}
 
 
 @Composable
@@ -205,8 +193,9 @@ fun RecipeCard(
         ) {
             Box(
                 modifier = Modifier
-                    .height(200.dp)
-                    .width(185.dp)
+                    .height(400.dp)
+                    .fillMaxWidth()
+                    //.width(185.dp)
                     .background(Color.White)
                     .clip(RoundedCornerShape(10.dp))
                     .border(
@@ -268,9 +257,7 @@ fun RecipeCard(
                             modifier = Modifier
                                 .size(12.dp)
                                 .clickable {
-                                    recipesViewModel.rateRecipe(recipe.id ?: "", star.toFloat()) {
-
-                                    }
+                                    recipesViewModel.rateRecipe(recipe.id ?: "", star.toFloat()) { success, updatedAverageRating -> }
                                 }
                         )
                     }
@@ -280,6 +267,7 @@ fun RecipeCard(
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
+
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                     contentDescription = "Bookmark",
@@ -293,6 +281,26 @@ fun RecipeCard(
                         }
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                UserNamePhoto(
+                    photoUri = recipe.userPhotoUrl,
+                    userName = recipe.userName,
+                    photoSize = 20.dp,
+                    fontColor = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f),
+                    spacer = 8.dp
+                )
+            }
+
         }
     }
 //}

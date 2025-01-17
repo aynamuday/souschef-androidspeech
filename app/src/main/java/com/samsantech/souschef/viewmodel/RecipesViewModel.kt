@@ -1,6 +1,5 @@
 package com.samsantech.souschef.viewmodel
 
-import com.google.firebase.auth.FirebaseAuth
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,18 +57,18 @@ class RecipesViewModel (
         }
     }
 
-    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean) -> Unit) {
-        firebaseRecipeManager.rateRecipe(recipeId, rating) { isSuccess ->
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Any?) -> Unit) {
+        firebaseRecipeManager.rateRecipe(recipeId, rating) { isSuccess, updatedAverageRating ->
             if (isSuccess) {
                 // Update the local recipe list with the new rating
                 val updatedRecipes = allRecipes.value.map { recipe ->
                     if (recipe.id == recipeId) {
-                        recipe.copy(userRating = rating)
+                        recipe.copy(userRating = rating, averageRating = updatedAverageRating)
                     } else recipe
                 }
                 allRecipes.value = updatedRecipes
             }
-            callback(isSuccess)
+            callback(isSuccess, updatedAverageRating)
         }
     }
 }
