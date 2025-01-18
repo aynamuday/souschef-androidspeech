@@ -14,10 +14,6 @@ class FirebaseRecipeManager(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
-    fun getCurrentUser(): String? {
-        return auth.currentUser?.uid
-    }
-
     fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
         db.collection("recipes")
             .get()
@@ -272,7 +268,9 @@ class FirebaseRecipeManager(
             audience = data["audience"].toString(),
             ratings = data["ratings"] as? HashMap<String, Float>,
             averageRating = (data["averageRating"] as? Double)?.toFloat(),
-            userRating = null
+            userRating = null,
+            isTikTok = data["isTikTok"] as? Boolean ?: false,
+            postId = data["postId"] as? String,
         )
     }
 

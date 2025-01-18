@@ -81,6 +81,7 @@ import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.ProfilePhoto
 import com.samsantech.souschef.ui.components.RecipeCard
+import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.utils.convertUriToBitmap
@@ -309,18 +310,10 @@ fun ProfileScreen(
                 if (show == "favorites") {
                     BoxWithConstraints {
                         val maxWidth = maxWidth
-
                         if (favoriteRecipeList.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
-//<<<<<<< master
                                 modifier = Modifier.padding(top = 8.dp),
-//=======
-//                                modifier = Modifier
-//                                    .padding(top = 8.dp)
-//                                    .fillMaxWidth(),
-//>>>>>>> nico
-//                                fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
                                 color = Color.Black.copy(.7f),
                                 textAlign = TextAlign.Center
@@ -333,52 +326,69 @@ fun ProfileScreen(
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 favoriteRecipeList.forEach { recipe ->
-                                    val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
-                                        Uri.parse("${recipe.photosUrl["portrait"]}")
-                                    } else if (recipe.photosUrl["square"] != null) {
-                                        Uri.parse("${recipe.photosUrl["square"]}")
-                                    } else {
-                                        Uri.parse("${recipe.photosUrl["landscape"]}")
-                                    }
-
-                                    Box(
-                                        modifier = Modifier
-                                    ) {
-                                        RecipeCard(
-                                            photoUrl = photoUrl,
-                                            modifier = Modifier
-                                                .width((maxWidth / 3) - 10.dp),
-                                            onClick = {
-                                                recipesViewModel.displayRecipe.value = recipe
-                                                onNavigateToRecipe()
-                                            },
-//<<<<<<< master
-//                                            showKebabMenu = false
-//=======
-                                            //showKebabMenu = true,
-                                            onClickKebabMenu = {
-                                                //showRecipeActionMenu = !showRecipeActionMenu
-                                                recipeWithAction = if (recipeWithAction == null) recipe else null
+                                    if (recipe.isTikTok) {
+                                            Box (modifier = Modifier.clip(RoundedCornerShape(5.dp))) {
+                                                val width = (maxWidth / 3)
+                                                recipe.postId?.let {
+                                                    TikTokWebView(
+                                                        postId = it,
+                                                        width = width.value.toInt(),
+                                                        height = 180
+                                                    )
+                                                }
                                             }
-//>>>>>>> nico
-                                        )
+                                    } else {
+                                        val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
+                                            Uri.parse("${recipe.photosUrl["portrait"]}")
+                                        } else {
+                                            Uri.parse("${recipe.photosUrl["square"]}")
+                                        }
 
-                                        IconButton(
-                                            onClick = {
-                                                recipe.id?.let {
-                                                    recipesViewModel.removeFromFavorites(it) { isSuccess ->
-                                                        if (isSuccess) {
-                                                            Toast.makeText(context, "Recipe removed from favorites", Toast.LENGTH_SHORT).show()
-                                                        } else {
-                                                            Toast.makeText(context, "Failed to remove from favorites", Toast.LENGTH_SHORT).show()
+                                        Box(modifier = Modifier) {
+                                            RecipeCard(
+                                                photoUrl = photoUrl,
+                                                modifier = Modifier
+                                                    .width((maxWidth / 3)),
+                                                onClick = {
+                                                    recipesViewModel.displayRecipe.value = recipe
+                                                    onNavigateToRecipe()
+                                                },
+//                                                showKebabMenu = true,
+                                                onClickKebabMenu = {
+                                                    //showRecipeActionMenu = !showRecipeActionMenu
+                                                    recipeWithAction =
+                                                        if (recipeWithAction == null) recipe else null
+                                                }
+                                            )
+
+                                            IconButton(
+                                                onClick = {
+                                                    recipe.id?.let {
+                                                        recipesViewModel.removeFromFavorites(it) { isSuccess ->
+                                                            if (isSuccess) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "Recipe removed from favorites",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            } else {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "Failed to remove from favorites",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            },
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                        ) {
-                                            Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove from favorites")
+                                                },
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = "Remove from favorites"
+                                                )
+                                            }
                                         }
                                     }
                                 }
