@@ -1,5 +1,6 @@
 package com.samsantech.souschef.ui
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -43,6 +43,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.UserNamePhoto
+import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 
@@ -152,6 +153,7 @@ fun HomeScreen(
 //}
 
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun RecipeCard(
     recipe: Recipe,
@@ -263,7 +265,7 @@ fun RecipeCard(
                     }
                 }
                 Text(
-                    text = "${String.format("%.1f", averageRating)}",
+                    text = String.format("%.1f", averageRating),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -271,7 +273,7 @@ fun RecipeCard(
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                     contentDescription = "Bookmark",
-                    tint = if (isFavorite) Color.Yellow else Color.Gray,
+                    tint = if (isFavorite) Green else Color.Gray,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
