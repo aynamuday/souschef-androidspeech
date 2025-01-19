@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -37,11 +39,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -90,13 +94,13 @@ fun HomeScreen(
                     fontWeight = FontWeight(700),
                     color = Color(255, 207, 81, 255)
                 )
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(40.dp)
-                )
+//                Icon(
+//                    imageVector = Icons.Filled.Menu,
+//                    contentDescription = null,
+//                    tint = Color.White,
+//                    modifier = Modifier
+//                        .size(40.dp)
+//                )
             }
 
             Box {
@@ -125,13 +129,58 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(recipes) { recipe ->
-                        RecipeCard(
-                            recipe = recipe,
-                            navController = navController,
-                            recipesViewModel = recipesViewModel,
-                            favoriteRecipes = favoriteRecipes,
-                            onNavigateToRecipe = onNavigateToRecipe
-                        )
+                        if (recipe.isTikTok) {
+                            BoxWithConstraints {
+                                val maxWidth = maxWidth
+                                Column {
+                                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))){
+
+                                        val width = maxWidth
+                                        recipe.postId?.let {
+                                            TikTokWebView(
+                                                postId = it,
+                                                width = width.value.toInt(),
+                                                height = 400
+                                            )
+                                        }
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Text(
+                                            text = recipe.title,
+                                            //fontWeight = FontWeight(500),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f),
+                                            //fontSize = 16.sp
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+
+                                        Icon(
+                                            imageVector = if (favoriteRecipes.contains(recipe.id)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                                            contentDescription = "Bookmark",
+                                            tint = if (favoriteRecipes.contains(recipe.id)) Green else Color.Gray,
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clickable {
+                                                    recipe.id?.let { id ->
+                                                        recipesViewModel.toggleFavoriteRecipe(id, !favoriteRecipes.contains(id)) {}
+                                                    }
+                                                }
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            RecipeCard(
+                                recipe = recipe,
+                                navController = navController,
+                                recipesViewModel = recipesViewModel,
+                                favoriteRecipes = favoriteRecipes,
+                                onNavigateToRecipe = onNavigateToRecipe
+                            )
+                        }
                     }
                 }
             }
