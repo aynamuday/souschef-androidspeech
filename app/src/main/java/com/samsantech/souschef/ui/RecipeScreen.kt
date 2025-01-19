@@ -3,6 +3,9 @@ package com.samsantech.souschef.ui
 import androidx.compose.runtime.getValue
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.text.Html
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -26,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.Icon
@@ -165,7 +169,8 @@ fun RecipeScreen(
                         }
                     }
                 },
-                onLikeRecipe = {}
+                onLikeRecipe = {},
+                context = context
             )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
@@ -218,7 +223,8 @@ fun RecipeMetadata(
     rating: Float,
     averageRating: Float,
     onRateRecipe: (Float) -> Unit,
-    onLikeRecipe: () -> Unit
+    onLikeRecipe: () -> Unit,
+    context: Context
 ) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
@@ -259,31 +265,31 @@ fun RecipeMetadata(
         }
         Spacer(modifier = Modifier.width(32.dp))
         Column(horizontalAlignment = Alignment.End) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "7.5k",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                    )
-                    Text(
-                        text = "likes",
-                        modifier = Modifier
-                            .offset(y = -(3.dp)),
-                        fontSize = 12.sp,
-                    )
-                }
-                Column {
-                    Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clickable { },
-                        tint = Color(0xfff73056)
-                    )
-                }
-            }
+//            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+//                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                    Text(
+//                        text = "7.5k",
+//                        fontWeight = FontWeight.SemiBold,
+//                        fontSize = 20.sp,
+//                    )
+//                    Text(
+//                        text = "likes",
+//                        modifier = Modifier
+//                            .offset(y = -(3.dp)),
+//                        fontSize = 12.sp,
+//                    )
+//                }
+//                Column {
+//                    Icon(
+//                        imageVector = Icons.Filled.Favorite,
+//                        contentDescription = null,
+//                        modifier = Modifier
+//                            .size(28.dp)
+//                            .clickable { },
+//                        tint = Color(0xfff73056)
+//                    )
+//                }
+//            }
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                 contentDescription = null,
@@ -300,13 +306,31 @@ fun RecipeMetadata(
         }
     }
     Spacer(modifier = Modifier.height(20.dp))
-    UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
+    //UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
+    Row() {
+        UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
+
+        Spacer(modifier = Modifier.weight(1f)) // Pushes the next element to the end
+
+        Icon(
+            imageVector = Icons.Filled.Share,
+            contentDescription = "Share Recipe",
+            modifier = Modifier
+                .size(28.dp)
+                .clickable {
+                    shareRecipeViaEmail(recipe, context)
+                }
+        )
+    }
+
     Spacer(modifier = Modifier.height(20.dp))
     Spacer(modifier = Modifier
         .fillMaxWidth()
         .height(2.dp)
         .background(Color(255, 207, 81))
     )
+
+
     Spacer(modifier = Modifier.height(16.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
         TimeOrServing(title = "Serving", text = recipe.serving, modifier = Modifier.weight(1f))
@@ -562,4 +586,73 @@ fun RecipeInstructionsItem(index: Int, instruction: String) {
     }
 }
 
+fun shareRecipeViaEmail(recipe: Recipe, context: Context) {
+    val recipeTitle = recipe.title
+    val recipeOwner = recipe.userName
+    //val recipeImage = recipe.photosUrl["portrait"] ?: recipe.photosUrl["square"]
+    val recipeIngredients = recipe.ingredients.joinToString("<br>") { "- $it" }
+    val recipeInstructions = recipe.instructions.joinToString("<br>") { "- $it" }
 
+    val emailSubject = "Check out this recipe: $recipeTitle"
+
+    // HTML content for better design and structure
+    val emailBody = """
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+            <div style="width: 80%; margin: 20px auto; background-color: #ffffff; padding: 20px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); border-radius: 12px; background-color: #f9f9f9;">
+                
+                <!-- Header Section with Background Color -->
+                <div style="background-color: #16A637; padding: 20px; border-radius: 10px 10px 0 0;">
+                    <h2 style="color: #ffffff; text-align: center; margin: 0;">$recipeTitle</h2>
+                </div>
+    
+                <table style="width: 100%; border-spacing: 20px; margin-top: 20px;">
+                    <tr>
+                        <!-- Column 1: Recipe Image -->
+                        <td style="width: 50%; vertical-align: top;">
+                            <img src="" alt="Recipe Image" style="width: 100%; height: auto; border-radius: 8px;">
+                        </td>
+                        <!-- Column 2: Recipe Details -->
+                        <td style="width: 50%; vertical-align: top; color: #333;">
+                            <p style="font-size: 16px; color: #16A637; font-weight: bold;">By <strong>$recipeOwner</strong></p>
+    
+                            <p style="font-size: 16px; color: #FFD600; margin-top: 20px;"><strong>Ingredients:</strong></p>
+                            <ul style="font-size: 16px; padding-left: 20px; list-style-type: square;">
+                                $recipeIngredients
+                            </ul>
+    
+                            <p style="font-size: 16px; color: #FFD600; margin-top: 20px;"><strong>Instructions:</strong></p>
+                            <ol style="font-size: 16px; padding-left: 20px; list-style-type: decimal;">
+                                $recipeInstructions
+                            </ol>
+                        </td>
+                    </tr>
+                </table>
+    
+                <!-- Footer Section -->
+                <div style="text-align: center; margin-top: 40px; font-size: 12px; color: #888;">
+                    <p style="font-size: 14px; color: #333;">Enjoy your meal!</p>
+                    <p style="font-size: 12px; color: #888;">This recipe was shared via the SousChef App.</p>
+                </div>
+    
+            </div>
+        </body>
+        </html>
+    """.trimIndent()
+
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        //type = "text/html"
+        putExtra(Intent.EXTRA_SUBJECT, emailSubject)
+        //putExtra(Intent.EXTRA_TEXT, emailBody)
+        //putExtra(Intent.EXTRA_HTML_TEXT, emailBody)
+        putExtra(Intent.EXTRA_TEXT, Html.fromHtml(emailBody))
+        setType("text/html")
+    }
+
+    try {
+        context.startActivity(Intent.createChooser(intent, "Send email via"))
+    } catch (e: android.content.ActivityNotFoundException) {
+        // Handle the case where no email app is available
+        Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+    }
+}
