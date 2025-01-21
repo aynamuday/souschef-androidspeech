@@ -1,8 +1,13 @@
 package com.samsantech.souschef.ui
 
+import android.Manifest
 import androidx.compose.runtime.getValue
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -25,12 +30,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
-import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -53,19 +57,25 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.app.ActivityCompat
 import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.KebabMenu
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
+import com.samsantech.souschef.ui.components.PermissionRationaleDialog
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.utils.getRecipeTimeText
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
-//val sharedViewModel = SharedViewModel()
+val sharedViewModel = SharedViewModel()
+
 @Composable
 fun RecipeScreen(
+    context: Context,
+    activity: Activity,
     recipesViewModel: RecipesViewModel,
     onNavigateToPreviousScreen: () -> Unit,
     userViewModel: UserViewModel,
@@ -101,7 +111,6 @@ fun RecipeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-//            .padding(bottom = if (cookingAssistantState.isCooking) 130.dp else 40.dp)
             .padding(bottom = 32.dp)
             .pointerInput(Unit) {
                 detectTapGestures {
@@ -170,7 +179,11 @@ fun RecipeScreen(
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
             Spacer(modifier = Modifier.height(20.dp))
-            RecipeInstructions(instructions = recipe.instructions)
+            RecipeInstructions(
+                context,
+                activity,
+                instructions = recipe.instructions
+            )
         }
     }
 
@@ -408,10 +421,14 @@ fun RecipeIngredients(ingredients: List<String>) {
 }
 
 //displayVoiceCommandPopUp: (Boolean) -> Unit,
-//recipe: Recipe?, activity: Activity,
-//context: Context, cookingAssistantViewModel: CookingAssistantViewModel
+//recipe: Recipe?,
+//cookingAssistantViewModel: CookingAssistantViewModel
 @Composable
-fun RecipeInstructions(instructions: List<String>) {
+fun RecipeInstructions(
+    context: Context,
+    activity: Activity,
+    instructions: List<String>
+) {
 //    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
 
 //    val instructions = recipe?.instructions?.sortedBy { it.orderNo }
@@ -427,18 +444,18 @@ fun RecipeInstructions(instructions: List<String>) {
                 fontSize = 18.sp
             )
 
-//            val showRecordAudioRationaleDialog = remember {
-//                mutableStateOf(false)
-//            }
+            val showRecordAudioRationaleDialog = remember {
+                mutableStateOf(false)
+            }
 //
 //            val showBluetoothConnectRationaleDialog = remember {
 //                mutableStateOf(false)
 //            }
 //
-//            val recordAudioPermissionResultLauncher = rememberLauncherForActivityResult(
-//                contract = ActivityResultContracts.RequestPermission(),
-//                onResult = { isGranted ->
-//                    if (isGranted) {
+            val recordAudioPermissionResultLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+                onResult = { isGranted ->
+                    if (isGranted) {
 //                        if (!NetworkUtils.isNetworkAvailable(context)) {
 //                            Toast.makeText(context, "No connection", Toast.LENGTH_SHORT).show()
 //                        }
@@ -449,14 +466,14 @@ fun RecipeInstructions(instructions: List<String>) {
 //                                }
 //                            }
 //                        }
-//                    }
-//                }
-//            )
+                    }
+                }
+            )
 
-//            IconButton(onClick = {
-//                when {
-//                    ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
-//                            == PackageManager.PERMISSION_GRANTED-> {
+            IconButton(onClick = {
+                when {
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+                            == PackageManager.PERMISSION_GRANTED-> {
 //                        if (!NetworkUtils.isNetworkAvailable(context)) {
 //                            Toast.makeText(context, "No connection", Toast.LENGTH_SHORT).show()
 //                        }
@@ -469,54 +486,54 @@ fun RecipeInstructions(instructions: List<String>) {
 //                        } else {
 //                            Toast.makeText(context, "Cooking assistant is running.\nTo cook anew, click the Stop icon.", Toast.LENGTH_SHORT).show()
 //                        }
-//                    }
-//                    ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) -> {
+                    }
+                    ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) -> {
 //                        showRecordAudioRationaleDialog.value = true
-//                    } else -> {
-//                    recordAudioPermissionResultLauncher.launch(Manifest.permission.RECORD_AUDIO)
-//                }
-//                }
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                    when {
+                    } else -> {
+//                        recordAudioPermissionResultLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    when {
 //                        PreferencesManager.getDismissBluetoothConnectPermissionCount(context) < 1 && ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
 //                                != PackageManager.PERMISSION_GRANTED-> {
 //                            showBluetoothConnectRationaleDialog.value = true
 //                        }
-//                    }
-//                }
-//            }) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.voice_icon),
-//                    contentDescription = null,
-//                    tint = Color(22, 166, 55, 255),
-//                    modifier = Modifier
-//                        .size(35.dp)
-//                )
-//            }
+                    }
+                }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.voice_icon),
+                    contentDescription = null,
+                    tint = Color(22, 166, 55, 255),
+                    modifier = Modifier
+                        .size(35.dp)
+                )
+            }
 
-//            IconButton(onClick = {
+            IconButton(onClick = {
 //                displayVoiceCommandPopUp(true)
-//            }) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.manual_icon),
-//                    contentDescription = null,
-//                    tint = Color(22, 166, 55, 255),
-//                    modifier = Modifier
-//                        .size(25.dp)
-//                )
-//            }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.manual_icon),
+                    contentDescription = null,
+                    tint = Color(22, 166, 55, 255),
+                    modifier = Modifier
+                        .size(25.dp)
+                )
+            }
 
-//            if (showRecordAudioRationaleDialog.value) {
-//                PermissionRationaleDialog(
-//                    title = "Allow SousChef to access your microphone?",
-//                    description = "SousChef uses this to recognize voice commands for hands-free cooking experience.",
-//                    onDismiss = { showRecordAudioRationaleDialog.value = false },
-//                    onAllow = {
-//                        showRecordAudioRationaleDialog.value = false
-//                        sharedViewModel.openAppSettings(context)
-//                    }
-//                )
-//            }
+            if (showRecordAudioRationaleDialog.value) {
+                PermissionRationaleDialog(
+                    title = "Allow SousChef to access your microphone?",
+                    description = "SousChef uses this to recognize voice commands for hands-free cooking experience.",
+                    onDismiss = { showRecordAudioRationaleDialog.value = false },
+                    onAllow = {
+                        showRecordAudioRationaleDialog.value = false
+                        sharedViewModel.openAppSettings(context)
+                    }
+                )
+            }
 
 //            if (showBluetoothConnectRationaleDialog.value) {
 //                PermissionRationaleDialog(

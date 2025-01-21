@@ -36,7 +36,7 @@ import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.viewmodel.AuthViewModel
-import com.samsantech.souschef.viewmodel.GeneralViewModel
+import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
@@ -49,14 +49,14 @@ fun SousChefApp(
     user: FirebaseUser?,
     activity: ComponentActivity,
     context: Context,
-    generalViewModel: GeneralViewModel,
+    sharedViewModel: SharedViewModel,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
     recipesViewModel: RecipesViewModel,
     searchRecipesViewModel: SearchRecipesViewModel
 ) {
-    val isLoading = generalViewModel.isLoading.collectAsState()
+    val isLoading = sharedViewModel.isLoading.collectAsState()
 
     Box(
         modifier = Modifier.padding(bottom = systemNavigationBarHeight)
@@ -318,6 +318,8 @@ fun SousChefApp(
             }
             composable<Recipe> {
                 RecipeScreen(
+                    context,
+                    activity,
                     recipesViewModel,
                     onNavigateToPreviousScreen = { navController.popBackStack() },
                     userViewModel,
