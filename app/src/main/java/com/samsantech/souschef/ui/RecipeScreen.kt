@@ -62,8 +62,6 @@ import com.samsantech.souschef.viewmodel.UserViewModel
 //val sharedViewModel = SharedViewModel()
 @Composable
 fun RecipeScreen(
-    activity: Activity,
-    context: Context,
     recipesViewModel: RecipesViewModel,
     onNavigateToPreviousScreen: () -> Unit,
     userViewModel: UserViewModel,
@@ -287,8 +285,16 @@ fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
             .padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val iconId = if (title == "Serving") {
+            R.drawable.ladle
+        } else if (title == "Cook Time") {
+            R.drawable.deadline
+        } else {
+            R.drawable.knife
+        }
+
         Icon(
-            painter = painterResource(id = if (title == "Serving") R.drawable.ladle else R.drawable.deadline),
+            painter = painterResource(id = iconId),
             contentDescription = null,
             modifier = Modifier
                 .size(22.dp),

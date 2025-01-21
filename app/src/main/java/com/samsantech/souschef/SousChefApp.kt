@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.navigation.compose.NavHost
@@ -25,7 +26,6 @@ import com.samsantech.souschef.ui.ChangePasswordScreen
 import com.samsantech.souschef.ui.CreateRecipeScreenFour
 import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.SearchScreen
-import com.samsantech.souschef.ui.SelectCategoryScreen
 import com.samsantech.souschef.ui.SelectCuisinesScreen
 import com.samsantech.souschef.ui.SelectDislikesScreen
 import com.samsantech.souschef.ui.SelectSkillLevelScreen
@@ -34,7 +34,9 @@ import com.samsantech.souschef.ui.SignUpScreen
 import com.samsantech.souschef.ui.UpdateEmailScreen
 import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
+import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.viewmodel.AuthViewModel
+import com.samsantech.souschef.viewmodel.GeneralViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
@@ -47,20 +49,21 @@ fun SousChefApp(
     user: FirebaseUser?,
     activity: ComponentActivity,
     context: Context,
+    generalViewModel: GeneralViewModel,
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
     recipesViewModel: RecipesViewModel,
     searchRecipesViewModel: SearchRecipesViewModel
 ) {
+    val isLoading = generalViewModel.isLoading.collectAsState()
+
     Box(
         modifier = Modifier.padding(bottom = systemNavigationBarHeight)
     ) {
         val navController = rememberNavController()
 
-
-        NavHost(navController = navController, startDestination = Home) {
-
+        NavHost(navController = navController, startDestination = Opening) {
             composable<Opening> {
                 var afterOpening: Any = GetStarted
                 if (user != null) {
@@ -68,13 +71,19 @@ fun SousChefApp(
                 }
 
                 OpeningScreen(
-                    onNavigateTo = { navController.navigate(route = afterOpening) }
+                    onNavigateTo = { navController.navigate(route = afterOpening) {
+                        popUpTo<Opening> { inclusive = true }
+                    } }
                 )
             }
             composable<GetStarted> {
                 GetStartedScreen(
                     activity,
-                    onNavigateToSignUpOrLogin = { navController.navigate(route = SignUpOrLogin) }
+                    onNavigateToSignUpOrLogin = {
+                        navController.navigate(route = SignUpOrLogin) {
+                            popUpTo<GetStarted> { inclusive = true }
+                        }
+                    }
                 )
             }
             composable<SignUpOrLogin> {
@@ -88,32 +97,40 @@ fun SousChefApp(
                     authViewModel,
                     userViewModel,
                     ownRecipesViewModel,
-                    onNavigateToSignUp = { navController.navigate(route = SignUp) },
+                    onNavigateToSignUp = { navController.navigate(route = SignUp) {
+                        popUpTo<SignUp> { inclusive = true }
+                    } },
                     onNavigateToVerifyEmail = { navController.navigate(route = VerifyEmail) },
-                    onNavigateToForgotPassword = { navController.navigate(route = ResetPassword) },
+                    onNavigateToForgotPassword = { navController.navigate(route = ResetPassword) {
+                        popUpTo<ResetPassword> { inclusive = true }
+                    } },
                     onNavigateToHome = {
-                        navController.navigate(route = Profile) {
-                            popUpTo(Profile) { inclusive = true }
+                        navController.navigate(route = Home) {
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     },
                     onNavigateToSelectCuisines = {
                         navController.navigate(route = SelectCuisines) {
-                            popUpTo(SelectCuisines) { inclusive = true }
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }
                 )
             }
             composable<VerifyEmail> {
                 VerifyEmailScreen(
-                    userViewModel,
                     authViewModel,
-                    onNavigateToLogin = { navController.navigate(route = Login) }
+                    onNavigateToLogin = { navController.navigate(route = Login) {
+                        popUpTo<VerifyEmail> { inclusive = true }
+                        popUpTo<Login> { inclusive = true }
+                    } }
                 )
             }
             composable<ResetPassword> {
                 ResetPasswordScreen(
                     authViewModel,
-                    onNavigateToLogin = { navController.navigate(route = Login) }
+                    onNavigateToLogin = { navController.navigate(route = Login) {
+                        popUpTo<Login> { inclusive = true }
+                    } }
                 )
             }
             composable<ChangePassword> {
@@ -122,6 +139,11 @@ fun SousChefApp(
                     onNavigateToEditProfile = {
                         navController.navigate(route = EditProfile) {
                             popUpTo(EditProfile) { inclusive = true }
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(route = Login) {
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }
                 )
@@ -135,7 +157,12 @@ fun SousChefApp(
                             popUpTo(VerifyEmail) { inclusive = true }
                         }
                     },
-                    onNavigateToLogin = { navController.navigate(route = Login) },
+                    onNavigateToLogin = { navController.navigate(route = Login) {
+                        popUpTo<Login> { inclusive = true }
+                    } },
+                    onBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
             composable<SelectCuisines> {
@@ -148,17 +175,21 @@ fun SousChefApp(
             composable<SelectDislikes> {
                 SelectDislikesScreen(
                     userViewModel = userViewModel,
-                    onNavigateToSelectCuisines = { navController.navigate(route = SelectCuisines) },
+                    onNavigateToSelectCuisines = { navController.navigate(route = SelectCuisines) {
+                        popUpTo<SelectCuisines> { inclusive = true }
+                    } },
                     onNavigateToSelectSkillLevel = { navController.navigate(route = SelectSkillLevel) },
                 )
             }
             composable<SelectSkillLevel> {
                 SelectSkillLevelScreen(
                     userViewModel = userViewModel,
-                    onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) },
+                    onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) {
+                        popUpTo<SelectDislikes> { inclusive = true }
+                    } },
                     onNavigateToHome = {
-                        navController.navigate(route = Profile) {
-                            popUpTo(Profile) { inclusive = true }
+                        navController.navigate(route = Home) {
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     },
                 )
@@ -170,14 +201,14 @@ fun SousChefApp(
                     userViewModel = userViewModel,
                     onNavigateToProfile = {
                         navController.navigate(route = Profile) {
-                            popUpTo(Profile) { inclusive = true }
+                            popUpTo(route = Profile) { inclusive = true }
                         }
                     },
                     onNavigateToUpdateEmail = { navController.navigate(route = UpdateEmail)},
                     onNavigateToChangePassword = { navController.navigate(route = ChangePassword) },
                     onNavigateToLogin = {
                         navController.navigate(route = Login) {
-                            popUpTo(Login) { inclusive = true }
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }
                 )
@@ -188,7 +219,7 @@ fun SousChefApp(
                     userViewModel,
                     onNavigateToLogin = {
                         navController.navigate(route = Login) {
-                            popUpTo(Login) { inclusive = true }
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }
                 )
@@ -278,13 +309,8 @@ fun SousChefApp(
                     )
                 }
             }
-            composable<SelectCategory> {
-                SelectCategoryScreen()
-            }
             composable<Recipe> {
                 RecipeScreen(
-                    activity,
-                    context,
                     recipesViewModel,
                     onNavigateToPreviousScreen = { navController.popBackStack() },
                     userViewModel,
@@ -314,7 +340,7 @@ fun SousChefApp(
                     ownRecipesViewModel,
                     onNavigateToCreateRecipeOne = {
                         navController.navigate(route = CreateRecipeOne) {
-                            popUpTo(CreateRecipeTwo) { inclusive = true }
+                            popUpTo(CreateRecipeOne) { inclusive = true }
                         }
                     },
                     onNavigateToCreateRecipeThree = {
@@ -331,7 +357,7 @@ fun SousChefApp(
                     ownRecipesViewModel,
                     onNavigateToCreateRecipeTwo = {
                         navController.navigate(route = CreateRecipeTwo) {
-                            popUpTo(CreateRecipeThree) { inclusive = true }
+                            popUpTo(CreateRecipeTwo) { inclusive = true }
                         }
                     },
                     onNavigateToCreateRecipeFour = {
@@ -347,9 +373,15 @@ fun SousChefApp(
                 CreateRecipeScreenFour(
                     context,
                     ownRecipesViewModel,
+                    onNavigateToProfile = {
+                         navController.navigate(route = Profile) {
+                             navController.popBackStack(route = CreateRecipeOne, inclusive = true)
+                             popUpTo<Profile>()
+                         }
+                    },
                     onNavigateToCreateRecipeThree = {
                         navController.navigate(route = CreateRecipeThree) {
-                            popUpTo(CreateRecipeFour) { inclusive = true }
+                            popUpTo(CreateRecipeThree) { inclusive = true }
                         }
                     },
                     closeCreateRecipe = {
@@ -358,6 +390,10 @@ fun SousChefApp(
                     }
                 )
             }
+        }
+
+        if (isLoading.value) {
+            ProgressSpinner()
         }
     }
 }
@@ -408,9 +444,6 @@ object UpdateEmail
 object Home
 
 @Serializable
-object SelectCategory
-
-@Serializable
 object Recipe
 
 @Serializable
@@ -427,6 +460,3 @@ object CreateRecipeFour
 
 @Serializable
 object Search
-
-//@Serializable
-//object TiktokVideos

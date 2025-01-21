@@ -131,15 +131,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(20.dp))
             ColoredButton(
                 onClick = {
-                    if (email.isNotEmpty() && password.isNotEmpty())
-                    {
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
                         isLoggingIn = true
                         authViewModel.login(email, password) { isSuccess, err ->
                             isLoggingIn = false
 
                             if (isSuccess) {
                                 if (!authViewModel.isUserVerified()) {
-                                    authViewModel.sendEmailVerification() { _, _ ->
+                                    authViewModel.sendEmailVerification { _, _ ->
                                         authViewModel.logout()
                                         onNavigateToVerifyEmail()
                                     }

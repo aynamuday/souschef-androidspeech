@@ -141,7 +141,8 @@ class FirebaseRecipeManager(
         data: HashMap<String, Any>,
         recipe: Recipe,
         updatedRecipe: (Recipe) -> Unit,
-        callback: (Boolean, String?) -> Unit
+        callback: (Boolean, String?) -> Unit,
+        deletePhotoKey: String?
     ) {
         if (recipe.photosUri.size > 0) {
             uploadRecipePhotos(
@@ -157,7 +158,41 @@ class FirebaseRecipeManager(
                 }
             )
         }
+
+        println(deletePhotoKey)
+
+        if (deletePhotoKey != null) {
+//                val removePhoto = if (recipe.photosUri["portrait"] == null) "portrait" else "square"
+//                if (recipe.photosUrl[removePhoto] != null) {
+            recipe.id?.let {
+                deleteRecipePhoto(it, deletePhotoKey) { isSuccess, err ->
+                    if (isSuccess) {
+                        recipe.id?.let { recipeId ->
+                            db.collection("recipes")
+                                .document(recipeId)
+                                .update("photosUrl.$deletePhotoKey", FieldValue.delete())
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        recipe.photosUrl.remove(deletePhotoKey)
+                                        updatedRecipe(recipe)
+                                    }
+                                    if (data.isEmpty()) {
+                                        callback(task.isSuccessful, getErrorMessage(task.exception))
+                                    }
+                                }
+                        }
+                    } else {
+                        if (data.isEmpty()) {
+                            callback(false, err)
+                        }
+                    }
+                }
+            }
+//                }
+        }
+
         if (data.isNotEmpty()) {
+            println("hey")
             data["updatedAt"] = FieldValue.serverTimestamp()
 
             recipe.id?.let { recipeId ->
@@ -169,6 +204,7 @@ class FirebaseRecipeManager(
                     }
                     .addOnFailureListener {
                         callback(false, getErrorMessage(it))
+                        println(it)
                     }
             }
         }
@@ -243,6 +279,20 @@ class FirebaseRecipeManager(
                 }
             }
         }
+    }
+
+    private fun deleteRecipePhoto(recipeId: String, key: String, callback: (Boolean, String?) -> Unit) {
+        val storageRef = storage.reference
+        val photoRef = storageRef.child("recipes/$recipeId/${key}.jpg")
+        photoRef.delete()
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+                    callback(true, null)
+                } else {
+                    callback(false, getErrorMessage(it.exception))
+                    println(it.exception)
+                }
+            }
     }
 
     private fun convertDocumentDataToRecipe(id: String, data: MutableMap<String, Any>): Recipe {

@@ -321,10 +321,8 @@ fun ProfileScreen(
                                     recipe?.let {
                                         val photoUrl: Uri? = if (it.photosUrl["portrait"] != null) {
                                             Uri.parse("${it.photosUrl["portrait"]}")
-                                        } else if (it.photosUrl["square"] != null) {
-                                            Uri.parse("${it.photosUrl["square"]}")
                                         } else {
-                                            Uri.parse("${it.photosUrl["landscape"]}")
+                                            Uri.parse("${it.photosUrl["square"]}")
                                         }
 
                                         RecipeCard(
@@ -400,7 +398,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 val menu = arrayOf<Menu>(
-                    Menu("Edit Profile", Icons.Filled.EditNote, onNavigateToEditProfile)
+                    Menu("Settings", Icons.Filled.EditNote, onNavigateToEditProfile)
                 )
 
 

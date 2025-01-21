@@ -88,13 +88,13 @@ fun CreateRecipeScreenOne(
     val difficulty = arrayOf("Easy", "Medium", "Hard")
 //    val courses = arrayOf("Main", "Side", "Appetizer", "Dessert", "Drink")
     var portrait by remember {
-        mutableStateOf<Uri?>(null)
+        mutableStateOf(if (action == OwnRecipeAction.EDIT && recipe.photosUrl["portrait"] != null) Uri.parse(recipe.photosUrl["portrait"].toString()) else null)
     }
 //    var landscape by remember {
 //        mutableStateOf<Uri?>(null)
 //    }
     var square by remember {
-        mutableStateOf<Uri?>(recipe.photosUri["square"])
+        mutableStateOf(if (action == OwnRecipeAction.EDIT && recipe.photosUrl["square"] != null) Uri.parse(recipe.photosUrl["square"].toString()) else null)
     }
 
     var showDifficultyDropdown by remember {
@@ -162,12 +162,15 @@ fun CreateRecipeScreenOne(
                         height = 200.dp,
                         width = 113.dp,
                         image  = if (action == OwnRecipeAction.EDIT)
-                                    if (portrait != null) portrait
-                                    else if (recipe.photosUrl["portrait"] != null) {
-                                        Uri.parse(recipe.photosUrl["portrait"].toString())
-                                    } else {
-                                        null
-                                    }
+                                    portrait
+//                                    Uri.parse(portrait.toString())
+//                                    else Uri.parse(recipe.photosUri["portrait"].toString())
+//                                    else if (recipe.photosUri["portrait"] != null) {
+//                                        println(true)
+//                                        Uri.parse(recipe.photosUri["portrait"].toString())
+//                                    } else {
+//                                        null
+//                                    }
                                 else recipe.photosUri["portrait"],
                         pickImage = pickImagePortrait,
                         onRemoveClick = {
@@ -180,12 +183,7 @@ fun CreateRecipeScreenOne(
                         height = 150.dp,
                         width = 150.dp,
                         image  = if (action == OwnRecipeAction.EDIT)
-                            if (square != null) square
-                            else if (recipe.photosUrl["square"] != null) {
-                                Uri.parse(recipe.photosUrl["square"].toString())
-                            } else {
-                                null
-                            }
+                            square
                         else recipe.photosUri["square"],
                         pickImage = pickImageSquare,
                         onRemoveClick = {
@@ -503,7 +501,8 @@ fun CreateRecipeScreenOne(
                         val newErrors = hashMapOf<String, String>()
 
                         // recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null &&
-                        if (action != OwnRecipeAction.EDIT && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null)) {
+                        if ((action != OwnRecipeAction.EDIT && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null))
+                            || (action == OwnRecipeAction.EDIT && (portrait == null && square == null))) {
                             newErrors["photos"] = "At least one photo is required."
                         }
 
@@ -533,6 +532,9 @@ fun CreateRecipeScreenOne(
                             newErrors["general"] = "Check your inputs for errors."
                             errors = newErrors
                         } else {
+                            if (action == OwnRecipeAction.EDIT) {
+                                ownRecipesViewModel.deletePhotoKey = if (portrait == null && recipe.photosUrl["portrait"] != null) "portrait" else if(square == null && recipe.photosUrl["square"] != null) "square" else null
+                            }
                             onNavigateToCreateRecipeTwo()
                         }
                     },
