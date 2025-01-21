@@ -24,8 +24,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,6 +76,7 @@ fun RecipeScreen(
 
     val user by userViewModel.user.collectAsState()
     val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
+    val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 //    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
 
 //    val displayVoiceCommandPopUp = remember {
@@ -86,6 +91,11 @@ fun RecipeScreen(
     var loading by remember {
         mutableStateOf(false)
     }
+
+    val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
+    val averageRating = recipe.averageRating ?: 0f
+    val isFavorite = recipe.id in favoriteRecipes
+
 
     Column(
         modifier = Modifier
@@ -140,7 +150,23 @@ fun RecipeScreen(
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp)
         ) {
 
-            RecipeMetadata(recipe = recipe)
+            RecipeMetadata(
+                recipe = recipe,
+                isFavorite = isFavorite,
+                recipesViewModel,
+                rating = userRating.value,
+                averageRating = averageRating,
+                onRateRecipe = { newRating ->
+                    recipe.id?.let {
+                        recipesViewModel.rateRecipe(it, newRating) { success ->
+                            if (success) {
+                                userRating.value = newRating
+                            }
+                        }
+                    }
+                },
+                onLikeRecipe = {}
+            )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
             Spacer(modifier = Modifier.height(20.dp))
@@ -185,7 +211,15 @@ fun RecipeScreen(
 }
 
 @Composable
-fun RecipeMetadata(recipe: Recipe) {
+fun RecipeMetadata(
+    recipe: Recipe,
+    isFavorite: Boolean,
+    recipesViewModel: RecipesViewModel,
+    rating: Float,
+    averageRating: Float,
+    onRateRecipe: (Float) -> Unit,
+    onLikeRecipe: () -> Unit
+) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -206,16 +240,19 @@ fun RecipeMetadata(recipe: Recipe) {
             Spacer(modifier = Modifier.height(
                 if (recipe.description.isNotEmpty() && recipe.description != "null") 16.dp else 8.dp
             ))
+            //Star Rating
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FiveStarRate(rate = 3.7f)
+                FiveStarRate(
+                    rating = rating,
+                    onRateRecipe = onRateRecipe)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "(1 ratings)", fontSize = 12.sp)
+                Text(text = "( ${"%.1f".format(averageRating)} ratings)", fontSize = 12.sp)
             }
             Text(
                 text = "Leave a rating", // or edit rating if rated already
                 fontSize = 12.sp,
                 modifier = Modifier
-                    .clickable { }
+                    //.clickable { }
                     .padding(top = 8.dp),
                 fontStyle = FontStyle.Italic
             )
@@ -248,12 +285,17 @@ fun RecipeMetadata(recipe: Recipe) {
                 }
             }
             Icon(
-                imageVector = Icons.Filled.BookmarkBorder,
+                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                 contentDescription = null,
+                tint = if (isFavorite) Color.Yellow else Color.Gray,
                 modifier = Modifier
                     .padding(0.dp, top = 8.dp)
                     .size(28.dp)
-                    .clickable { },
+                    .clickable {
+                        recipe.id?.let { id ->
+                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {}
+                        }
+                    },
             )
         }
     }
@@ -273,6 +315,29 @@ fun RecipeMetadata(recipe: Recipe) {
         }
         if (recipe.cookTimeHr.trim() != "0" || recipe.cookTimeMin.trim() != "0") {
             TimeOrServing(title = "Cook Time", text = getRecipeTimeText(recipe.cookTimeHr, recipe.cookTimeMin), modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun FiveStarRate(
+    rating: Float,
+    onRateRecipe: (Float) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        for (i in 1..5) {
+            val starColor = if (rating >= i) Color(0xFFFFA500) else Color.Gray
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = starColor,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onRateRecipe(i.toFloat()) }
+            )
         }
     }
 }
@@ -504,8 +569,5 @@ fun RecipeInstructionsItem(index: Int, instruction: String) {
         )
     }
 }
-//=======
-fun RecipeScreen(){
 
-}
-//>>>>>>> nico
+

@@ -98,8 +98,11 @@ fun ProfileScreen(
     onNavigateToCreateRecipeOne: () -> Unit
 ) {
     val user by userViewModel.user.collectAsState()
+    val allRecipes by recipesViewModel.allRecipes.collectAsState()
     val ownRecipes by ownRecipesViewModel.recipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState(emptyList())
+
+    val favoriteRecipeList = allRecipes.filter { favoriteRecipes.contains(it.id) }
 
     var loading by remember {
         mutableStateOf(false)
@@ -300,14 +303,16 @@ fun ProfileScreen(
                     }
                 }
                 if (show == "favorites") {
-                    Box {
-                        if (favoriteRecipes.isEmpty()) {
+                    BoxWithConstraints {
+                        val maxWidth = maxWidth
+
+                        if (favoriteRecipeList.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
                                 modifier = Modifier.padding(top = 8.dp),
-                                fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
-                                color = Color.Black.copy(.7f)
+                                color = Color.Black.copy(.7f),
+                                textAlign = TextAlign.Center
                             )
                         } else {
                             FlowRow(
@@ -321,18 +326,51 @@ fun ProfileScreen(
                                     recipe?.let {
                                         val photoUrl: Uri? = if (it.photosUrl["portrait"] != null) {
                                             Uri.parse("${it.photosUrl["portrait"]}")
-                                        } else {
+                                        } else if (it.photosUrl["square"] != null) {
                                             Uri.parse("${it.photosUrl["square"]}")
+                                        } else {
+                                            Uri.parse("${it.photosUrl["landscape"]}")
                                         }
 
+                                    Box(
+                                        modifier = Modifier
+                                    ) {
                                         RecipeCard(
                                             photoUrl = photoUrl,
+                                            modifier = Modifier
+                                                .width((maxWidth / 3) - 10.dp),
                                             onClick = {
-                                                recipesViewModel.displayRecipe.value = it
+                                                recipesViewModel.displayRecipe.value = recipe
                                                 onNavigateToRecipe()
                                             },
-                                            showKebabMenu = false
+//<<<<<<< master
+//                                            showKebabMenu = false
+//=======
+                                            //showKebabMenu = true,
+                                            onClickKebabMenu = {
+                                                //showRecipeActionMenu = !showRecipeActionMenu
+                                                recipeWithAction = if (recipeWithAction == null) recipe else null
+                                            }
+//>>>>>>> nico
                                         )
+
+                                        IconButton(
+                                            onClick = {
+                                                recipe.id?.let {
+                                                    recipesViewModel.removeFromFavorites(it) { isSuccess ->
+                                                        if (isSuccess) {
+                                                            Toast.makeText(context, "Recipe removed from favorites", Toast.LENGTH_SHORT).show()
+                                                        } else {
+                                                            Toast.makeText(context, "Failed to remove from favorites", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                        ) {
+                                            Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove from favorites")
+                                        }
                                     }
                                 }
                             }
@@ -398,7 +436,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 val menu = arrayOf<Menu>(
-                    Menu("Settings", Icons.Filled.EditNote, onNavigateToEditProfile)
+                    Menu("Edit Profile", Icons.Filled.EditNote, onNavigateToEditProfile)
                 )
 
 
