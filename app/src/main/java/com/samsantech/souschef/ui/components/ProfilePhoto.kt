@@ -21,7 +21,7 @@ fun ProfilePhoto(
     uri: String?,
     size: Dp
 ) {
-    if (uri == "" || uri == null) {
+    if (uri == "" || uri == null || uri == "null") {
         Icon(
             imageVector = Icons.Filled.Person,
             contentDescription = null,

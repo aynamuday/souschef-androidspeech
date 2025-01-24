@@ -47,7 +47,7 @@ fun UpdateEmailScreen(
     val user by userViewModel.user.collectAsState()
 
     var email by remember {
-        mutableStateOf(user?.email)
+        mutableStateOf("")
     }
     var password by remember {
         mutableStateOf("")
@@ -93,31 +93,32 @@ fun UpdateEmailScreen(
                         )
                     )
 
-                    email?.let {
-                        FormOutlinedTextField(
-                            value = it,
-                            onValueChange = { valueChange ->
-                                error = ""
-                                errorEmail = ""
-                                email = valueChange
+                    FormOutlinedTextField(
+                        value = email,
+                        onValueChange = { valueChange ->
+                            error = ""
+                            errorEmail = ""
+                            email = valueChange
 
-                                if (valueChange.isNotBlank()) {
-                                    userViewModel.isEmailExists(valueChange) {
-                                        if (it) {
-                                            errorEmail = "Email is already taken."
-                                        }
+                            if (valueChange.isNotBlank()) {
+                                userViewModel.isEmailExists(valueChange) {
+                                    if (it) {
+                                        errorEmail = "Email is already taken."
                                     }
                                 }
-                            },
-                            label = "Email",
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Person,
-                                    contentDescription = null
-                                )
-                            },
-                        )
-                    }
+                            }
+                            if (email == user!!.email) {
+                                errorEmail = "The provided email is the same with the current email."
+                            }
+                        },
+                        label = "Email",
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Person,
+                                contentDescription = null
+                            )
+                        },
+                    )
                     Spacer(modifier = Modifier.height(10.dp))
                     if (errorEmail.isNotBlank()) {
                         ErrorText(text = errorEmail)
@@ -138,10 +139,7 @@ fun UpdateEmailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     ColoredButton(
                         onClick = {
-                            if (email == user!!.email) {
-                                error = "Please provide a new email."
-                            }
-                            if (!email?.let { Patterns.EMAIL_ADDRESS.matcher(it).matches() }!!) {
+                            if (!email.let { Patterns.EMAIL_ADDRESS.matcher(it).matches() }) {
                                 errorEmail = "Email must be valid format."
                             }
 
@@ -167,7 +165,7 @@ fun UpdateEmailScreen(
                 onClickCancel = { showConfirmDialog = false }) {
                     loading = true
 
-                    userViewModel.updateEmail(email!!, password) { isSuccess, errorMessage ->
+                    userViewModel.updateEmail(email, password) { isSuccess, errorMessage ->
                         loading = false
 
                         if (isSuccess) {

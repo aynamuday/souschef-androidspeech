@@ -15,6 +15,7 @@ class OwnRecipesViewModel(
     val recipes = MutableStateFlow<List<Recipe>>(listOf())
     val action = MutableStateFlow(OwnRecipeAction.ADD)
     val originalData = MutableStateFlow(Recipe())
+    var deletePhotoKey: String? = null
 
     init {
         getOwnRecipes()
@@ -47,22 +48,25 @@ class OwnRecipesViewModel(
     }
 
     fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
+        val recipe = recipe.value
+
         firebaseRecipeManager.updateRecipe(
             data,
-            recipe.value,
-            updatedRecipe = {updatedRecipe ->
+            recipe,
+            updatedRecipe = { updatedRecipe ->
                 updateRecipes(updatedRecipe)
             },
             callback = { isSuccess, error ->
                 callback(isSuccess, error)
                 if (isSuccess) {
-                    updateRecipes(recipe.value)
-                    if (recipesViewModel.displayRecipe.value.id == recipe.value.id) {
-                        recipesViewModel.displayRecipe.value = recipe.value
+                    updateRecipes(recipe)
+                    if (recipesViewModel.displayRecipe.value.id == recipe.id) {
+                        recipesViewModel.displayRecipe.value = recipe
                     }
                     resetRecipe()
                 }
-            }
+            },
+            deletePhotoKey = deletePhotoKey
         )
     }
 
@@ -86,11 +90,14 @@ class OwnRecipesViewModel(
     fun resetRecipe() {
         recipe.value = Recipe()
         originalData.value = Recipe()
+        deletePhotoKey = null
     }
 
     private fun updateRecipes(recipe: Recipe) {
         val updatedRecipes = recipes.value.toMutableList()
-        val recipeIndexToUpdate = updatedRecipes.indexOfFirst { it.id == recipe.id }
+        val recipeIndexToUpdate = updatedRecipes.indexOfFirst {
+            it.id == recipe.id
+        }
 
         if (recipeIndexToUpdate != -1) {
             updatedRecipes[recipeIndexToUpdate] = recipe
@@ -114,6 +121,12 @@ class OwnRecipesViewModel(
         photos.remove(key)
         recipe.value = recipe.value.copy(
             photosUri = photos
+        )
+    }
+
+    fun updateRecipePhotosUriMap(photosUri: HashMap<String, Uri>) {
+        recipe.value = recipe.value.copy(
+            photosUri = photosUri
         )
     }
 

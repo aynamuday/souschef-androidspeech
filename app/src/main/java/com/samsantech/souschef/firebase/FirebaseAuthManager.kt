@@ -80,8 +80,6 @@ class FirebaseAuthManager(
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-
-                    auth.currentUser?.sendEmailVerification()
                     onComplete(true, null)
                 } else {
                     val exception = task.exception
@@ -143,16 +141,16 @@ class FirebaseAuthManager(
         }
     }
 
-//    fun sendResetEmail(email: String, callback: (Boolean, String?) -> Unit) {
-//        auth.sendPasswordResetEmail(email)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    callback(true, null)
-//                } else {
-//                    callback(false, getErrorMessage(task.exception))
-//                }
-//            }
-//    }
+    fun sendResetEmail(email: String, callback: (Boolean, String?) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    callback(true, null)
+                } else {
+                    callback(false, getErrorMessage(task.exception))
+                }
+            }
+    }
 
     // Send OTP to the user's email using Firebase Functions
     fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {

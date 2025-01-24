@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class AuthViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
 ) {
-    val signUpInformation = MutableStateFlow<User>(User())
+    val signUpInformation = MutableStateFlow(User())
     val otpState = MutableStateFlow("")
     val newPassword = MutableStateFlow("")
 
@@ -36,12 +36,16 @@ class AuthViewModel(
         )
     }
 
+    fun clearSignUpInformation() {
+        signUpInformation.value = User()
+    }
+
     fun isUserVerified(): Boolean {
         return firebaseAuthManager.isUserVerified()
     }
 
     fun sendEmailVerification(callback: (Boolean, String?) -> Unit) {
-        firebaseAuthManager.sendEmailVerification() { isSuccess, error ->
+        firebaseAuthManager.sendEmailVerification { isSuccess, error ->
             callback(isSuccess, error)
         }
     }
@@ -52,11 +56,11 @@ class AuthViewModel(
         }
     }
 
-//    fun resetPassword(email: String, callback: (Boolean, String?) -> Unit) {
-//        firebaseAuthManager.sendResetEmail(email) { isSuccess, error ->
-//            callback(isSuccess, error)
-//        }
-//    }
+    fun resetPassword(email: String, callback: (Boolean, String?) -> Unit) {
+        firebaseAuthManager.sendResetEmail(email) { isSuccess, error ->
+            callback(isSuccess, error)
+        }
+    }
 
     // Send OTP to email
     fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
@@ -73,9 +77,9 @@ class AuthViewModel(
     }
 
     // Reset password after OTP verification
-    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {
-        firebaseAuthManager.resetPassword(newPassword) { isSuccess, error ->
-            callback(isSuccess, error)
-        }
-    }
+//    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {
+//        firebaseAuthManager.resetPassword(newPassword) { isSuccess, error ->
+//            callback(isSuccess, error)
+//        }
+//    }
 }

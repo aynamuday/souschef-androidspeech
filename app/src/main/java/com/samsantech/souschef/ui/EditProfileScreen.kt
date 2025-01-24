@@ -59,7 +59,10 @@ fun EditProfileScreen(
     var username by remember {
         mutableStateOf(user?.username)
     }
-    var error by remember {
+    var nameError by remember {
+        mutableStateOf("")
+    }
+    var userNameError by remember {
         mutableStateOf("")
     }
     var loading by remember {
@@ -101,7 +104,12 @@ fun EditProfileScreen(
                         FormOutlinedTextField(
                             value = it,
                             onValueChange = { valueChange ->
-                                displayName = valueChange
+                                if (it.length >= 30 && valueChange.length >= 30) {
+                                    nameError = "Name is maximum of 30 characters."
+                                } else {
+                                    nameError = ""
+                                    displayName = valueChange
+                                }
                             },
                             label = "Name",
                             leadingIcon = {
@@ -112,23 +120,35 @@ fun EditProfileScreen(
                             },
                         )
                     }
+                    if (nameError.isNotBlank()) {
+                        Text(
+                            text = nameError,
+                            fontSize = 14.sp,
+                            color = Color.Red,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     username?.let {
                         FormOutlinedTextField(
                             value = it,
                             onValueChange = { valueChange ->
-                                error = ""
-                                username = valueChange
+                                if (it.length >= 30 && valueChange.length >= 30) {
+                                    userNameError = "Username is maximum of 30 characters."
+                                } else {
+                                    userNameError = ""
+                                    username = valueChange
 
-                                if (valueChange.isNotBlank() && valueChange != user!!.username) {
-                                    userViewModel.isUsernameExists(valueChange) { isExists ->
-                                        if (isExists) {
-                                            error = "Username is already taken."
+                                    if (valueChange.isNotBlank() && valueChange != user!!.username) {
+                                        userViewModel.isUsernameExists(valueChange) { isExists ->
+                                            if (isExists) {
+                                                userNameError = "Username is already taken."
+                                            }
                                         }
-                                    }
 
-                                    if (!isValidUsername(valueChange)) {
-                                        error = "Username must only contain letters, numbers, underscore, and dot."
+                                        if (!isValidUsername(valueChange)) {
+                                            userNameError = "Username must only contain letters, numbers, underscore, and dot."
+                                        }
                                     }
                                 }
                             },
@@ -141,9 +161,9 @@ fun EditProfileScreen(
                             },
                         )
                     }
-                    if (error.isNotBlank()) {
+                    if (userNameError.isNotBlank()) {
                         Text(
-                            text = error,
+                            text = userNameError,
                             fontSize = 14.sp,
                             color = Color.Red,
                             modifier = Modifier.fillMaxWidth()
@@ -152,21 +172,25 @@ fun EditProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     ColoredButton(
                         onClick = {
-                            if ((displayName?.isNotEmpty() == true || username?.isNotEmpty() == true) && error.isEmpty()) {
-                                loading = true
+                            if (user!!.displayName == displayName && user!!.username == username) {
+                                onNavigateToProfile()
+                            } else {
+                                if ((displayName?.isNotEmpty() == true || username?.isNotEmpty() == true) && nameError.isEmpty() && userNameError.isEmpty()) {
+                                    loading = true
 
-                                userViewModel.updateProfile(
-                                    displayName,
-                                    username
-                                ) { isSuccess, errorMessage ->
-                                    loading = false
+                                    userViewModel.updateProfile(
+                                        displayName,
+                                        username
+                                    ) { isSuccess, errorMessage ->
+                                        loading = false
 
-                                    if (isSuccess) {
-                                        onNavigateToProfile()
-                                    } else {
-                                        if (errorMessage != null) {
-                                            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG)
-                                                .show()
+                                        if (isSuccess) {
+                                            onNavigateToProfile()
+                                        } else {
+                                            if (errorMessage != null) {
+                                                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG)
+                                                    .show()
+                                            }
                                         }
                                     }
                                 }
@@ -198,7 +222,8 @@ fun EditProfileScreen(
                         onClick = {
                             showLogoutConfirmation = true
                         },
-                        containerColor = Color.Red, contentColor = Color.White,
+                        containerColor = Color.Red,
+                        contentColor = Color.White,
                         text = "Logout",
                         border = BorderStroke(1.dp, Color.Red)
                     )
