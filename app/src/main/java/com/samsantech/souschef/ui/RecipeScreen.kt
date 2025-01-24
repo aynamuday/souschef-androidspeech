@@ -286,13 +286,20 @@ fun RecipeMetadata(
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                 contentDescription = null,
-                tint = if (isFavorite) Color.Yellow else Color.Gray,
+                tint = if (isFavorite) Green else Color.Gray,
                 modifier = Modifier
                     .padding(0.dp, top = 8.dp)
                     .size(28.dp)
                     .clickable {
                         recipe.id?.let { id ->
-                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {}
+                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
+                                val message = if (isFavorite) {
+                                    "Recipe removed from favorites"
+                                } else {
+                                    "Recipe added to favorites"
+                                }
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     },
             )
