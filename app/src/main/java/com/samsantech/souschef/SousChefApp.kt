@@ -252,17 +252,11 @@ fun SousChefApp(
                     ownRecipesViewModel
                 ) { paddingValues ->
                     HomeScreen(
-                        navController,
-//<<<<<<< nico
                         paddingValues,
-                        searchRecipesViewModel,
-//=======
-//>>>>>>> master
                         recipesViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe)
                         },
-                        paddingValues,
                         cookingAssistantState.isCooking
                     )
                     DisplayCookingAssistantUi(

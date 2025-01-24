@@ -31,13 +31,9 @@ data class Recipe(
     var favoriteRecipes: List<String> = listOf(),
     var ratings: HashMap<String, Float>? = null,
     var averageRating: Float? = null,
-//<<<<<<< nico
     var userRating: Float? = null,
     var isTikTok: Boolean = false,
-    var postId: String? = null
-)
-//=======
-    var userRating: Float? = null
+    var postId: String? = null,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         id = parcel.readString(),
