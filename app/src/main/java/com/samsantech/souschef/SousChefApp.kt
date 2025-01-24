@@ -2,12 +2,15 @@ package com.samsantech.souschef
 
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -34,6 +37,7 @@ import com.samsantech.souschef.ui.SignUpScreen
 import com.samsantech.souschef.ui.UpdateEmailScreen
 import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
+import com.samsantech.souschef.ui.components.CookingAssistantUi
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
@@ -44,6 +48,7 @@ import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.serialization.Serializable
 
+//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun SousChefApp(
     systemNavigationBarHeight: Dp,
@@ -59,6 +64,7 @@ fun SousChefApp(
     cookingAssistantViewModel: CookingAssistantViewModel
 ) {
     val isLoading = sharedViewModel.isLoading.collectAsState()
+    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
 
     Box(
         modifier = Modifier.padding(bottom = systemNavigationBarHeight)
@@ -228,7 +234,6 @@ fun SousChefApp(
             }
             composable<Home> {
                 ContentBottomNavigationWrapper(
-//                    systemNavigationBarHeight,
                     name = "Home",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -248,17 +253,31 @@ fun SousChefApp(
                 ) { paddingValues ->
                     HomeScreen(
                         navController,
-                        paddingValues,
                         recipesViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe)
-                        }
+                        },
+                        paddingValues,
+                        cookingAssistantState.isCooking
+                    )
+                    DisplayCookingAssistantUi(
+                        context,
+                        isNetworkAvailable = false,
+                        cookingAssistantViewModel = cookingAssistantViewModel,
+                        recipesViewModel = recipesViewModel,
+                        sharedViewModel,
+                        onNavigateToRecipe = {
+                            navController.navigate(route = Recipe) {
+                                popUpTo<Recipe> { inclusive = true }
+                            }
+                        },
+                        bottomHeight = 45.dp,
+                        isCooking = cookingAssistantState.isCooking
                     )
                 }
             }
             composable<Profile> {
                 ContentBottomNavigationWrapper(
-//                    systemNavigationBarHeight,
                     name = "Profile",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -284,13 +303,27 @@ fun SousChefApp(
                         recipesViewModel,
                         onNavigateToEditProfile = { navController.navigate(route = EditProfile) },
                         onNavigateToRecipe = { navController.navigate(route = Recipe) },
-                        onNavigateToCreateRecipeOne = { navController.navigate(route = CreateRecipeOne) }
+                        onNavigateToCreateRecipeOne = { navController.navigate(route = CreateRecipeOne) },
+                        isCooking = cookingAssistantState.isCooking
+                    )
+                    DisplayCookingAssistantUi(
+                        context,
+                        isNetworkAvailable = false,
+                        cookingAssistantViewModel = cookingAssistantViewModel,
+                        recipesViewModel = recipesViewModel,
+                        sharedViewModel,
+                        onNavigateToRecipe = {
+                            navController.navigate(route = Recipe) {
+                                popUpTo<Recipe>() { inclusive = true }
+                            }
+                        },
+                        bottomHeight = 45.dp,
+                        isCooking = cookingAssistantState.isCooking
                     )
                 }
             }
             composable<Search> {
                 ContentBottomNavigationWrapper(
-//                    systemNavigationBarHeight,
                     name = "Search",
                     onNavigateToHome = {
                         navController.navigate(route = Home)
@@ -314,8 +347,21 @@ fun SousChefApp(
                         recipesViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe)
-                        }
+                        },
+//                        isCooking = cookingAssistantState.isCooking
                     )
+//                    DisplayCookingAssistantUi(
+//                        isNetworkAvailable = false,
+//                        cookingAssistantViewModel = cookingAssistantViewModel,
+//                        recipesViewModel = recipesViewModel,
+//                        onNavigateToRecipe = {
+//                            navController.navigate(route = Recipe) {
+//                                popUpTo<Recipe>() { inclusive = true }
+//                            }
+//                        },
+//                        bottomHeight = 45.dp,
+//                        isCooking = cookingAssistantState.isCooking
+//                    )
                 }
             }
             composable<Recipe> {
@@ -332,8 +378,20 @@ fun SousChefApp(
                         popUpTo(Recipe) {inclusive = true}
                     } }
                 )
+                DisplayCookingAssistantUi(
+                    context,
+                    isNetworkAvailable = false,
+                    cookingAssistantViewModel = cookingAssistantViewModel,
+                    recipesViewModel = recipesViewModel,
+                    sharedViewModel,
+                    onNavigateToRecipe = {
+                        navController.navigate(route = Recipe) {
+                            popUpTo<Recipe>() { inclusive = true }
+                        }
+                    },
+                    isCooking = cookingAssistantState.isCooking
+                )
             }
-
             composable<CreateRecipeOne> {
                 CreateRecipeScreenOne(
                     context,
@@ -407,6 +465,30 @@ fun SousChefApp(
         if (isLoading.value) {
             ProgressSpinner()
         }
+    }
+}
+
+@Composable
+fun DisplayCookingAssistantUi(
+    context: Context,
+    isNetworkAvailable: Boolean,
+    cookingAssistantViewModel: CookingAssistantViewModel,
+    recipesViewModel: RecipesViewModel,
+    sharedViewModel: SharedViewModel,
+    onNavigateToRecipe: () -> Unit,
+    bottomHeight: Dp = 0.dp,
+    isCooking: Boolean
+) {
+    if (isCooking) {
+        CookingAssistantUi (
+            context,
+            isNetworkAvailable,
+            cookingAssistantViewModel,
+            recipesViewModel,
+            sharedViewModel,
+            onNavigateToRecipe,
+            bottomHeight
+        )
     }
 }
 

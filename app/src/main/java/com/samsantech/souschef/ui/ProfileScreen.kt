@@ -96,7 +96,8 @@ fun ProfileScreen(
     recipesViewModel: RecipesViewModel,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToRecipe: () -> Unit,
-    onNavigateToCreateRecipeOne: () -> Unit
+    onNavigateToCreateRecipeOne: () -> Unit,
+    isCooking: Boolean
 ) {
     val user by userViewModel.user.collectAsState()
     val allRecipes by recipesViewModel.allRecipes.collectAsState()
@@ -152,6 +153,7 @@ fun ProfileScreen(
                     .padding(horizontal = 20.dp)
                     .padding(top = 16.dp)
                     .padding(paddingValues)
+                    .padding(bottom = if (isCooking) 150.dp else 0.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -232,7 +234,7 @@ fun ProfileScreen(
                         contentPadding = PaddingValues(12.dp, 12.dp),
                         containerColor = if (show == "recipes") Green else Color.White,
                         contentColor = if (show == "recipes") Color.White else Green,
-                        border = if (show == "recipes")  BorderStroke(0.dp, Color.Transparent) else BorderStroke(1.dp, Color(0xFF16A637))
+                        border = if (show == "recipes")  BorderStroke(0.dp, Green) else BorderStroke(1.dp, Color(0xFF16A637))
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ColoredButton(
@@ -449,8 +451,8 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(32.dp))
 
-                val menu = arrayOf<Menu>(
-                    Menu("Edit Profile", Icons.Filled.EditNote, onNavigateToEditProfile)
+                val menu = arrayOf(
+                    Menu("Settings", Icons.Filled.EditNote, onNavigateToEditProfile)
                 )
 
 

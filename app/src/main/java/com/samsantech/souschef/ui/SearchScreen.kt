@@ -57,7 +57,8 @@ fun SearchScreen(
     paddingValues: PaddingValues,
     searchRecipesViewModel: SearchRecipesViewModel,
     recipesViewModel: RecipesViewModel,
-    onNavigateToRecipe: () -> Unit
+    onNavigateToRecipe: () -> Unit,
+//    isCooking: Boolean
 ) {
     val pagingHits = searchRecipesViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
     val gridState by searchRecipesViewModel.gridState.collectAsState()
@@ -86,6 +87,7 @@ fun SearchScreen(
         modifier = Modifier
             .padding(start = 12.dp, end = 12.dp, top = 40.dp, bottom = 20.dp)
             .padding(paddingValues)
+//            .padding(bottom = if (isCooking) 150.dp else 20.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

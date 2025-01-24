@@ -1,11 +1,13 @@
 package com.samsantech.souschef.utils
 
 import android.content.Context
+import android.media.AudioAttributes
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import androidx.annotation.RequiresApi
 import java.io.File
-import java.util.Locale
 
+//@RequiresApi(Build.VERSION_CODES.Q)
 class TextToSpeechManager(context: Context) {
     private val textToSpeech = TextToSpeech(context) { status ->
         if (status != TextToSpeech.SUCCESS) {
@@ -15,13 +17,23 @@ class TextToSpeechManager(context: Context) {
     private var onSaveDone: ((Boolean) -> Unit)? = null
 
     init {
+        textToSpeech.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+//                .setAllowedCapturePolicy(AudioAttributes.ALLOW_CAPTURE_BY_NONE)
+                .build()
+        )
+        textToSpeech.setSpeechRate(1f)
+        textToSpeech.setPitch(1f)
+
         textToSpeech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
 
             }
 
             override fun onDone(utteranceId: String?) {
-                if (utteranceId === "100") {
+                if (utteranceId == "100") {
                     onSaveDone?.let { it(true) }
                 }
             }
@@ -52,8 +64,6 @@ class TextToSpeechManager(context: Context) {
             null,
             null
         )
-
-        println("hey")
     }
 
     fun stop() {

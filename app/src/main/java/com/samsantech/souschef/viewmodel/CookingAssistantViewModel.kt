@@ -16,7 +16,7 @@ class CookingAssistantViewModel(
     private val textToSpeechManager: TextToSpeechManager
 ) {
     private var speechToTextManager: SpeechToTextManager = SpeechToTextManager(context)
-    private var cookingAssistantState: MutableStateFlow<CookingAssistantState> = MutableStateFlow(
+    var cookingAssistantState: MutableStateFlow<CookingAssistantState> = MutableStateFlow(
         CookingAssistantState()
     )
     private var mediaPlayer: MediaPlayer? = null
@@ -24,6 +24,7 @@ class CookingAssistantViewModel(
     private val instructionsAudioDir = instructionsAudioLocalDataSource.getInstructionsAudioDir()
     private val introText = "Hi, I'm SousChef. I will guide you in this cooking session. To start, say \"Start\"."
 
+//    @RequiresApi(Build.VERSION_CODES.Q)
     fun startCookingAssistance(recipe: Recipe) {
         cookingAssistantState.value = CookingAssistantState(isCooking = true, recipe = recipe)
         speechToTextManager.startStreaming { result ->
@@ -38,11 +39,13 @@ class CookingAssistantViewModel(
 
     fun stopCookingAssistance() {
         speechToTextManager.stopStreaming()
+        textToSpeechManager.stop()
         mediaPlayer?.release()
         instructionsAudioLocalDataSource.clearInstructionsAudioDirectory()
         cookingAssistantState.value = CookingAssistantState()
     }
 
+//    @RequiresApi(Build.VERSION_CODES.Q)
     private fun handleRecognizedCommands(transcription: String) {
         val currentStep = cookingAssistantState.value.currentStep
         val totalInstructions = cookingAssistantState.value.recipe?.instructions?.size
@@ -62,13 +65,12 @@ class CookingAssistantViewModel(
         }
         //"next"
         else if (transcription.contains("next")) {
-//            if(currentStep == totalInstructions) {
-//                textToSpeechManager.synthesize("You've already come to the last instruction.")
-//            } else {
-
+            if(currentStep == totalInstructions) {
+                textToSpeechManager.synthesize("You've already come to the last instruction.")
+            } else {
                 synthesizeInstructionAndPlay(currentStep+1)
                 updateCurrentStep(currentStep+1)
-//            }
+            }
         }
         //"go back"
         else if(transcription.contains("go back")) {
@@ -113,8 +115,8 @@ class CookingAssistantViewModel(
         }
     }
 
+//    @RequiresApi(Build.VERSION_CODES.Q)
     private fun synthesizeInstructionAndPlay(instructionNumber: Int) {
-        println("HERE WE ARE")
         textToSpeechManager.stop()
         var instruction = cookingAssistantState.value.recipe?.instructions?.get(instructionNumber-1)
         val totalInstructions = cookingAssistantState.value.recipe?.instructions?.size
@@ -127,14 +129,10 @@ class CookingAssistantViewModel(
         var audioFile: File? = instructionsAudioLocalDataSource.getInstructionAudioFile(instructionFileName)
 
         if (audioFile == null) {
-            println("AUDIO FILE IS NULL")
             if (instruction != null) {
-                println("INSTRUCTION IS NOT NULL")
                 audioFile = File(instructionsAudioDir, instructionFileName)
                 textToSpeechManager.synthesizeToFile(instruction, audioFile) {
-                    println("OUT HERE")
                     if (it) {
-                        println("IT IS TRUE!")
                         playAudioFile(audioFile)
                     }
                 }
