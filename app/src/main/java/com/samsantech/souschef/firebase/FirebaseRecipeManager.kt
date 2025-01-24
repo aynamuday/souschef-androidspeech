@@ -14,10 +14,6 @@ class FirebaseRecipeManager(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
-    fun getCurrentUser(): String? {
-        return auth.currentUser?.uid
-    }
-
     fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
         db.collection("recipes")
             .get()
@@ -322,7 +318,9 @@ class FirebaseRecipeManager(
             audience = data["audience"].toString(),
             ratings = data["ratings"] as? HashMap<String, Float>,
             averageRating = (data["averageRating"] as? Double)?.toFloat(),
-            userRating = null
+            userRating = null,
+            isTikTok = data["isTikTok"] as? Boolean ?: false,
+            postId = data["postId"] as? String,
         )
     }
 
@@ -396,26 +394,29 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean) -> Unit) {
-        val userId = auth.currentUser?.uid ?: return callback(false)
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Float?) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return callback(false, null)
         val recipeRef = db.collection("recipes").document(recipeId)
 
         db.runTransaction { transaction ->
             val snapshot = transaction.get(recipeRef)
             val currentRatings = snapshot.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
+            val updatedRatings = currentRatings.toMutableMap().apply { this[userId] = rating }
+            val newAverageRating = updatedRatings.values.average().toFloat()
 
             currentRatings[userId] = rating
 
-            val averageRating = if (currentRatings.isNotEmpty()) {
-                currentRatings.values.sum() / currentRatings.size
-            } else 0f
+            // Update Firestore
+            transaction.update(recipeRef, mapOf(
+                "ratings" to updatedRatings,
+                "averageRating" to newAverageRating
+            ))
 
-            transaction.update(recipeRef, "ratings", currentRatings)
-            transaction.update(recipeRef, "averageRating", averageRating)
-        }.addOnSuccessListener {
-            callback(true)
+            newAverageRating
+        }.addOnSuccessListener { newAverageRating ->
+            callback(true, newAverageRating)
         }.addOnFailureListener {
-            callback(false)
+            callback(false, null)
         }
     }
 }

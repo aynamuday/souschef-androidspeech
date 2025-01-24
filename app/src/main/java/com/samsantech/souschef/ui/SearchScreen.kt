@@ -17,9 +17,12 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
@@ -66,15 +69,11 @@ fun SearchScreen(
     val loadingState = searchRecipesViewModel.loadingState
     val search by searchRecipesViewModel.search.collectAsState()
     val hasSearched by searchRecipesViewModel.hasSearched.collectAsState()
-    var error by remember {
-        mutableStateOf<String?>(null)
-    }
-    var view by remember {
-        mutableStateOf("grid")
-    }
-    var displayBottomActionMenuPopUp by remember {
-        mutableStateOf(false)
-    }
+    var error by remember { mutableStateOf<String?>(null) }
+    var view by remember { mutableStateOf("grid") }
+    var displayBottomActionMenuPopUp by remember { mutableStateOf(false) }
+
+    val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
     BackHandler {
         if (hasSearched) {
@@ -221,6 +220,20 @@ fun SearchScreen(
                                     }
                                 }
                             },
+                            favoriteRecipes = favoriteRecipes,
+                            recipesViewModel = recipesViewModel,
+                            onToggleFavorite = { recipeId ->
+                                val isAdd = !favoriteRecipes.contains(recipeId)
+
+                                recipesViewModel.toggleFavoriteRecipe(
+                                    recipeId,
+                                    isAdd
+                                ) { isSuccess ->
+                                    if (!isSuccess) {
+                                        error = "Failed to toggle favorite status. Please try again later."
+                                    }
+                                }
+                            },
                             view = view
                         )
                     }
@@ -289,6 +302,9 @@ fun RecipesList(
     lazyPagingItems: LazyPagingItems<SearchRecipe>,
     lazyGridState: LazyGridState,
     onDisplayRecipe: (id: String) -> Unit,
+    favoriteRecipes: Set<String>,
+    recipesViewModel: RecipesViewModel,
+    onToggleFavorite: (String) -> Unit,
     view: String = "grid" // or list
 ) {
     LazyVerticalGrid(
@@ -304,8 +320,12 @@ fun RecipesList(
             val width = if (view == "grid") ((maxWidth/2) - 8.dp) else maxWidth
             val height = if (view == "grid") (width/2)+width else 300.dp
 
-            if (item.isTikTok == true) {
+            val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
 
+            val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
+            val averageRating = remember { mutableStateOf(recipe.averageRating ?: 0f) }
+
+            if (item.isTikTok == true) {
                 Column {
                     Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
                         if (view == "grid") {
@@ -334,12 +354,13 @@ fun RecipesList(
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Icon(
-                            imageVector = Icons.Filled.BookmarkBorder,
-                            contentDescription = null,
+                            imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                            contentDescription = "Bookmark",
+                            tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
                             modifier = Modifier
                                 .size(if (view == "grid") 18.dp else 22.dp)
                                 .clickable {
-
+                                    onToggleFavorite(item.objectID!!)
                                 },
                         )
                     }
@@ -349,9 +370,23 @@ fun RecipesList(
                     itemWidth = width,
                     itemHeight = height,
                     item = item,
+                    rating = userRating.value,
+                    averageRating = averageRating.value,
+                    onRateRecipe = { newRating ->
+                        recipe.id?.let {
+                            recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
+                                if (success) {
+                                    userRating.value = newRating
+                                    averageRating.value = (updatedAverageRating ?: averageRating.value) as Float
+                                }
+                            }
+                        }
+                    },
                     onDisplayRecipe = {
                         item.objectID?.let { onDisplayRecipe(it) }
                     },
+                    isFavorite = favoriteRecipes.contains(item.objectID),
+                    onToggleFavorite = { onToggleFavorite(item.objectID!!) },
                     view = view
                 )
             }
@@ -366,7 +401,12 @@ fun SearchRecipeItem(
     itemHeight: Dp,
     item: SearchRecipe,
     onDisplayRecipe: () -> Unit,
-    view: String = "grid"
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
+    view: String = "grid",
+    rating: Float,
+    averageRating: Float,
+    onRateRecipe: (Float) -> Unit,
 ) {
     val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
         Uri.parse("${item.photosUrl["portrait"]}")
@@ -399,21 +439,31 @@ fun SearchRecipeItem(
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                FiveStarRate(rate = 3.7f, size = if (view == "grid") 12.dp else 14.dp)
-                Spacer(modifier = Modifier.width(5.dp))
-                androidx.compose.material3.Text(text = "(1)", fontSize = 12.sp)
+                FiveStar(
+                    rating = rating,
+                    onRateRecipe = { newRating ->
+                        onRateRecipe(newRating) // Pass the updated rating
+                    }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "( ${"%.1f".format(averageRating)} )",
+                    fontSize = 12.sp
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(if (view == "grid") 16.dp else 22.dp)
-                        .clickable { },
-                    tint = Color(0xfff73056)
-                )
-                Spacer(modifier = Modifier.width(if (view == "grid") 2.dp else 5.dp))
-                Text(text = "999k", fontSize = if (view == "grid") 12.sp else 14.sp)
+//                Icon(
+//                    imageVector = Icons.Filled.Favorite,
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .size(if (view == "grid") 16.dp else 22.dp)
+//                        .clickable {
+//                            //onToggleFavorite()
+//                        },
+//                    //tint = if (isFavorite) Color(0xfff73056) else Color.Gray
+//                )
+//                Spacer(modifier = Modifier.width(if (view == "grid") 2.dp else 5.dp))
+//                Text(text = "999k", fontSize = if (view == "grid") 12.sp else 14.sp)
             }
         }
         Spacer(modifier = Modifier.height(5.dp))
@@ -430,13 +480,37 @@ fun SearchRecipeItem(
                 spacer = 8.dp
             )
             Icon(
-                imageVector = Icons.Filled.BookmarkBorder,
-                contentDescription = null,
+                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                contentDescription = "Bookmark",
+                tint = if (isFavorite) Green else Color.Gray,
                 modifier = Modifier
                     .size(if (view == "grid") 18.dp else 22.dp)
                     .clickable {
-
+                        onToggleFavorite()
                     },
+            )
+        }
+    }
+}
+
+@Composable
+fun FiveStar(
+    rating: Float,
+    onRateRecipe: (Float) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        for (i in 1..5) {
+            val starColor = if (rating >= i) Color(0xFFFFA500) else Color.Gray
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = starColor,
+                modifier = Modifier
+                    .size(14.dp)
+                    .clickable { onRateRecipe(i.toFloat()) }
             )
         }
     }

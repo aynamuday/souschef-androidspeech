@@ -4,6 +4,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Paint.Align
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -78,6 +79,7 @@ import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.ProfilePhoto
 import com.samsantech.souschef.ui.components.RecipeCard
+import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.utils.convertUriToBitmap
@@ -271,35 +273,37 @@ fun ProfileScreen(
                                 textAlign = TextAlign.Center
                             )
                         } else {
-                            FlowRow(
-                                maxItemsInEachRow = 3,
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                ownRecipes.forEach { recipe ->
-                                    val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
-                                        Uri.parse("${recipe.photosUrl["portrait"]}")
-                                    } else if (recipe.photosUrl["square"] != null) {
-                                        Uri.parse("${recipe.photosUrl["square"]}")
-                                    } else {
-                                        Uri.parse("${recipe.photosUrl["landscape"]}")
-                                    }
-
-                                    RecipeCard(
-                                        photoUrl = photoUrl,
-                                        modifier = Modifier
-                                            .width((maxWidth / 3) - 10.dp),
-                                        onClick = {
-                                            recipesViewModel.displayRecipe.value = recipe
-                                            onNavigateToRecipe()
-                                        },
-                                        showKebabMenu = true,
-                                        onClickKebabMenu = {
-                                            showRecipeActionMenu = !showRecipeActionMenu
-                                            recipeWithAction = if (recipeWithAction == null) recipe else null
+                            Box(contentAlignment = Alignment.Center) {
+                                FlowRow(
+                                    maxItemsInEachRow = 3,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    ownRecipes.forEach { recipe ->
+                                        val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
+                                            Uri.parse("${recipe.photosUrl["portrait"]}")
+                                        } else if (recipe.photosUrl["square"] != null) {
+                                            Uri.parse("${recipe.photosUrl["square"]}")
+                                        } else {
+                                            Uri.parse("${recipe.photosUrl["landscape"]}")
                                         }
-                                    )
+
+                                        RecipeCard(
+                                            photoUrl = photoUrl,
+                                            modifier = Modifier
+                                                .width((maxWidth / 3) - 4.dp),
+                                            onClick = {
+                                                recipesViewModel.displayRecipe.value = recipe
+                                                onNavigateToRecipe()
+                                            },
+                                            showKebabMenu = true,
+                                            onClickKebabMenu = {
+                                                showRecipeActionMenu = !showRecipeActionMenu
+                                                recipeWithAction = if (recipeWithAction == null) recipe else null
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -308,7 +312,6 @@ fun ProfileScreen(
                 if (show == "favorites") {
                     BoxWithConstraints {
                         val maxWidth = maxWidth
-
                         if (favoriteRecipeList.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
@@ -318,6 +321,79 @@ fun ProfileScreen(
                                 textAlign = TextAlign.Center
                             )
                         } else {
+//<<<<<<< nico
+                            Box(contentAlignment = Alignment.Center) {
+                                FlowRow(
+                                    maxItemsInEachRow = 3,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    favoriteRecipeList.forEach { recipe ->
+                                        if (recipe.isTikTok) {
+                                            Box (modifier = Modifier.clip(RoundedCornerShape(5.dp))) {
+                                                val width = (maxWidth / 3) - 4.dp
+                                                recipe.postId?.let {
+                                                    TikTokWebView(
+                                                        postId = it,
+                                                        width = width.value.toInt(),
+                                                        height = 180
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
+                                                Uri.parse("${recipe.photosUrl["portrait"]}")
+                                            } else {
+                                                Uri.parse("${recipe.photosUrl["square"]}")
+                                            }
+
+                                            Box(modifier = Modifier) {
+                                                RecipeCard(
+                                                    photoUrl = photoUrl,
+                                                    modifier = Modifier
+                                                        .width((maxWidth / 3) - 4.dp),
+                                                    onClick = {
+                                                        recipesViewModel.displayRecipe.value = recipe
+                                                        onNavigateToRecipe()
+                                                    },
+//                                                showKebabMenu = true,
+                                                    onClickKebabMenu = {
+                                                        //showRecipeActionMenu = !showRecipeActionMenu
+                                                        recipeWithAction =
+                                                            if (recipeWithAction == null) recipe else null
+                                                    }
+                                                )
+
+                                                IconButton(
+                                                    onClick = {
+                                                        recipe.id?.let {
+                                                            recipesViewModel.removeFromFavorites(it) { isSuccess ->
+                                                                if (isSuccess) {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "Recipe removed from favorites",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                } else {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "Failed to remove from favorites",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    modifier = Modifier
+                                                        .align(Alignment.TopEnd)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = "Remove from favorites"
+                                                    )
+                                                }
+//=======
                             FlowRow(
                                 maxItemsInEachRow = 3,
                                 modifier = Modifier.fillMaxWidth(),
@@ -385,11 +461,13 @@ fun ProfileScreen(
                                                     imageVector = Icons.Default.Delete,
                                                     contentDescription = "Remove from favorites"
                                                 )
+//>>>>>>> master
                                             }
                                         }
                                     }
                                 }
                             }
+
                         }
                     }
                 }

@@ -1,11 +1,13 @@
 package com.samsantech.souschef.ui
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,10 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+//<<<<<<< nico
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Menu
+//=======
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+//>>>>>>> master
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Star
@@ -35,17 +46,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
+//<<<<<<< nico
+import com.samsantech.souschef.ui.components.TikTokWebView
+import com.samsantech.souschef.ui.components.UserNamePhoto
+import com.samsantech.souschef.ui.theme.Green
+import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
+//=======
 import com.samsantech.souschef.ui.components.Header
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+//>>>>>>> master
 
 @Composable
 fun HomeScreen(
     navController: NavController,
+//<<<<<<< nico
+    paddingValues: PaddingValues,
+    searchRecipesViewModel: SearchRecipesViewModel,
+//=======
+//>>>>>>> master
     recipesViewModel: RecipesViewModel,
     onNavigateToRecipe: () -> Unit,
     paddingValues: PaddingValues,
@@ -54,11 +79,34 @@ fun HomeScreen(
     val recipes by recipesViewModel.allRecipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
+//<<<<<<< nico
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(paddingValues)
+    ) {
+        Spacer(
+            modifier = Modifier
+                .background(Color(22, 166, 55, 255))
+                .fillMaxWidth()
+                .height(100.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = 50.dp, start = 20.dp, end = 20.dp,
+                )
+        ) {
+            Row(
+//=======
     Box {
         Column {
             Header()
 
             Column(
+//>>>>>>> master
                 modifier = Modifier
                     .padding(paddingValues)
                     .padding(bottom = if (isCooking) 150.dp else 0.dp)
@@ -69,39 +117,121 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 10.dp)
                 )
+//<<<<<<< nico
+//                Icon(
+//                    imageVector = Icons.Filled.Menu,
+//                    contentDescription = null,
+//                    tint = Color.White,
+//                    modifier = Modifier
+//                        .size(40.dp)
+//                )
+            }
+//=======
+//>>>>>>> master
 
                 RecipeFeed(navController, recipes, recipesViewModel, favoriteRecipes, onNavigateToRecipe)
             }
-        }
-    }
-}
+//<<<<<<< nico
 
-@Composable
-fun RecipeFeed(
-    navController: NavController,
-    recipes: List<Recipe>,
-    recipesViewModel: RecipesViewModel,
-    favoriteRecipes: Set<String>,
-    onNavigateToRecipe: () -> Unit
-) {
-    // Horizontal scrolling layout using LazyRow
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        items(recipes) { recipe ->
-            RecipeCard(
-                recipe = recipe,
-                navController = navController,
-                recipesViewModel = recipesViewModel,
-                favoriteRecipes = favoriteRecipes,
-                onNavigateToRecipe = onNavigateToRecipe
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Recipe Feed Section
+            Text(
+                text = "Discover Recipes",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 10.dp)
             )
+
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(recipes) { recipe ->
+                        if (recipe.isTikTok) {
+                            BoxWithConstraints {
+                                val maxWidth = maxWidth
+                                Column {
+                                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))){
+//=======
+        }
+    }
+}
+//>>>>>>> master
+
+                                        val width = maxWidth
+                                        recipe.postId?.let {
+                                            TikTokWebView(
+                                                postId = it,
+                                                width = width.value.toInt(),
+                                                height = 400
+                                            )
+                                        }
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Text(
+                                            text = recipe.title,
+                                            //fontWeight = FontWeight(500),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f),
+                                            //fontSize = 16.sp
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+
+                                        Icon(
+                                            imageVector = if (favoriteRecipes.contains(recipe.id)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                                            contentDescription = "Bookmark",
+                                            tint = if (favoriteRecipes.contains(recipe.id)) Green else Color.Gray,
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clickable {
+                                                    recipe.id?.let { id ->
+                                                        recipesViewModel.toggleFavoriteRecipe(id, !favoriteRecipes.contains(id)) {}
+                                                    }
+                                                }
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            RecipeCard(
+                                recipe = recipe,
+                                navController = navController,
+                                recipesViewModel = recipesViewModel,
+                                favoriteRecipes = favoriteRecipes,
+                                onNavigateToRecipe = onNavigateToRecipe
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
 
+//@Composable
+//fun RecipeList(
+//    navController: NavController,
+//    recipes: List<Recipe>,
+//    recipesViewModel: RecipesViewModel,
+//    favoriteRecipes: Set<String>,
+//    onNavigateToRecipe: () -> Unit
+//) {
+//
+//}
 
+
+@SuppressLint("DefaultLocale")
 @Composable
 fun RecipeCard(
     recipe: Recipe,
@@ -111,11 +241,9 @@ fun RecipeCard(
     onNavigateToRecipe: () -> Unit
 ) {
     val isFavorite = recipe.id in favoriteRecipes
-    //var rating by remember { mutableStateOf(0) }
     val userRating = recipe.userRating ?: 0f
     val averageRating = recipe.averageRating ?: 0f
 
-    // Determine the photo URL based on available keys
     val photoUrl: Uri? = when {
         recipe.photosUrl["portrait"] != null -> Uri.parse("${recipe.photosUrl["portrait"]}")
         recipe.photosUrl["square"] != null -> Uri.parse("${recipe.photosUrl["square"]}")
@@ -123,26 +251,31 @@ fun RecipeCard(
         else -> null
     }
 
-    Box(
-        modifier = Modifier
-            .width(200.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(245, 245, 220))
-            .clickable {
-                recipesViewModel.displayRecipe.value = recipe
-                onNavigateToRecipe()
-            }
-    ) {
+//    Box(
+//        modifier = Modifier
+//            .width(200.dp)
+//            .clip(RoundedCornerShape(10.dp))
+//            .background(Color(245, 245, 220))
+//            .clickable {
+//                recipesViewModel.displayRecipe.value = recipe
+//                onNavigateToRecipe()
+//            }
+//    ) {
         Column(
             modifier = Modifier
-                .padding(10.dp)
+//                .padding(10.dp)
                 .fillMaxWidth()
-                .align(Alignment.Center)
+//                .align(Alignment.Center)
+                .clickable {
+                    recipesViewModel.displayRecipe.value = recipe
+                    onNavigateToRecipe()
+            }
         ) {
             Box(
                 modifier = Modifier
-                    .height(120.dp)
-                    .width(200.dp)
+                    .height(400.dp)
+                    .fillMaxWidth()
+                    //.width(185.dp)
                     .background(Color.White)
                     .clip(RoundedCornerShape(10.dp))
                     .border(
@@ -160,19 +293,21 @@ fun RecipeCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
+                            .align(Alignment.Center)
                     )
                 } else {
-                    // Placeholder text or icon when no image is available
                     Text(
                         text = "No Image",
                         color = Color.Gray,
                         fontSize = 14.sp,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.Center)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+//            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = recipe.title,
@@ -180,11 +315,11 @@ fun RecipeCard(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 8.dp)
             )
-            Text(
-                text = "Learn to cook ${recipe.title}!",
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
+//            Text(
+//                text = "Learn to cook ${recipe.title}!",
+//                fontSize = 12.sp,
+//                color = Color.Gray
+//            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -200,24 +335,23 @@ fun RecipeCard(
                             contentDescription = "Rate $star stars",
                             tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
                             modifier = Modifier
-                                .size(16.dp)
+                                .size(12.dp)
                                 .clickable {
-                                    recipesViewModel.rateRecipe(recipe.id ?: "", star.toFloat()) {
-
-                                    }
+                                    recipesViewModel.rateRecipe(recipe.id ?: "", star.toFloat()) { success, updatedAverageRating -> }
                                 }
                         )
                     }
                 }
                 Text(
-                    text = "${String.format("%.1f", averageRating)}",
+                    text = String.format("%.1f", averageRating),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
+
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                     contentDescription = "Bookmark",
-                    tint = if (isFavorite) Color.Yellow else Color.Gray,
+                    tint = if (isFavorite) Green else Color.Gray,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
@@ -227,6 +361,26 @@ fun RecipeCard(
                         }
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                UserNamePhoto(
+                    photoUri = recipe.userPhotoUrl,
+                    userName = recipe.userName,
+                    photoSize = 20.dp,
+                    fontColor = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f),
+                    spacer = 8.dp
+                )
+            }
+
         }
     }
-}
+//}
