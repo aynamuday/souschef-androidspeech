@@ -1,9 +1,11 @@
 package com.samsantech.souschef.ui
 
+import android.Manifest
 import androidx.compose.runtime.getValue
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
+//<<<<<<< nico
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -15,6 +17,13 @@ import android.text.Spanned
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+//=======
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+//>>>>>>> master
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -37,13 +46,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+//<<<<<<< nico
 import androidx.compose.material.icons.filled.Share
+//=======
+import androidx.compose.material.icons.filled.Favorite
+//>>>>>>> master
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,41 +78,53 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import androidx.compose.ui.text.style.TextAlign
+//<<<<<<< nico
 import com.google.firebase.storage.FirebaseStorage
+//=======
+import androidx.core.app.ActivityCompat
+import com.samsantech.souschef.data.CookingAssistantState
+//>>>>>>> master
 import com.samsantech.souschef.ui.components.KebabMenu
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
+import com.samsantech.souschef.ui.components.PermissionRationaleDialog
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.UserNamePhoto
+import com.samsantech.souschef.ui.components.VoiceCommandsGuide
 import com.samsantech.souschef.utils.getRecipeTimeText
+import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
+import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-//val sharedViewModel = SharedViewModel()
+val sharedViewModel = SharedViewModel()
+
+//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun RecipeScreen(
-    activity: Activity,
     context: Context,
+    activity: Activity,
     recipesViewModel: RecipesViewModel,
     onNavigateToPreviousScreen: () -> Unit,
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
+    cookingAssistantViewModel: CookingAssistantViewModel,
     onNavigateToCreateRecipeOne: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
 ) {
 
     val user by userViewModel.user.collectAsState()
     val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
-//    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
+    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
 
-//    val displayVoiceCommandPopUp = remember {
-//        mutableStateOf(false)
-//    }
+    val displayVoiceCommandPopUp = remember {
+        mutableStateOf(false)
+    }
     var showRecipeActionMenu by remember {
         mutableStateOf(false)
     }
@@ -108,8 +135,13 @@ fun RecipeScreen(
         mutableStateOf(false)
     }
 
+//<<<<<<< nico
     val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
     //val averageRating = recipe.averageRating ?: 0f
+//=======
+    //val userRating = remember { mutableFloatStateOf(recipe.userRating ?: 0f) }
+    //val averageRating = recipe.averageRating ?: 0f
+//>>>>>>> master
     val isFavorite = recipe.id in favoriteRecipes
     val averageRating = remember { mutableStateOf(recipe.averageRating ?: 0f) }
 
@@ -117,11 +149,10 @@ fun RecipeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-//            .padding(bottom = if (cookingAssistantState.isCooking) 130.dp else 40.dp)
-            .padding(bottom = 32.dp)
+            .padding(bottom = if (cookingAssistantState.isCooking) 150.dp else 32.dp)
             .pointerInput(Unit) {
                 detectTapGestures {
-//                    displayVoiceCommandPopUp.value = false
+                    displayVoiceCommandPopUp.value = false
                 }
             }
     ) {
@@ -165,17 +196,22 @@ fun RecipeScreen(
                 .fillMaxWidth()
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp)
         ) {
-
             RecipeMetadata(
                 recipe = recipe,
                 isFavorite = isFavorite,
                 recipesViewModel,
+//<<<<<<< nico
                 rating = userRating.value,
                 averageRating = averageRating.value,
+//=======
+//                rating = userRating.floatValue,
+//                averageRating = averageRating,
+//>>>>>>> master
                 onRateRecipe = { newRating ->
                     recipe.id?.let {
                         recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
                             if (success) {
+//<<<<<<< nico
                                 userRating.value = newRating
                                 averageRating.value = (updatedAverageRating ?: averageRating.value) as Float
                             }
@@ -184,25 +220,39 @@ fun RecipeScreen(
                 },
                 onLikeRecipe = {},
                 context = context
+//=======
+//                                userRating.floatValue = newRating
+//                            }
+//                        }
+//                    }
+//                }
+//>>>>>>> master
             )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
             Spacer(modifier = Modifier.height(20.dp))
-            RecipeInstructions(instructions = recipe.instructions)
+            RecipeInstructions(
+                context,
+                activity,
+                instructions = recipe.instructions,
+                recipe,
+                displayVoiceCommandPopUp = { displayVoiceCommandPopUp.value = it },
+                cookingAssistantState
+            )
         }
     }
 
-//    if (displayVoiceCommandPopUp.value) {
-//        VoiceCommandsPopUp(
-//            isWhereToViewTextIsVisible = false,
-//            isGoBackIconVisible = false,
-//            isGoBackIconClicked = {}
-//        ) { isCloseIconClicked ->
-//            if (isCloseIconClicked) {
-//                displayVoiceCommandPopUp.value = false
-//            }
-//        }
-//    }
+    if (displayVoiceCommandPopUp.value) {
+        VoiceCommandsGuide(
+            isWhereToViewTextIsVisible = false,
+            isGoBackIconVisible = false,
+            isGoBackIconClicked = {}
+        ) { isCloseIconClicked ->
+            if (isCloseIconClicked) {
+                displayVoiceCommandPopUp.value = false
+            }
+        }
+    }
 
     if (recipe.userId == user?.uid) {
         OwnRecipeActionMenu(
@@ -236,8 +286,11 @@ fun RecipeMetadata(
     rating: Float,
     averageRating: Float,
     onRateRecipe: (Float) -> Unit,
+//<<<<<<< nico
     onLikeRecipe: () -> Unit,
     context: Context
+//=======
+//>>>>>>> master
 ) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
@@ -271,7 +324,6 @@ fun RecipeMetadata(
                 text = "Leave a rating", // or edit rating if rated already
                 fontSize = 12.sp,
                 modifier = Modifier
-                    //.clickable { }
                     .padding(top = 8.dp),
                 fontStyle = FontStyle.Italic
             )
@@ -437,12 +489,19 @@ fun FiveStarRate(
 fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-//            .background(Color(255, 207, 81).copy(.2f), RoundedCornerShape(8.dp))
             .padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val iconId = if (title == "Serving") {
+            R.drawable.ladle
+        } else if (title == "Cook Time") {
+            R.drawable.deadline
+        } else {
+            R.drawable.knife
+        }
+
         Icon(
-            painter = painterResource(id = if (title == "Serving") R.drawable.ladle else R.drawable.deadline),
+            painter = painterResource(id = iconId),
             contentDescription = null,
             modifier = Modifier
                 .size(22.dp),
@@ -465,7 +524,6 @@ fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
     }
 }
 
-//val sharedViewModel = SharedViewModel()
 @Composable
 fun RecipeIngredients(ingredients: List<String>) {
     Column {
@@ -476,12 +534,6 @@ fun RecipeIngredients(ingredients: List<String>) {
         )
         for (ingredient in ingredients) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-//                Box(
-//                    modifier = Modifier
-//                        .size(8.dp)
-//                        .background(Color(255, 207, 81, 255), RoundedCornerShape(50)),
-//                )
-//                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = ingredient
                 )
@@ -490,15 +542,16 @@ fun RecipeIngredients(ingredients: List<String>) {
     }
 }
 
-//displayVoiceCommandPopUp: (Boolean) -> Unit,
-//recipe: Recipe?, activity: Activity,
-//context: Context, cookingAssistantViewModel: CookingAssistantViewModel
+//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
-fun RecipeInstructions(instructions: List<String>) {
-//    val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
-
-//    val instructions = recipe?.instructions?.sortedBy { it.orderNo }
-
+fun RecipeInstructions(
+    context: Context,
+    activity: Activity,
+    instructions: List<String>,
+    recipe: Recipe,
+    displayVoiceCommandPopUp: (Boolean) -> Unit,
+    cookingAssistantState: CookingAssistantState
+) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -510,111 +563,76 @@ fun RecipeInstructions(instructions: List<String>) {
                 fontSize = 18.sp
             )
 
-//            val showRecordAudioRationaleDialog = remember {
-//                mutableStateOf(false)
-//            }
-//
-//            val showBluetoothConnectRationaleDialog = remember {
-//                mutableStateOf(false)
-//            }
-//
-//            val recordAudioPermissionResultLauncher = rememberLauncherForActivityResult(
-//                contract = ActivityResultContracts.RequestPermission(),
-//                onResult = { isGranted ->
-//                    if (isGranted) {
-//                        if (!NetworkUtils.isNetworkAvailable(context)) {
-//                            Toast.makeText(context, "No connection", Toast.LENGTH_SHORT).show()
-//                        }
-//                        else if(!cookingAssistantState.isCooking) {
-//                            if (recipe != null) {
-//                                if (recipe.instructions.isNotEmpty()) {
-//                                    sharedViewModel.startCookingAssistantService(context, recipe)
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            )
+            val showRecordAudioRationaleDialog = remember {
+                mutableStateOf(false)
+            }
 
-//            IconButton(onClick = {
-//                when {
-//                    ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
-//                            == PackageManager.PERMISSION_GRANTED-> {
-//                        if (!NetworkUtils.isNetworkAvailable(context)) {
-//                            Toast.makeText(context, "No connection", Toast.LENGTH_SHORT).show()
-//                        }
-//                        else if(!cookingAssistantState.isCooking) {
-//                            if (recipe != null) {
-//                                if (recipe.instructions.isNotEmpty()) {
-//                                    sharedViewModel.startCookingAssistantService(context, recipe)
-//                                }
-//                            }
-//                        } else {
-//                            Toast.makeText(context, "Cooking assistant is running.\nTo cook anew, click the Stop icon.", Toast.LENGTH_SHORT).show()
-//                        }
-//                    }
-//                    ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) -> {
-//                        showRecordAudioRationaleDialog.value = true
-//                    } else -> {
-//                    recordAudioPermissionResultLauncher.launch(Manifest.permission.RECORD_AUDIO)
-//                }
-//                }
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                    when {
-//                        PreferencesManager.getDismissBluetoothConnectPermissionCount(context) < 1 && ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT)
-//                                != PackageManager.PERMISSION_GRANTED-> {
-//                            showBluetoothConnectRationaleDialog.value = true
-//                        }
-//                    }
-//                }
-//            }) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.voice_icon),
-//                    contentDescription = null,
-//                    tint = Color(22, 166, 55, 255),
-//                    modifier = Modifier
-//                        .size(35.dp)
-//                )
-//            }
+            val recordAudioPermissionResultLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+                onResult = { isGranted ->
+                    if (isGranted) {
+                        if(!cookingAssistantState.isCooking) {
+                            if (recipe.instructions.isNotEmpty()) {
+                                sharedViewModel.startCookingAssistantService(context, recipe)
+                            } else {
+                                Toast.makeText(context, "Cooking assistant is running.\nTo cook anew, click the Stop icon.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            )
 
-//            IconButton(onClick = {
-//                displayVoiceCommandPopUp(true)
-//            }) {
-//                Icon(
-//                    painter = painterResource(id = R.drawable.manual_icon),
-//                    contentDescription = null,
-//                    tint = Color(22, 166, 55, 255),
-//                    modifier = Modifier
-//                        .size(25.dp)
-//                )
-//            }
+            IconButton(onClick = {
+                when {
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+                            == PackageManager.PERMISSION_GRANTED-> {
+                        if(!cookingAssistantState.isCooking) {
+                            if (recipe.instructions.isNotEmpty()) {
+                                sharedViewModel.startCookingAssistantService(context, recipe)
+                            }
+                        } else {
+                            Toast.makeText(context, "Cooking assistant is running.\nTo cook anew, click the Stop icon.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO) -> {
+                        showRecordAudioRationaleDialog.value = true
+                    } else -> {
+                        recordAudioPermissionResultLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.voice_icon),
+                    contentDescription = null,
+                    tint = Color(22, 166, 55, 255),
+                    modifier = Modifier
+                        .size(35.dp)
+                )
+            }
 
-//            if (showRecordAudioRationaleDialog.value) {
-//                PermissionRationaleDialog(
-//                    title = "Allow SousChef to access your microphone?",
-//                    description = "SousChef uses this to recognize voice commands for hands-free cooking experience.",
-//                    onDismiss = { showRecordAudioRationaleDialog.value = false },
-//                    onAllow = {
-//                        showRecordAudioRationaleDialog.value = false
-//                        sharedViewModel.openAppSettings(context)
-//                    }
-//                )
-//            }
+            IconButton(onClick = {
+                displayVoiceCommandPopUp(true)
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.manual_icon),
+                    contentDescription = null,
+                    tint = Color(22, 166, 55, 255),
+                    modifier = Modifier
+                        .size(25.dp)
+                )
+            }
 
-//            if (showBluetoothConnectRationaleDialog.value) {
-//                PermissionRationaleDialog(
-//                    title = "Allow SousChef to access Bluetooth (nearby devices)?",
-//                    description = "If you intend to use wireless earphone for voice-activated cooking assistance, this permission must be enabled.",
-//                    onDismiss = {
-//                        showBluetoothConnectRationaleDialog.value = false
-//                        PreferencesManager.incrementDismissBluetoothConnectPermissionCount(context)
-//                    },
-//                    onAllow = {
-//                        showBluetoothConnectRationaleDialog.value = false
-//                        sharedViewModel.openAppSettings(context)
-//                    }
-//                )
-//            }
+            if (showRecordAudioRationaleDialog.value) {
+                PermissionRationaleDialog(
+                    title = "Allow SousChef to access your microphone?",
+                    description = "SousChef uses this to recognize voice commands for hands-free cooking experience.",
+                    onDismiss = { showRecordAudioRationaleDialog.value = false },
+                    onAllow = {
+                        showRecordAudioRationaleDialog.value = false
+                        sharedViewModel.openAppSettings(context)
+                    }
+                )
+            }
         }
 
         instructions.forEachIndexed { index, instruction ->

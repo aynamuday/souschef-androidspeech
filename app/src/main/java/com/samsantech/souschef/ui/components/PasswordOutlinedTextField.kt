@@ -52,6 +52,7 @@ fun PasswordOutlinedTextField(value: String, onValueChange: (String) -> Unit,
                 contentDescription = "lock icon"
             )
         } },
+        singleLine = true,
         trailingIcon = {
             Icon(
                 painter = if (showPassword) { painterResource(id = R.drawable.visibility_vector) }

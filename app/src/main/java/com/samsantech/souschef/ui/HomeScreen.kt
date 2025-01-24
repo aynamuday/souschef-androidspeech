@@ -19,12 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+//<<<<<<< nico
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Menu
+//=======
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+//>>>>>>> master
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Star
@@ -45,24 +52,34 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
+//<<<<<<< nico
 import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
+//=======
+import com.samsantech.souschef.ui.components.Header
+import com.samsantech.souschef.viewmodel.RecipesViewModel
+//>>>>>>> master
 
 @Composable
 fun HomeScreen(
     navController: NavController,
+//<<<<<<< nico
     paddingValues: PaddingValues,
     searchRecipesViewModel: SearchRecipesViewModel,
+//=======
+//>>>>>>> master
     recipesViewModel: RecipesViewModel,
-    onNavigateToRecipe: () -> Unit
+    onNavigateToRecipe: () -> Unit,
+    paddingValues: PaddingValues,
+    isCooking: Boolean
 ) {
     val recipes by recipesViewModel.allRecipes.collectAsState()
-    //val favoriteRecipes by userViewModel.favoriteRecipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
+//<<<<<<< nico
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -83,17 +100,24 @@ fun HomeScreen(
                 )
         ) {
             Row(
+//=======
+    Box {
+        Column {
+            Header()
+
+            Column(
+//>>>>>>> master
                 modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(paddingValues)
+                    .padding(bottom = if (isCooking) 150.dp else 0.dp)
             ) {
                 Text(
-                    text = "SOUSCHEF",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight(700),
-                    color = Color(255, 207, 81, 255)
+                    text = "Discover Recipes",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 10.dp)
                 )
+//<<<<<<< nico
 //                Icon(
 //                    imageVector = Icons.Filled.Menu,
 //                    contentDescription = null,
@@ -102,12 +126,12 @@ fun HomeScreen(
 //                        .size(40.dp)
 //                )
             }
+//=======
+//>>>>>>> master
 
-            Box {
-                Column {
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
+                RecipeFeed(navController, recipes, recipesViewModel, favoriteRecipes, onNavigateToRecipe)
             }
+//<<<<<<< nico
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -134,6 +158,11 @@ fun HomeScreen(
                                 val maxWidth = maxWidth
                                 Column {
                                     Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))){
+//=======
+        }
+    }
+}
+//>>>>>>> master
 
                                         val width = maxWidth
                                         recipe.postId?.let {

@@ -1,0 +1,39 @@
+package com.samsantech.souschef.viewmodel
+
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.core.content.ContextCompat
+import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.utils.CookingAssistantService
+import kotlinx.coroutines.flow.MutableStateFlow
+
+class SharedViewModel {
+    val isLoading = MutableStateFlow(false)
+
+    fun openAppSettings(context: Context) {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", context.packageName, null)
+        )
+        context.startActivity(intent)
+    }
+
+    fun startCookingAssistantService(context: Context, recipe: Recipe) {
+        val cookingAssistantServiceIntent = Intent(context, CookingAssistantService::class.java).apply {
+            action = CookingAssistantService.Actions.START.toString()
+            putExtra("recipe", recipe)
+        }
+
+        ContextCompat.startForegroundService(context, cookingAssistantServiceIntent)
+    }
+
+    fun stopCookingAssistantService(context: Context) {
+        val cookingAssistantServiceIntent = Intent(context, CookingAssistantService::class.java).apply {
+            action = CookingAssistantService.Actions.STOP.toString()
+        }
+
+        ContextCompat.startForegroundService(context, cookingAssistantServiceIntent)
+    }
+}

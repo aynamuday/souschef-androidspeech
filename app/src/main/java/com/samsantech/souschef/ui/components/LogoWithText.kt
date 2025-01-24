@@ -31,7 +31,7 @@ fun LogoWithText() {
                 .size(150.dp)
         )
         Text(
-            text = "S  O  U  C  H  E  F",
+            text = "S  O  U  S  C  H  E  F",
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily(Font(R.font.inter)),
             fontSize = 20.sp,

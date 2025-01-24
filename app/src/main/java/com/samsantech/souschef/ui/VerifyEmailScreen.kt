@@ -30,16 +30,12 @@ import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.viewmodel.AuthViewModel
-import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun VerifyEmailScreen(
-    userViewModel: UserViewModel,
     authViewModel: AuthViewModel,
     onNavigateToLogin: () -> Unit
 ) {
-    val user by userViewModel.user.collectAsState()
-
     var error by remember {
         mutableStateOf("")
     }
@@ -53,7 +49,7 @@ fun VerifyEmailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 80.dp, bottom = 70.dp, start = 25.dp, end = 25.dp),
+            .padding(top = 80.dp, bottom = 30.dp, start = 25.dp, end = 25.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(
@@ -73,7 +69,7 @@ fun VerifyEmailScreen(
                     )
                 )
             )
-            Text(text = "A verification email has been sent to your email address. Please check your email and click on the link to verify your email address.")
+            Text(text = "A new verification email has been sent to your email address. Please check your email and click on the link to verify your email address.")
 
             Spacer(modifier = Modifier.height(10.dp))
             ErrorText(text = error)

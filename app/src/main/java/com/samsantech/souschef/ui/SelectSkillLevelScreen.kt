@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -28,6 +30,7 @@ import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.SelectionCard
 import com.samsantech.souschef.ui.components.Dialog
+import com.samsantech.souschef.ui.components.SkipButton
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.viewmodel.UserViewModel
@@ -52,13 +55,21 @@ fun SelectSkillLevelScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 50.dp, bottom = 70.dp, start = 32.dp, end = 32.dp),
+                .padding(top = 50.dp, bottom = 30.dp, start = 32.dp, end = 32.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Spacer(modifier = Modifier.height(50.dp))
+                SkipButton(onClick = {
+                    userViewModel.clearPreferencesSkillLevel()
+                    userViewModel.setUserPreferences {
+                        println()
+                    }
+                    onNavigateToHome()
+                })
+
                 Text(
                     text = "How skilled are you in the kitchen?",
                     color = Color(0xFF16A637),

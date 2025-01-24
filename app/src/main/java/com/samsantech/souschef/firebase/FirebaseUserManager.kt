@@ -41,7 +41,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
         }
     }
 
-    fun updateProfile(username: String? = null, newDisplayName: String? = null, callback: (Boolean, String?) -> Unit) {
+    fun updateProfile(username: String? = null, newDisplayName: String? = null, email: String? = null, callback: (Boolean, String?) -> Unit) {
         val user = auth.currentUser
 
         if (user != null) {
@@ -59,11 +59,13 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         }
                     }
             }
-            if (username != null) {
-                val updatedUser = hashMapOf(
-                    "username" to username,
-                )
-
+            val updatedUser = hashMapOf<String, String>()
+            updatedUser["username"] = username ?: ""
+            updatedUser["email"] = if (email != null) "$email" else "${user.email}"
+            println(email)
+            println("$email")
+            println(updatedUser)
+            if (updatedUser.isNotEmpty()) {
                 db.collection("users")
                     .document(user.uid)
                     .set(updatedUser)
@@ -118,7 +120,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
         }
     }
 
-    fun updateEmail(newEmail: String, password: String, callback: (Boolean, String?) -> Unit) {
+    fun updateEmail(newEmail: String, username: String?, password: String, callback: (Boolean, String?) -> Unit) {
         val user = auth.currentUser
 
         if (user != null) {
@@ -136,6 +138,9 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                             user.updateEmail(newEmail)
                                 .addOnCompleteListener {
                                     if (it.isSuccessful) {
+                                        updateProfile(username = username, email = newEmail) { _, err ->
+                                            println(err)
+                                        }
                                         callback(true, null)
                                         user.reload()
                                     } else {

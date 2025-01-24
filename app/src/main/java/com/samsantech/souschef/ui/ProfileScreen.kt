@@ -41,11 +41,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-//<<<<<<< master
 import androidx.compose.material.icons.filled.Close
-//=======
 import androidx.compose.material.icons.filled.Delete
-//>>>>>>> nico
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.Icon
@@ -101,7 +98,8 @@ fun ProfileScreen(
     recipesViewModel: RecipesViewModel,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToRecipe: () -> Unit,
-    onNavigateToCreateRecipeOne: () -> Unit
+    onNavigateToCreateRecipeOne: () -> Unit,
+    isCooking: Boolean
 ) {
     val user by userViewModel.user.collectAsState()
     val allRecipes by recipesViewModel.allRecipes.collectAsState()
@@ -157,6 +155,7 @@ fun ProfileScreen(
                     .padding(horizontal = 20.dp)
                     .padding(top = 16.dp)
                     .padding(paddingValues)
+                    .padding(bottom = if (isCooking) 150.dp else 0.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -237,7 +236,7 @@ fun ProfileScreen(
                         contentPadding = PaddingValues(12.dp, 12.dp),
                         containerColor = if (show == "recipes") Green else Color.White,
                         contentColor = if (show == "recipes") Color.White else Green,
-                        border = if (show == "recipes")  BorderStroke(0.dp, Color.Transparent) else BorderStroke(1.dp, Color(0xFF16A637))
+                        border = if (show == "recipes")  BorderStroke(0.dp, Green) else BorderStroke(1.dp, Color(0xFF16A637))
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     ColoredButton(
@@ -322,6 +321,7 @@ fun ProfileScreen(
                                 textAlign = TextAlign.Center
                             )
                         } else {
+//<<<<<<< nico
                             Box(contentAlignment = Alignment.Center) {
                                 FlowRow(
                                     maxItemsInEachRow = 3,
@@ -393,6 +393,75 @@ fun ProfileScreen(
                                                         contentDescription = "Remove from favorites"
                                                     )
                                                 }
+//=======
+                            FlowRow(
+                                maxItemsInEachRow = 3,
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                favoriteRecipes.forEach { recipeId ->
+                                    val recipe = ownRecipes.find { it.id == recipeId }
+                                    recipe?.let {
+                                        val photoUrl: Uri? = if (it.photosUrl["portrait"] != null) {
+                                            Uri.parse("${it.photosUrl["portrait"]}")
+                                        } else if (it.photosUrl["square"] != null) {
+                                            Uri.parse("${it.photosUrl["square"]}")
+                                        } else {
+                                            Uri.parse("${it.photosUrl["landscape"]}")
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                        ) {
+                                            RecipeCard(
+                                                photoUrl = photoUrl,
+                                                modifier = Modifier
+                                                    .width((maxWidth / 3) - 10.dp),
+                                                onClick = {
+                                                    recipesViewModel.displayRecipe.value = recipe
+                                                    onNavigateToRecipe()
+                                                },
+                                                //<<<<<<< master
+                                                //                                            showKebabMenu = false
+                                                //=======
+                                                //showKebabMenu = true,
+                                                onClickKebabMenu = {
+                                                    //showRecipeActionMenu = !showRecipeActionMenu
+                                                    recipeWithAction =
+                                                        if (recipeWithAction == null) recipe else null
+                                                }
+                                                //>>>>>>> nico
+                                            )
+
+                                            IconButton(
+                                                onClick = {
+                                                    recipe.id?.let {
+                                                        recipesViewModel.removeFromFavorites(it) { isSuccess ->
+                                                            if (isSuccess) {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "Recipe removed from favorites",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            } else {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    "Failed to remove from favorites",
+                                                                    Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = "Remove from favorites"
+                                                )
+//>>>>>>> master
                                             }
                                         }
                                     }
@@ -460,8 +529,8 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(32.dp))
 
-                val menu = arrayOf<Menu>(
-                    Menu("Edit Profile", Icons.Filled.EditNote, onNavigateToEditProfile)
+                val menu = arrayOf(
+                    Menu("Settings", Icons.Filled.EditNote, onNavigateToEditProfile)
                 )
 
 

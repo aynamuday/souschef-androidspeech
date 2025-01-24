@@ -1,6 +1,7 @@
 package com.samsantech.souschef.ui
 
 import android.util.Patterns
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,8 +46,14 @@ fun SignUpScreen(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
     onNavigateToVerifyEmail: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onBack: () -> Unit
 ) {
+    BackHandler {
+        authViewModel.clearSignUpInformation()
+        onBack()
+    }
+
     val signUpInformation by authViewModel.signUpInformation.collectAsState()
     var loading by remember {
         mutableStateOf(false)
@@ -97,9 +104,13 @@ fun SignUpScreen(
             FormOutlinedTextField(
                 value = signUpInformation.displayName,
                 onValueChange = { valueChange ->
-                    error = ""
-                    errorDisplayName = ""
-                    authViewModel.setSignUpInformation(displayName = valueChange)
+                    if (signUpInformation.displayName.length >= 30 && valueChange.length >= 30) {
+                        errorDisplayName = "Maximum of 30 characters."
+                    } else {
+                        error = ""
+                        errorDisplayName = ""
+                        authViewModel.setSignUpInformation(displayName = valueChange)
+                    }
                 },
                 label = "Name",
                 leadingIcon = {
@@ -116,19 +127,23 @@ fun SignUpScreen(
             FormOutlinedTextField(
                 value = signUpInformation.username,
                 onValueChange = { valueChange ->
-                    error = ""
-                    errorUsername = ""
-                    authViewModel.setSignUpInformation(username = valueChange)
+                    if (signUpInformation.username.length >= 30 && valueChange.length >= 30) {
+                        errorUsername = "Maximum of 30 characters."
+                    } else {
+                        error = ""
+                        errorUsername = ""
+                        authViewModel.setSignUpInformation(username = valueChange)
 
-                    if (valueChange.isNotBlank()) {
-                        userViewModel.isUsernameExists(valueChange) {
-                            if (it) {
-                                errorUsername = "Username is already taken."
+                        if (valueChange.isNotBlank()) {
+                            userViewModel.isUsernameExists(valueChange) {
+                                if (it) {
+                                    errorUsername = "Username is already taken."
+                                }
                             }
-                        }
 
-                        if (!isValidUsername(valueChange)) {
-                            errorUsername = "Username must only contain letters, numbers, underscore, and dot."
+                            if (!isValidUsername(valueChange)) {
+                                errorUsername = "Username must only contain letters, numbers, underscore, and dot."
+                            }
                         }
                     }
                 },
@@ -219,7 +234,15 @@ fun SignUpScreen(
 
                             if (isSuccess) {
                                 userViewModel.refreshUser()
-                                authViewModel.setSignUpInformation()
+                                authViewModel.clearSignUpInformation()
+
+                                authViewModel.sendEmailVerification { _, err ->
+                                    if (err != null) {
+                                        println(errorMessage)
+                                    }
+                                }
+                                authViewModel.logout()
+
                                 success = true
                             }
                         }
@@ -239,7 +262,10 @@ fun SignUpScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             ColoredButton(
-                onClick = onNavigateToLogin,
+                onClick = {
+                    onNavigateToLogin()
+                    authViewModel.clearSignUpInformation()
+                },
                 containerColor = Color.White, contentColor = Green,
                 text = "Login",
                 border = BorderStroke(1.dp, Color.Black)
@@ -257,13 +283,14 @@ fun SignUpScreen(
             message = "Sign up successful!",
             subMessage = "Your account has been created.",
             onCloseClick = {
-                authViewModel.logout()
-                authViewModel.sendEmailVerification() { _, errorMessage ->
-                    if (errorMessage != null) {
-                        println(errorMessage)
-                    }
-                }
+//                authViewModel.sendEmailVerification { _, errorMessage ->
+//                    if (errorMessage != null) {
+//                        println(errorMessage)
+//                    }
+//                }
                 onNavigateToVerifyEmail()
+//                authViewModel.logout()
+//                onNavigateToLogin()
             }
         )
     }

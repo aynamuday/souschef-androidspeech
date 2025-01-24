@@ -66,7 +66,7 @@ fun DisplayProfileImage(
                     modifier = Modifier
                         .clip(CircleShape)
                         .size(200.dp)
-                        .background(Color.LightGray),
+                        .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
                     if (bitmap != null) {
@@ -80,14 +80,9 @@ fun DisplayProfileImage(
                                 .background(Color.White)
                         )
                     } else if (uri != null) {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(198.dp)
-                                .background(Color.White)
+                        ProfilePhoto(
+                            uri = uri,
+                            size = 198.dp
                         )
                     }
                 }

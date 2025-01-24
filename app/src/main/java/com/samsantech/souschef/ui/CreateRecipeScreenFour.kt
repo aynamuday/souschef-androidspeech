@@ -62,7 +62,8 @@ fun CreateRecipeScreenFour(
     context: Context,
     ownRecipesViewModel: OwnRecipesViewModel,
     onNavigateToCreateRecipeThree: () -> Unit,
-    closeCreateRecipe: () -> Unit
+    closeCreateRecipe: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     val recipe by ownRecipesViewModel.recipe.collectAsState()
     val action by ownRecipesViewModel.action.collectAsState()
@@ -236,7 +237,7 @@ fun CreateRecipeScreenFour(
                         if (action == OwnRecipeAction.EDIT) {
                             changes = getRecipesDifference(originalData, recipe)
 
-                            if (changes.isEmpty() && recipe.photosUri.size < 1) {
+                            if (changes.isEmpty() && recipe.photosUri.size < 1 && ownRecipesViewModel.deletePhotoKey == null) {
                                 closeCreateRecipe()
                             } else {
                                 saveRecipe = true
@@ -295,8 +296,8 @@ fun CreateRecipeScreenFour(
                 message = if (action == OwnRecipeAction.EDIT) "Recipe updated successfully!" else "Recipe uploaded successfully!",
                 subMessage = null,
                 onCloseClick = {
+                    if (action == OwnRecipeAction.EDIT) closeCreateRecipe() else onNavigateToProfile()
                     ownRecipesViewModel.action.value = OwnRecipeAction.ADD
-                    closeCreateRecipe()
                     success = false
                 }
             )

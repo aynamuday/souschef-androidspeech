@@ -86,7 +86,6 @@ fun CreateRecipeScreenTwo(
                                 Box(modifier = Modifier.weight(1f)) {
                                     FormBasicTextField(
                                         value = ingredient,
-                                        maxLines = 2,
                                         onValueChange = {
                                             error = ""
                                             ownRecipesViewModel.updateIngredients(index, it)

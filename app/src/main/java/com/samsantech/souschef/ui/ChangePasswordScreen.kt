@@ -21,6 +21,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.samsantech.souschef.ui.components.ColoredButton
+import com.samsantech.souschef.ui.components.ConfirmDialog
+import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.Header
 import com.samsantech.souschef.ui.components.PasswordOutlinedTextField
 import com.samsantech.souschef.ui.components.ProgressSpinner
@@ -30,7 +32,8 @@ import com.samsantech.souschef.viewmodel.AuthViewModel
 @Composable
 fun ChangePasswordScreen(
     authViewModel: AuthViewModel,
-    onNavigateToEditProfile: () -> Unit
+    onNavigateToEditProfile: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     var oldPassword by remember {
         mutableStateOf("")
@@ -45,6 +48,12 @@ fun ChangePasswordScreen(
         mutableStateOf("")
     }
     var loading by remember {
+        mutableStateOf(false)
+    }
+    var success by remember {
+        mutableStateOf(false)
+    }
+    var showConfirmDialog by remember {
         mutableStateOf(false)
     }
 
@@ -117,24 +126,57 @@ fun ChangePasswordScreen(
                             "Password must be at least 8 characters long, contain a number, an uppercase letter, and a special character."
                     } else if (newPassword != confirmPassword) {
                         error = "Password confirmation do not match."
+                    } else if (newPassword == oldPassword) {
+                        error = "New password is the same with old password."
                     }
+
                     if (error.isBlank()) {
-                        loading = true
-                        authViewModel.changePassword(
-                            oldPassword,
-                            newPassword
-                        ) { isSuccess, errorMessage ->
-                            loading = false
-                            if (isSuccess) {
-                                onNavigateToEditProfile()
-                            } else {
-                                error = errorMessage ?: "An error occurred. Please try again."
-                            }
-                        }
+                        showConfirmDialog = true
+
+//                        loading = true
+//                        authViewModel.changePassword(
+//                            oldPassword,
+//                            newPassword
+//                        ) { isSuccess, errorMessage ->
+//                            loading = false
+//                            if (isSuccess) {
+//                                success = true
+//                            } else {
+//                                error = errorMessage ?: "An error occurred. Please try again."
+//                            }
+//                        }
                     }
                 },
                 text = "Confirm"
             )
+        }
+    }
+
+    if (showConfirmDialog) {
+        ConfirmDialog(
+            message = "Are you sure?",
+            subMessage = "You will be logged out.",
+            buttonOkayName = "Yes",
+            onClickCancel = { showConfirmDialog = false }) {
+            loading = true
+            authViewModel.changePassword(
+                oldPassword,
+                newPassword
+            ) { isSuccess, errorMessage ->
+                loading = false
+                if (isSuccess) {
+                    authViewModel.logout()
+                    onNavigateToLogin()
+                } else {
+                    error = errorMessage ?: "An error occurred. Please try again."
+                }
+            }
+        }
+    }
+
+    if (success) {
+        Dialog(message = "Password changed successfully!") {
+            onNavigateToEditProfile()
         }
     }
 

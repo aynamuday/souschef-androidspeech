@@ -63,7 +63,7 @@ class UserViewModel(
     }
 
     fun updateEmail(newEmail: String, password: String, callback: (Boolean, String?) -> Unit) {
-        firebaseUserManager.updateEmail(newEmail, password) { isSuccess, error ->
+        firebaseUserManager.updateEmail(newEmail, user.value?.username, password) { isSuccess, error ->
             if (isSuccess) {
                 refreshUser()
             }
