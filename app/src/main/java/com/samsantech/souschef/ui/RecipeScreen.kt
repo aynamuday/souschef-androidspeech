@@ -2,9 +2,18 @@ package com.samsantech.souschef.ui
 
 import androidx.compose.runtime.getValue
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
 import android.text.Html
+import android.text.Html.fromHtml
+import android.text.Spanned
+import android.util.Base64
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,7 +37,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
@@ -55,6 +63,7 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import androidx.compose.ui.text.style.TextAlign
+import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.ui.components.KebabMenu
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.ProgressSpinner
@@ -63,6 +72,10 @@ import com.samsantech.souschef.utils.getRecipeTimeText
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 //val sharedViewModel = SharedViewModel()
 @Composable
@@ -343,6 +356,60 @@ fun RecipeMetadata(
     }
 }
 
+fun shareRecipeViaEmail(recipe: Recipe, context: Context) {
+    val subjectMessage = "Check out this recipe: ${recipe.title}"
+
+    val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
+        Uri.parse("${recipe.photosUrl["portrait"]}")
+    } else if (recipe.photosUrl["square"] != null) {
+        Uri.parse("${recipe.photosUrl["square"]}")
+    } else {
+        null
+    }
+
+    if (photoUrl == null) {
+        Toast.makeText(context, "Image URL is null or invalid", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("$photoUrl")
+
+    storageReference.downloadUrl.addOnSuccessListener { uri ->
+        val photo = "$uri?alt=media"
+        val htmlData = """
+        <html>
+        <body>
+            <h2>${recipe.title}</h2>
+            <img src="$photo" alt="Recipe Image" style="width:100%;max-width:300px;">
+            <p><strong>By:</strong> ${recipe.userName}</p>
+            <h3>Ingredients:</h3>
+            <p>${recipe.ingredients.joinToString("<br>") { "• $it" }}</p>
+            <h3>Instructions:</h3>
+            <p>${recipe.instructions.mapIndexed { index, step -> "${index + 1}. $step" }.joinToString("<br>")}</p>
+            <p>Shared via the SousChef App</p>
+        </body>
+        </html>
+        """.trimIndent()
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/html"
+            putExtra(Intent.EXTRA_SUBJECT, subjectMessage)
+            putExtra(Intent.EXTRA_TEXT, fromHtml(htmlData))
+            putExtra(Intent.EXTRA_HTML_TEXT, htmlData)
+        }
+
+        try {
+            context.startActivity(Intent.createChooser(intent, "Send mail..."))
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+        }
+    }.addOnFailureListener { exception ->
+        Log.e("EmailSharing", "Failed to get image URL: ${exception.message}")
+        Toast.makeText(context, "Failed to fetch image URL: ${exception.message}", Toast.LENGTH_SHORT).show()
+    }
+
+}
+
 @Composable
 fun FiveStarRate(
     rating: Float,
@@ -583,76 +650,5 @@ fun RecipeInstructionsItem(index: Int, instruction: String) {
             modifier = Modifier
                 .padding(start = 10.dp)
         )
-    }
-}
-
-fun shareRecipeViaEmail(recipe: Recipe, context: Context) {
-    val recipeTitle = recipe.title
-    val recipeOwner = recipe.userName
-    //val recipeImage = recipe.photosUrl["portrait"] ?: recipe.photosUrl["square"]
-    val recipeIngredients = recipe.ingredients.joinToString("<br>") { "- $it" }
-    val recipeInstructions = recipe.instructions.joinToString("<br>") { "- $it" }
-
-    val emailSubject = "Check out this recipe: $recipeTitle"
-
-    // HTML content for better design and structure
-    val emailBody = """
-        <html>
-        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
-            <div style="width: 80%; margin: 20px auto; background-color: #ffffff; padding: 20px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); border-radius: 12px; background-color: #f9f9f9;">
-                
-                <!-- Header Section with Background Color -->
-                <div style="background-color: #16A637; padding: 20px; border-radius: 10px 10px 0 0;">
-                    <h2 style="color: #ffffff; text-align: center; margin: 0;">$recipeTitle</h2>
-                </div>
-    
-                <table style="width: 100%; border-spacing: 20px; margin-top: 20px;">
-                    <tr>
-                        <!-- Column 1: Recipe Image -->
-                        <td style="width: 50%; vertical-align: top;">
-                            <img src="" alt="Recipe Image" style="width: 100%; height: auto; border-radius: 8px;">
-                        </td>
-                        <!-- Column 2: Recipe Details -->
-                        <td style="width: 50%; vertical-align: top; color: #333;">
-                            <p style="font-size: 16px; color: #16A637; font-weight: bold;">By <strong>$recipeOwner</strong></p>
-    
-                            <p style="font-size: 16px; color: #FFD600; margin-top: 20px;"><strong>Ingredients:</strong></p>
-                            <ul style="font-size: 16px; padding-left: 20px; list-style-type: square;">
-                                $recipeIngredients
-                            </ul>
-    
-                            <p style="font-size: 16px; color: #FFD600; margin-top: 20px;"><strong>Instructions:</strong></p>
-                            <ol style="font-size: 16px; padding-left: 20px; list-style-type: decimal;">
-                                $recipeInstructions
-                            </ol>
-                        </td>
-                    </tr>
-                </table>
-    
-                <!-- Footer Section -->
-                <div style="text-align: center; margin-top: 40px; font-size: 12px; color: #888;">
-                    <p style="font-size: 14px; color: #333;">Enjoy your meal!</p>
-                    <p style="font-size: 12px; color: #888;">This recipe was shared via the SousChef App.</p>
-                </div>
-    
-            </div>
-        </body>
-        </html>
-    """.trimIndent()
-
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        //type = "text/html"
-        putExtra(Intent.EXTRA_SUBJECT, emailSubject)
-        //putExtra(Intent.EXTRA_TEXT, emailBody)
-        //putExtra(Intent.EXTRA_HTML_TEXT, emailBody)
-        putExtra(Intent.EXTRA_TEXT, Html.fromHtml(emailBody))
-        setType("text/html")
-    }
-
-    try {
-        context.startActivity(Intent.createChooser(intent, "Send email via"))
-    } catch (e: android.content.ActivityNotFoundException) {
-        // Handle the case where no email app is available
-        Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
     }
 }
