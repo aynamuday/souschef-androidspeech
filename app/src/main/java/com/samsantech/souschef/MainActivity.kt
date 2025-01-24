@@ -17,13 +17,18 @@ import com.samsantech.souschef.firebase.FirebaseAuthManager
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import com.samsantech.souschef.firebase.FirebaseUserManager
 import com.samsantech.souschef.ui.theme.SousChefTheme
+import com.samsantech.souschef.utils.TextToSpeechManager
 import com.samsantech.souschef.viewmodel.AuthViewModel
+import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
+import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
+    private val textToSpeechManager = TextToSpeechManager(this.applicationContext)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -54,24 +59,33 @@ class MainActivity : ComponentActivity() {
 
                 val user = auth.currentUser
 
+                val sharedViewModel = SharedViewModel()
                 val authViewModel = AuthViewModel(firebaseAuthManager)
                 val userViewModel = UserViewModel(firebaseAuthManager, firebaseUserManager)
                 val recipesViewModel = RecipesViewModel(firebaseRecipeManager)
                 val ownRecipesViewModel = OwnRecipesViewModel(userViewModel, firebaseRecipeManager, recipesViewModel)
                 val searchRecipesViewModel = SearchRecipesViewModel()
+                val cookingAssistantViewModel = CookingAssistantViewModel(context = this.applicationContext, textToSpeechManager = textToSpeechManager)
 
                 SousChefApp(
                     systemNavigationBarHeight,
                     user,
                     activity = this,
                     context = this,
+                    sharedViewModel,
                     authViewModel,
                     userViewModel,
                     ownRecipesViewModel,
                     recipesViewModel,
-                    searchRecipesViewModel
+                    searchRecipesViewModel,
+                    cookingAssistantViewModel
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        textToSpeechManager.destroy()
     }
 }

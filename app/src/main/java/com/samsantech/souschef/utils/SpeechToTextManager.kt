@@ -40,22 +40,15 @@ class SpeechToTextManager(private val context: Context) {
     }
 
     private val mRecognitionListener = object : RecognitionListener {
-        override fun onBeginningOfSpeech() {
-            println("onBeginningOfSpeech")
-        }
+        override fun onBeginningOfSpeech() {}
 
-        override fun onBufferReceived(buffer: ByteArray) {
-            println("onBufferReceived: $buffer")
-        }
+        override fun onBufferReceived(buffer: ByteArray) {}
 
         override fun onEndOfSpeech() {
-            println("onEndOfSpeech")
             speechRecognizer!!.stopListening()
         }
 
         override fun onResults(results: Bundle) {
-            println("onResults")
-
             val matches: ArrayList<String>? = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
 
             for (text in matches!!) {
@@ -67,27 +60,19 @@ class SpeechToTextManager(private val context: Context) {
         }
 
         override fun onError(errorCode: Int) {
-            println("FAILED onError $errorCode")
+            println("STT ERROR $errorCode")
 
             resetSpeechRecognizer()
             startListening()
         }
 
-        override fun onEvent(arg0: Int, arg1: Bundle) {
-            println("onEvent")
-        }
+        override fun onEvent(arg0: Int, arg1: Bundle) {}
 
-        override fun onPartialResults(arg0: Bundle) {
-            println("onPartialResults")
-        }
+        override fun onPartialResults(arg0: Bundle) {}
 
-        override fun onReadyForSpeech(arg0: Bundle) {
-            println("onReadyForSpeech")
-        }
+        override fun onReadyForSpeech(arg0: Bundle) {}
 
-        override fun onRmsChanged(rmsdB: Float) {
-            println("onRmsChanged")
-        }
+        override fun onRmsChanged(rmsdB: Float) {}
     }
 
     private fun setRecogniserIntent() {
@@ -99,6 +84,10 @@ class SpeechToTextManager(private val context: Context) {
         recognizerIntent!!.putExtra(
             RecognizerIntent.EXTRA_LANGUAGE,
             "en-US"
+        )
+        recognizerIntent!!.putExtra(
+            RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
+            3000
         )
     }
 }

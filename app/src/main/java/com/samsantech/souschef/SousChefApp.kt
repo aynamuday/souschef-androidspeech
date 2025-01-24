@@ -36,6 +36,7 @@ import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.viewmodel.AuthViewModel
+import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
 import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -54,7 +55,8 @@ fun SousChefApp(
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
     recipesViewModel: RecipesViewModel,
-    searchRecipesViewModel: SearchRecipesViewModel
+    searchRecipesViewModel: SearchRecipesViewModel,
+    cookingAssistantViewModel: CookingAssistantViewModel
 ) {
     val isLoading = sharedViewModel.isLoading.collectAsState()
 
@@ -324,6 +326,7 @@ fun SousChefApp(
                     onNavigateToPreviousScreen = { navController.popBackStack() },
                     userViewModel,
                     ownRecipesViewModel,
+                    cookingAssistantViewModel,
                     onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
                     onNavigateToProfile = { navController.navigate(route = Profile) {
                         popUpTo(Recipe) {inclusive = true}
