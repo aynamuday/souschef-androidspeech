@@ -1,7 +1,12 @@
 package com.samsantech.souschef.data
 
 import android.net.Uri
+import android.os.Parcel
+import android.os.Parcelable
+import kotlinx.parcelize.Parceler
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class Recipe(
     var id: String? = null,
     var userId: String? = null,
@@ -27,4 +32,64 @@ data class Recipe(
     var ratings: HashMap<String, Float>? = null,
     var averageRating: Float? = null,
     var userRating: Float? = null
-)
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        id = parcel.readString(),
+        userId = parcel.readString(),
+        userName = parcel.readString(),
+        userPhotoUrl = parcel.readString(),
+        photosUrl = parcel.readHashMap(Uri::class.java.classLoader) as HashMap<String, Uri>,
+        photosUri = parcel.readHashMap(Uri::class.java.classLoader) as HashMap<String, Uri>,
+        title = parcel.readString() ?: "",
+        description = parcel.readString() ?: "",
+        cookTimeHr = parcel.readString() ?: "0",
+        cookTimeMin = parcel.readString() ?: "0",
+        prepTimeHr = parcel.readString() ?: "0",
+        prepTimeMin = parcel.readString() ?: "0",
+        serving = parcel.readString() ?: "1",
+        difficulty = parcel.readString() ?: "",
+        mealTypes = parcel.createStringArrayList() ?: listOf(),
+        categories = parcel.createStringArrayList() ?: listOf(),
+        ingredients = parcel.createStringArrayList() ?: listOf(""),
+        instructions = parcel.createStringArrayList() ?: listOf(""),
+        tags = parcel.createStringArrayList() ?: listOf(),
+        audience = parcel.readString() ?: "Public",
+        favoriteRecipes = parcel.createStringArrayList() ?: listOf(),
+        ratings = parcel.readSerializable() as HashMap<String, Float>?,
+        averageRating = parcel.readValue(Float::class.java.classLoader) as Float?,
+        userRating = parcel.readValue(Float::class.java.classLoader) as Float?
+    )
+
+    companion object : Parceler<Recipe> {
+        override fun Recipe.write(parcel: Parcel, flags: Int) {
+            parcel.writeString(id)
+            parcel.writeString(userId)
+            parcel.writeString(userName)
+            parcel.writeString(userPhotoUrl)
+            parcel.writeMap(photosUrl)
+            parcel.writeMap(photosUri)
+            parcel.writeString(title)
+            parcel.writeString(description)
+            parcel.writeString(cookTimeHr)
+            parcel.writeString(cookTimeMin)
+            parcel.writeString(prepTimeHr)
+            parcel.writeString(prepTimeMin)
+            parcel.writeString(serving)
+            parcel.writeString(difficulty)
+            parcel.writeStringList(mealTypes)
+            parcel.writeStringList(categories)
+            parcel.writeStringList(ingredients)
+            parcel.writeStringList(instructions)
+            parcel.writeStringList(tags)
+            parcel.writeString(audience)
+            parcel.writeStringList(favoriteRecipes)
+            parcel.writeSerializable(ratings)
+            parcel.writeValue(averageRating)
+            parcel.writeValue(userRating)
+        }
+
+        override fun create(parcel: Parcel): Recipe {
+            return Recipe(parcel)
+        }
+    }
+}
