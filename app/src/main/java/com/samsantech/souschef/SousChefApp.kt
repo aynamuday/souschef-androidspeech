@@ -27,6 +27,7 @@ import com.samsantech.souschef.ui.OpeningScreen
 import com.samsantech.souschef.ui.ProfileScreen
 import com.samsantech.souschef.ui.ChangePasswordScreen
 import com.samsantech.souschef.ui.CreateRecipeScreenFour
+import com.samsantech.souschef.ui.HomeSc
 import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.SearchScreen
 import com.samsantech.souschef.ui.SelectCuisinesScreen
@@ -41,6 +42,7 @@ import com.samsantech.souschef.ui.components.CookingAssistantUi
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
+import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -61,7 +63,8 @@ fun SousChefApp(
     ownRecipesViewModel: OwnRecipesViewModel,
     recipesViewModel: RecipesViewModel,
     searchRecipesViewModel: SearchRecipesViewModel,
-    cookingAssistantViewModel: CookingAssistantViewModel
+    cookingAssistantViewModel: CookingAssistantViewModel,
+    homeViewModel: HomeViewModel
 ) {
     val isLoading = sharedViewModel.isLoading.collectAsState()
     val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
@@ -251,9 +254,20 @@ fun SousChefApp(
                     },
                     ownRecipesViewModel
                 ) { paddingValues ->
-                    HomeScreen(
+//                    HomeScreen(
+//                        paddingValues,
+//                        recipesViewModel,
+//                        onNavigateToRecipe = {
+//                            navController.navigate(route = Recipe)
+//                        },
+//                        cookingAssistantState.isCooking
+//                    )
+                    HomeSc(
+                        context,
                         paddingValues,
+                        homeViewModel,
                         recipesViewModel,
+                        userViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe)
                         },
