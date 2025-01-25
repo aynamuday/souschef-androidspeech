@@ -146,10 +146,10 @@ fun ProfileScreen(
     }
 
     Box {
-        Column {
-            Header(showMenuBar = true, onClickMenuBar = {
-                showMenuBar = true
-            })
+        Column(modifier = Modifier.padding(top = 30.dp)) {
+//            Header(showMenuBar = true, onClickMenuBar = {
+//                showMenuBar = true
+//            })
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -223,8 +223,8 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(5.dp))
 
-//                ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
-//                Spacer(modifier = Modifier.height(12.dp))
+                ColoredButton(onClick = onNavigateToEditProfile, text = "Edit Profile")
+                Spacer(modifier = Modifier.height(3.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

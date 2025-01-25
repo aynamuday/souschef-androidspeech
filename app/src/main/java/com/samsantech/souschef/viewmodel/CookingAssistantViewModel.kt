@@ -24,7 +24,7 @@ class CookingAssistantViewModel(
     private val instructionsAudioLocalDataSource: InstructionsAudioLocalDataSource = InstructionsAudioLocalDataSource(context)
     private val instructionsAudioDir = instructionsAudioLocalDataSource.getInstructionsAudioDir()
     private val introText = "Hi, I'm SousChef. I will guide you in this cooking session. To start, say \"Start\"."
-    private val commands = listOf("start over", "start", "next", "go back", "again", "stop", "continue", "skip to")
+    private val commands = listOf("start over", "start", "next", "go back", "again", "stop", "continue", "skip to", "escape to")
 
 //    @RequiresApi(Build.VERSION_CODES.Q)
     fun startCookingAssistance(recipe: Recipe) {
@@ -103,21 +103,22 @@ class CookingAssistantViewModel(
                 mediaPlayer!!.start()
             }
         }
-        //"stop"
-        else if (transcription.contains("stop")) {
-            if (mediaPlayer?.isPlaying == true) {
-                mediaPlayer!!.pause()
-            }
-        }
-        //"continue"
-        else if (transcription.contains("continue")) {
-            if (mediaPlayer?.isPlaying == false) {
-                mediaPlayer!!.start()
-            }
-        }
+//        //"stop"
+//        else if (transcription.contains("stop")) {
+//            if (mediaPlayer?.isPlaying == true) {
+//                mediaPlayer!!.pause()
+//            }
+//        }
+//        //"continue"
+//        else if (transcription.contains("continue")) {
+//            if (mediaPlayer?.isPlaying == false) {
+//                mediaPlayer!!.start()
+//            }
+//        }
         //"skip to"
-        else if (transcription.contains("skip to")) {
-            val skipToNumber = getSkipToNumber(transcription)
+        else if (transcription.contains("skip to") || transcription.contains("escape to")) {
+            val wordDetected = if (transcription.contains("skip to")) "skip" else "escape"
+            val skipToNumber = getSkipToNumber(transcription, wordDetected)
             if (skipToNumber != null) {
                 if (skipToNumber <= totalInstructions!!) {
                     updateCurrentStep(skipToNumber)
@@ -154,6 +155,7 @@ class CookingAssistantViewModel(
                 textToSpeechManager.synthesizeToFile(instruction, audioFile) {
                     if (it) {
                         playAudioFile(audioFile)
+                        speechToTextManager.restart()
                     }
                 }
             }
@@ -186,8 +188,8 @@ class CookingAssistantViewModel(
         }
     }
 
-    private fun getSkipToNumber(command: String): Int? {
-        val regex = Regex("""\bskip\b\s+\bto\b\s+(\w+)""", RegexOption.IGNORE_CASE)
+    private fun getSkipToNumber(command: String, wordDetected: String = "skip"): Int? {
+        val regex = if (wordDetected == "skip") Regex("""\bskip\b\s+\bto\b\s+(\w+)""", RegexOption.IGNORE_CASE) else Regex("""\b$wordDetected\b\s+\bto\b\s+(\w+)""", RegexOption.IGNORE_CASE)
         val match = regex.find(command)
         var skipToNumber: Int? = null
 

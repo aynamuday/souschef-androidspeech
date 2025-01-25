@@ -51,13 +51,13 @@ class RecipesViewModel (
     fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
         firebaseRecipeManager.removeFromFavorites(recipeId) { isSuccess ->
             if (isSuccess) {
-                favoriteRecipes.value = favoriteRecipes.value - recipeId
+                favoriteRecipes.value -= recipeId
             }
             callback(isSuccess)
         }
     }
 
-    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Any?) -> Unit) {
+    fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Float?) -> Unit) {
         firebaseRecipeManager.rateRecipe(recipeId, rating) { isSuccess, updatedAverageRating ->
             if (isSuccess) {
                 // Update the local recipe list with the new rating

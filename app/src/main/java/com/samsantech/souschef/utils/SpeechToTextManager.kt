@@ -26,12 +26,21 @@ class SpeechToTextManager(private val context: Context) {
         speechRecognizer!!.destroy()
     }
 
+    fun restart() {
+        resetSpeechRecognizer()
+        startListening()
+    }
+
     fun startListening() {
         speechRecognizer!!.startListening(recognizerIntent)
     }
 
     private fun resetSpeechRecognizer() {
-        if (speechRecognizer != null) speechRecognizer!!.destroy()
+        if (speechRecognizer != null) {
+            speechRecognizer!!.stopListening()
+            speechRecognizer!!.cancel()
+            speechRecognizer!!.destroy()
+        }
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
 
