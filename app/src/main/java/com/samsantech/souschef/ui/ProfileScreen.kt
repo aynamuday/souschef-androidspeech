@@ -361,8 +361,8 @@ fun ProfileScreen(
                                                         }
                                                     },
                                                     modifier = Modifier
-                                                        .align(Alignment.TopEnd)
-                                                        .offset(7.dp, -(5.dp))
+                                                        .align(Alignment.BottomStart)
+                                                        .offset(-(7.dp), -(25.dp))
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.Bookmark,
@@ -415,8 +415,8 @@ fun ProfileScreen(
                                                         }
                                                     },
                                                     modifier = Modifier
-                                                        .align(Alignment.TopEnd)
-                                                        .offset(7.dp, -(5.dp))
+                                                        .align(Alignment.BottomStart)
+                                                        .offset(-(7.dp), 5.dp)
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.Bookmark,

@@ -39,17 +39,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.RecipesViewModel
-import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.ui.components.Header
 
 @Composable
@@ -93,7 +90,7 @@ fun HomeScreen(
                                                 TikTokWebView(
                                                     postId = it,
                                                     width = width.value.toInt(),
-                                                    height = 400
+                                                    height = 550
                                                 )
                                             }
                                         }
@@ -117,32 +114,37 @@ fun HomeScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             // Stars for User Rating
-                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                val userRating = recipe.userRating ?: 0f
-                                                val averageRating = recipe.averageRating ?: 0f
-                                                (1..5).forEach { star ->
-                                                    Icon(
-                                                        imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
-                                                        contentDescription = "Rate $star stars",
-                                                        tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
-                                                        modifier = Modifier
-                                                            .size(12.dp)
-                                                            .clickable {
-                                                                recipesViewModel.rateRecipe(
-                                                                    recipe.id ?: "",
-                                                                    star.toFloat()
-                                                                ) { _, _ -> }
-                                                            }
-                                                    )
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Row {
+                                                    val userRating = recipe.userRating ?: 0f
+                                                    val averageRating = recipe.averageRating ?: 0f
+                                                    (1..5).forEach { star ->
+                                                        Icon(
+                                                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                                            contentDescription = "Rate $star stars",
+                                                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                                                            modifier = Modifier
+                                                                .size(18.dp)
+                                                                .clickable {
+                                                                    recipesViewModel.rateRecipe(
+                                                                        recipe.id ?: "",
+                                                                        star.toFloat()
+                                                                    ) { _, _ -> }
+                                                                }
+                                                        )
+                                                    }
                                                 }
-                                            }
 
-                                            // Average Rating Text
-                                            Text(
-                                                text = String.format("%.1f", recipe.averageRating ?: 0f),
-                                                fontSize = 12.sp,
-                                                color = Color.Gray
-                                            )
+                                                // Average Rating Text
+                                                Text(
+                                                    text = String.format("%.1f", recipe.averageRating ?: 0f),
+                                                    fontSize = 12.sp,
+                                                    color = Color.Gray
+                                                )
+                                            }
 
                                             Icon(
                                                 imageVector = if (favoriteRecipes.contains(recipe.id)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
@@ -156,12 +158,19 @@ fun HomeScreen(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
                                                             ) {
-                                                                val message = if (favoriteRecipes.contains(id)) {
-                                                                    "Recipe added to favorites"
-                                                                } else {
-                                                                    "Recipe removed from favorites"
-                                                                }
-                                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                                val message =
+                                                                    if (favoriteRecipes.contains(id)) {
+                                                                        "Recipe added to favorites"
+                                                                    } else {
+                                                                        "Recipe removed from favorites"
+                                                                    }
+                                                                Toast
+                                                                    .makeText(
+                                                                        context,
+                                                                        message,
+                                                                        Toast.LENGTH_SHORT
+                                                                    )
+                                                                    .show()
                                                             }
                                                         }
                                                     }
@@ -261,29 +270,33 @@ fun RecipeCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                (1..5).forEach { star ->
-                    Icon(
-                        imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
-                        contentDescription = "Rate $star stars",
-                        tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clickable {
-                                recipesViewModel.rateRecipe(
-                                    recipe.id ?: "",
-                                    star.toFloat()
-                                ) { _, _ -> }
-                            }
-                    )
+                Row {
+                    (1..5).forEach { star ->
+                        Icon(
+                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+                            contentDescription = "Rate $star stars",
+                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clickable {
+                                    recipesViewModel.rateRecipe(
+                                        recipe.id ?: "",
+                                        star.toFloat()
+                                    ) { _, _ -> }
+                                }
+                        )
+                    }
                 }
+
+                Text(
+                    text = String.format("%.1f", averageRating),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
-            Text(
-                text = String.format("%.1f", averageRating),
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
 
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
@@ -299,7 +312,9 @@ fun RecipeCard(
                                 } else {
                                     "Recipe added to favorites"
                                 }
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                Toast
+                                    .makeText(context, message, Toast.LENGTH_SHORT)
+                                    .show()
                             }
                         }
                     }

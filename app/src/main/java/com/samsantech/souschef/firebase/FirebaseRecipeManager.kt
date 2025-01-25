@@ -90,7 +90,7 @@ class FirebaseRecipeManager(
             "title" to recipe.title,
             "serving" to recipe.serving,
             "difficulty" to recipe.difficulty,
-            "mealTypes" to recipe.mealTypes,
+//            "mealTypes" to recipe.mealTypes,
 //            "categories" to recipe.categories,
             "ingredients" to recipe.ingredients,
             "instructions" to recipe.instructions,
@@ -103,6 +103,7 @@ class FirebaseRecipeManager(
         if (recipe.cookTimeHr.isNotEmpty()) data["cookTimeHr"] = recipe.cookTimeHr
         if (recipe.cookTimeMin.isNotEmpty()) data["cookTimeMin"] = recipe.cookTimeMin
         if (recipe.categories.isNotEmpty()) data["categories"] = recipe.categories
+        if (recipe.mealTypes.isNotEmpty()) data["mealTypes"] = recipe.mealTypes
         if (recipe.tags.isNotEmpty()) data["tags"] = recipe.tags
         data["createdAt"] = FieldValue.serverTimestamp()
         data["updatedAt"] = FieldValue.serverTimestamp()
