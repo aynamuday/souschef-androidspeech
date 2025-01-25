@@ -19,22 +19,33 @@ class CookingAssistantViewModel(
     var cookingAssistantState: MutableStateFlow<CookingAssistantState> = MutableStateFlow(
         CookingAssistantState()
     )
+    private var toNotDetect: List<String> = listOf()
     private var mediaPlayer: MediaPlayer? = null
     private val instructionsAudioLocalDataSource: InstructionsAudioLocalDataSource = InstructionsAudioLocalDataSource(context)
     private val instructionsAudioDir = instructionsAudioLocalDataSource.getInstructionsAudioDir()
     private val introText = "Hi, I'm SousChef. I will guide you in this cooking session. To start, say \"Start\"."
+    private val commands = listOf("start over", "start", "next", "go back", "again", "stop", "continue", "skip to")
 
 //    @RequiresApi(Build.VERSION_CODES.Q)
     fun startCookingAssistance(recipe: Recipe) {
         cookingAssistantState.value = CookingAssistantState(isCooking = true, recipe = recipe)
         speechToTextManager.startStreaming { result ->
-            updateCookingAssistantStateCommand(result)
-            handleRecognizedCommands(result)
+            var transcription = result
+            if (toNotDetect.isNotEmpty()) {
+                toNotDetect.forEach {
+                    transcription = transcription.replaceFirst(it, "")
+                }
+            }
+            updateCookingAssistantStateCommand(transcription)
+            handleRecognizedCommands(transcription)
+            toNotDetect = listOf()
         }
         mediaPlayer = MediaPlayer()
         instructionsAudioLocalDataSource.clearInstructionsAudioDirectory()
 
         textToSpeechManager.synthesize(introText)
+        toNotDetect = toNotDetect.plus("to start")
+        toNotDetect = toNotDetect.plus("say start")
     }
 
     fun stopCookingAssistance() {
@@ -61,6 +72,8 @@ class CookingAssistantViewModel(
                 synthesizeInstructionAndPlay(currentStep)
             } else {
                 textToSpeechManager.synthesize("You are in Step Number $currentStep. To start over, say \"Start Over\".")
+                toNotDetect = toNotDetect.plus("start over")
+                toNotDetect = toNotDetect.plus("start over")
             }
         }
         //"next"
@@ -76,15 +89,14 @@ class CookingAssistantViewModel(
         else if(transcription.contains("go back")) {
             if (currentStep <= 1) {
                 textToSpeechManager.synthesize("You are in the first step - cannot go back")
+                toNotDetect = toNotDetect.plus("cannot go back")
             } else {
-
                 synthesizeInstructionAndPlay(currentStep-1)
                 updateCurrentStep(currentStep-1)
             }
         }
         //"again"
         else if(transcription.contains("again")) {
-
             if (mediaPlayer != null) {
                 mediaPlayer!!.start()
             }
@@ -120,6 +132,12 @@ class CookingAssistantViewModel(
         textToSpeechManager.stop()
         var instruction = cookingAssistantState.value.recipe?.instructions?.get(instructionNumber-1)
         val totalInstructions = cookingAssistantState.value.recipe?.instructions?.size
+
+        commands.forEach {
+            if (instruction?.contains(it) == true) {
+                toNotDetect = toNotDetect.plus(it)
+            }
+        }
 
         if (instructionNumber == totalInstructions) {
             instruction = "This is the last step. ".plus(instruction)
