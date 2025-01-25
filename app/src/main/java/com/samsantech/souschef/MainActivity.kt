@@ -1,6 +1,5 @@
 package com.samsantech.souschef
 
-import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowInsets
@@ -23,6 +22,7 @@ import com.samsantech.souschef.ui.theme.SousChefTheme
 import com.samsantech.souschef.utils.TextToSpeechManager
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
+import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
                 val searchRecipesViewModel = SearchRecipesViewModel()
                 val cookingAssistantViewModel = CookingAssistantViewModel(context = this.applicationContext, textToSpeechManager = textToSpeechManager!!)
                 CookingAssistantViewModelProvider.cookingAssistantViewModel = cookingAssistantViewModel
+                val homeViewModel = HomeViewModel()
 
                 SousChefApp(
                     systemNavigationBarHeight,
@@ -86,7 +87,8 @@ class MainActivity : ComponentActivity() {
                     ownRecipesViewModel,
                     recipesViewModel,
                     searchRecipesViewModel,
-                    cookingAssistantViewModel
+                    cookingAssistantViewModel,
+                    homeViewModel
                 )
             }
         }

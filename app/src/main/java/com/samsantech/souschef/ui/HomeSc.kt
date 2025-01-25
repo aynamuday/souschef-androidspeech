@@ -1,5 +1,6 @@
 package com.samsantech.souschef.ui
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -18,85 +19,122 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.data.SearchRecipe
 import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
+import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
-import com.samsantech.souschef.ui.components.Header
+import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
-fun HomeScreen(
+fun HomeSc(
+    context: Context,
     paddingValues: PaddingValues,
+    homeViewModel: HomeViewModel,
     recipesViewModel: RecipesViewModel,
+    userViewModel: UserViewModel,
     onNavigateToRecipe: () -> Unit,
     isCooking: Boolean
 ) {
-    val recipes by recipesViewModel.allRecipes.collectAsState()
+    val pagingHits = homeViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
+    val lazyState by homeViewModel.lazyState.collectAsState()
+    val loadingState = homeViewModel.loadingState
+    val user = userViewModel.user
+
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
-    val context = LocalContext.current
 
-    Box {
-        Column(modifier = Modifier.padding(top = 30.dp)) {
-//            Header()
-
-            Column(
+    Column(
+        modifier = Modifier
+            .padding(start = 12.dp, end = 12.dp, top = 40.dp, bottom = if (isCooking) 120.dp else 0.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        if (loadingState.loading) {
+            Box(
                 modifier = Modifier
-                    .padding(paddingValues)
-                    .padding(bottom = if (isCooking) 120.dp else 0.dp)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .width(25.dp),
+                    color = Color.White,
+                    trackColor = Green,
+                    strokeWidth = 3.dp
+                )
+            }
+        } else {
+            if (pagingHits.itemCount <= 0) {
+                Text(
+                    text = "No recipes",
+                    fontStyle = FontStyle.Italic,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                BoxWithConstraints {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(1),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        state = lazyState
                     ) {
-                        items(recipes) { recipe ->
-                            if (recipe.isTikTok) {
+                        items(pagingHits.itemCount) { index ->
+                            val item = pagingHits[index] ?: return@items
+
+                            var userRating by remember {
+                                mutableFloatStateOf(item.ratings?.get(user.value?.uid) ?: 0f)
+                            }
+                            var averageRating by remember {
+                                mutableFloatStateOf(item.averageRating ?: 0f)
+                            }
+
+                            if (item.isTikTok == true) {
                                 BoxWithConstraints {
                                     val maxWidth = maxWidth
                                     Column {
                                         Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
                                             val width = maxWidth
-                                            recipe.postId?.let {
-                                                TikTokWebView(
-                                                    postId = it,
-                                                    width = width.value.toInt(),
-                                                    height = 550
-                                                )
-                                            }
+                                            TikTokWebView(
+                                                postId = item.postId,
+                                                width = width.value.toInt(),
+                                                height = 550
+                                            )
                                         }
                                         Row(modifier = Modifier.fillMaxWidth()) {
-                                            Text(
-                                                text = recipe.title,
+                                            androidx.compose.material3.Text(
+                                                text = item.title,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(top = 8.dp)
@@ -119,41 +157,44 @@ fun HomeScreen(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Row {
-                                                    val userRating = recipe.userRating ?: 0f
-                                                    val averageRating = recipe.averageRating ?: 0f
                                                     (1..5).forEach { star ->
                                                         Icon(
-                                                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
                                                             contentDescription = "Rate $star stars",
                                                             tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
                                                             modifier = Modifier
                                                                 .size(18.dp)
                                                                 .clickable {
                                                                     recipesViewModel.rateRecipe(
-                                                                        recipe.id ?: "",
+                                                                        item.objectID ?: "",
                                                                         star.toFloat()
-                                                                    ) { _, _ -> }
+                                                                    ) { isSuccess, newAverageRating ->
+                                                                        if (isSuccess) {
+                                                                            userRating = star.toFloat()
+                                                                            if (newAverageRating != null) {
+                                                                                averageRating = if (item.ratings != null) newAverageRating else userRating
+                                                                            }
+                                                                        }
+                                                                    }
                                                                 }
                                                         )
                                                     }
                                                 }
-
-                                                // Average Rating Text
                                                 Text(
-                                                    text = String.format("%.1f", recipe.averageRating ?: 0f),
+                                                    text = averageRating.toString(),
                                                     fontSize = 12.sp,
                                                     color = Color.Gray
                                                 )
                                             }
 
                                             Icon(
-                                                imageVector = if (favoriteRecipes.contains(recipe.id)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                                                imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                                                 contentDescription = "Bookmark",
-                                                tint = if (favoriteRecipes.contains(recipe.id)) Green else Color.Gray,
+                                                tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
                                                 modifier = Modifier
                                                     .size(20.dp)
                                                     .clickable {
-                                                        recipe.id?.let { id ->
+                                                        item.objectID?.let { id ->
                                                             recipesViewModel.toggleFavoriteRecipe(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
@@ -179,13 +220,22 @@ fun HomeScreen(
                                     }
                                 }
                             } else {
-                                RecipeCard(
-                                    recipe = recipe,
+                                RecipeCa(
+                                    recipe = item,
                                     recipesViewModel = recipesViewModel,
-                                    favoriteRecipes = favoriteRecipes
-                                ) {
-                                    onNavigateToRecipe()
-                                }
+                                    favoriteRecipes = favoriteRecipes,
+                                    onNavigateToRecipe,
+                                    userRating,
+                                    averageRating,
+                                    updateRatings = { user, average ->
+                                        if (user != null) {
+                                            userRating = user
+                                        }
+                                        if (average != null) {
+                                            averageRating = average
+                                        }
+                                    }
+                                )
                             }
                         }
                     }
@@ -197,15 +247,16 @@ fun HomeScreen(
 
 
 @Composable
-fun RecipeCard(
-    recipe: Recipe,
+fun RecipeCa(
+    recipe: SearchRecipe,
     recipesViewModel: RecipesViewModel,
     favoriteRecipes: Set<String>,
-    onNavigateToRecipe: () -> Unit
+    onNavigateToRecipe: () -> Unit,
+    userRating: Float,
+    averageRating: Float,
+    updateRatings: (userRating: Float?, averageRating: Float?) -> Unit
 ) {
-    val isFavorite = recipe.id in favoriteRecipes
-    val userRating = recipe.userRating ?: 0f
-    val averageRating = recipe.averageRating ?: 0f
+    val isFavorite = recipe.objectID in favoriteRecipes
     val context = LocalContext.current
 
     val photoUrl: Uri? = when {
@@ -218,8 +269,20 @@ fun RecipeCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                recipesViewModel.displayRecipe.value = recipe
-                onNavigateToRecipe()
+                if (recipe.objectID != null) {
+                    recipesViewModel.getRecipe(recipe.objectID!!) { isSuccess, err, recipe ->
+                        if (isSuccess) {
+                            if (recipe != null) {
+                                recipesViewModel.displayRecipe.value = recipe
+                                onNavigateToRecipe()
+                            }
+                        } else {
+                            Toast
+                                .makeText(context, err, Toast.LENGTH_LONG)
+                                .show()
+                        }
+                    }
+                }
             }
     ) {
         Box(
@@ -246,7 +309,7 @@ fun RecipeCard(
                         .align(Alignment.Center)
                 )
             } else {
-                Text(
+                androidx.compose.material3.Text(
                     text = "No Image",
                     color = Color.Gray,
                     fontSize = 14.sp,
@@ -257,7 +320,7 @@ fun RecipeCard(
             }
         }
 
-        Text(
+        androidx.compose.material3.Text(
             text = recipe.title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -283,16 +346,20 @@ fun RecipeCard(
                                 .size(18.dp)
                                 .clickable {
                                     recipesViewModel.rateRecipe(
-                                        recipe.id ?: "",
+                                        recipe.objectID ?: "",
                                         star.toFloat()
-                                    ) { _, _ -> }
+                                    ) { isSuccess, newAverageRating ->
+                                        if (isSuccess) {
+                                            updateRatings(star.toFloat(), if (recipe.ratings != null) newAverageRating else userRating)
+                                        }
+                                    }
                                 }
                         )
                     }
                 }
 
                 Text(
-                    text = String.format("%.1f", averageRating),
+                    text = averageRating.toString(),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -305,7 +372,7 @@ fun RecipeCard(
                 modifier = Modifier
                     .size(20.dp)
                     .clickable {
-                        recipe.id?.let { id ->
+                        recipe.objectID?.let { id ->
                             recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
                                 val message = if (isFavorite) {
                                     "Recipe removed from favorites"

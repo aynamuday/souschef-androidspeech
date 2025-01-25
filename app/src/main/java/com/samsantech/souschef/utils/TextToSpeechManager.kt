@@ -19,9 +19,8 @@ class TextToSpeechManager(context: Context) {
     init {
         textToSpeech.setAudioAttributes(
             AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-//                .setAllowedCapturePolicy(AudioAttributes.ALLOW_CAPTURE_BY_NONE)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
         )
         textToSpeech.setSpeechRate(1f)

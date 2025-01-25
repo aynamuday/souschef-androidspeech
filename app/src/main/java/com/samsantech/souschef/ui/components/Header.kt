@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun Header(
+    showMenuBar: Boolean = false,
     onClickMenuBar: () -> Unit = {}
 ) {
     Box {
@@ -43,17 +44,19 @@ fun Header(
                 fontWeight = FontWeight(700),
                 color = Color(255, 207, 81, 255)
             )
-            Icon(
-                imageVector = Icons.Filled.Menu,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        onClickMenuBar()
-                    }
-            )
+            if (showMenuBar) {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            onClickMenuBar()
+                        }
+                )
+            }
         }
     }
 }

@@ -238,8 +238,8 @@ fun VoiceCommandsSection() {
         VoiceCommandsItem("Next", "Proceed to the next instruction")
         VoiceCommandsItem("Go back", "Go back to the previous instruction")
         VoiceCommandsItem("Again", "Repeat the instruction")
-        VoiceCommandsItem("Stop", "Pause the voice instruction")
-        VoiceCommandsItem("Continue", "Continue the voice instruction")
+//        VoiceCommandsItem("Stop", "Pause the voice instruction")
+//        VoiceCommandsItem("Continue", "Continue the voice instruction")
         VoiceCommandsItem("Skip to [number]", "Skip to a specific instruction")
     }
 }
@@ -248,7 +248,7 @@ fun VoiceCommandsSection() {
 fun AccuracyOfVoiceCommandText() {
     Text(
         text = "The accuracy of voice command recognition can be affected by Internet connection and earphone quality (if using one).",
-        fontSize = 15.sp,
+        fontSize = 12.sp,
         lineHeight = 18.sp,
         color = Color.Black.copy(.7f),
         fontStyle = FontStyle.Italic,

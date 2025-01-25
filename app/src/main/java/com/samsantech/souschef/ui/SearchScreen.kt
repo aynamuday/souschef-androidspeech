@@ -6,20 +6,18 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
@@ -45,7 +43,6 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.data.SearchRecipe
 import com.samsantech.souschef.ui.components.Dialog
-import com.samsantech.souschef.ui.components.FiveStarRate
 import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.components.SearchBottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.SearchBox
@@ -147,7 +144,11 @@ fun SearchScreen(
         }
         Spacer(modifier = Modifier.height(16.dp))
         if (!hasSearched) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+            ) {
                 val categories = mapOf(
                     "Chicken" to R.drawable.chicken, "Pork" to R.drawable.pork, "Beef" to R.drawable.beef, "Seafood" to R.drawable.seafood,
                     "Vegetables" to R.drawable.vegetable, "Fruits" to R.drawable.fruits, "Dessert" to R.drawable.dessert, "Drink" to R.drawable.drinks
@@ -159,21 +160,17 @@ fun SearchScreen(
                     fontSize = 20.sp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    state = categoriesRowState
-                ) {
-                    items(categories.entries.toList()) {
-                        SearchCategoryCard(
-                            title = it.key,
-                            drawable = it.value,
-                            onClick = {
-                                searchRecipesViewModel.searchCategory(it.key)
-                                searchRecipesViewModel.hasSearched.value = true
-                                searchRecipesViewModel.search.value = it.key
-                            }
-                        )
-                    }
+                categories.forEach {
+                    SearchCategoryCard(
+                        title = it.key,
+                        drawable = it.value,
+                        onClick = {
+                            searchRecipesViewModel.searchCategory(it.key)
+                            searchRecipesViewModel.hasSearched.value = true
+                            searchRecipesViewModel.search.value = it.key
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
             }
         } else {
@@ -265,7 +262,7 @@ fun SearchScreen(
 fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
     Box(modifier = Modifier
         .clip(RoundedCornerShape(10.dp))
-        .wrapContentSize()
+        .fillMaxWidth()
         .clickable {
             onClick()
         }
@@ -274,12 +271,13 @@ fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
             painter = painterResource(id = drawable),
             contentDescription = null,
             modifier = Modifier
-                .size(190.dp),
+                .height(150.dp),
             contentScale = ContentScale.Crop
         )
         Box(
             modifier = Modifier
-                .size(190.dp)
+                .height(150.dp)
+                .fillMaxWidth()
                 .background(Color.Black.copy(.2f))
                 .clip(RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center

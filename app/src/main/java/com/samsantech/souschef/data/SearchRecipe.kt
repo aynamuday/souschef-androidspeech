@@ -12,4 +12,6 @@ data class SearchRecipe(
     var userPhotoUrl: String = "",
     var photosUrl: HashMap<String, String> = hashMapOf(),
     var title: String = "",
+    var averageRating: Float? = null,
+    var ratings: Map<String, Float>? = null,
 )

@@ -423,36 +423,36 @@ fun CreateRecipeScreenOne(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // MEAL TYPE
-                Column {
-                    Text(text = "Meal Type", fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    mealTypes.forEach { mealType ->
-                        val isSelected = recipe.mealTypes.contains(mealType)
-
-                        CreateRecipeCard(
-                            mealType,
-                            onClick = {
-                                clearError("mealTypes", errors) { newErrors ->
-                                    errors = newErrors
-                                }
-
-                                if (isSelected) {
-                                    ownRecipesViewModel.removeMealType(mealType)
-                                } else {
-                                    ownRecipesViewModel.addMealType(mealType)
-                                }
-                            },
-                            borderColor = if (isSelected) { Green } else Color.Black,
-                            backgroundColor = if (isSelected) { Green.copy(.2f) } else Color.White,
-                            textColor = if (isSelected) { Color.Black } else Color.Black
-                        )
-                    }
-                }
-                if (errors["mealTypes"] != null && errors["mealTypes"] != "") {
-                    Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["mealTypes"]!!)
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+//                Column {
+//                    Text(text = "Meal Type", fontWeight = FontWeight.Bold)
+//                    Spacer(modifier = Modifier.height(10.dp))
+//                    mealTypes.forEach { mealType ->
+//                        val isSelected = recipe.mealTypes.contains(mealType)
+//
+//                        CreateRecipeCard(
+//                            mealType,
+//                            onClick = {
+//                                clearError("mealTypes", errors) { newErrors ->
+//                                    errors = newErrors
+//                                }
+//
+//                                if (isSelected) {
+//                                    ownRecipesViewModel.removeMealType(mealType)
+//                                } else {
+//                                    ownRecipesViewModel.addMealType(mealType)
+//                                }
+//                            },
+//                            borderColor = if (isSelected) { Green } else Color.Black,
+//                            backgroundColor = if (isSelected) { Green.copy(.2f) } else Color.White,
+//                            textColor = if (isSelected) { Color.Black } else Color.Black
+//                        )
+//                    }
+//                }
+//                if (errors["mealTypes"] != null && errors["mealTypes"] != "") {
+//                    Spacer(modifier = Modifier.height(5.dp))
+//                    ErrorText(text = errors["mealTypes"]!!)
+//                }
+//                Spacer(modifier = Modifier.height(16.dp))
 
                 // MAIN CATEGORY
                 Column {
@@ -520,9 +520,9 @@ fun CreateRecipeScreenOne(
                             newErrors["difficulty"] = "Difficulty is required."
                         }
 
-                        if (recipe.mealTypes.isEmpty()) {
-                            newErrors["mealTypes"] = "Select at least one meal type."
-                        }
+//                        if (recipe.mealTypes.isEmpty()) {
+//                            newErrors["mealTypes"] = "Select at least one meal type."
+//                        }
 
 //                        if (recipe.categories.isEmpty()) {
 //                            newErrors["categories"] = "Select at least one category."

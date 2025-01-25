@@ -2,6 +2,7 @@ package com.samsantech.souschef.utils
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaRecorder.AudioSource
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -25,12 +26,21 @@ class SpeechToTextManager(private val context: Context) {
         speechRecognizer!!.destroy()
     }
 
-    private fun startListening() {
+    fun restart() {
+        resetSpeechRecognizer()
+        startListening()
+    }
+
+    fun startListening() {
         speechRecognizer!!.startListening(recognizerIntent)
     }
 
     private fun resetSpeechRecognizer() {
-        if (speechRecognizer != null) speechRecognizer!!.destroy()
+        if (speechRecognizer != null) {
+            speechRecognizer!!.stopListening()
+            speechRecognizer!!.cancel()
+            speechRecognizer!!.destroy()
+        }
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
 
@@ -88,6 +98,10 @@ class SpeechToTextManager(private val context: Context) {
         recognizerIntent!!.putExtra(
             RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
             4000
+        )
+        recognizerIntent!!.putExtra(
+            RecognizerIntent.EXTRA_AUDIO_SOURCE,
+            AudioSource.VOICE_COMMUNICATION
         )
     }
 }
