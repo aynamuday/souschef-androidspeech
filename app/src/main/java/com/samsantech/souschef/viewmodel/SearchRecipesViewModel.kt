@@ -25,6 +25,7 @@ import com.algolia.search.model.ApplicationID
 import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
+import com.algolia.search.model.search.Query
 import com.samsantech.souschef.data.SearchRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -41,6 +42,10 @@ class SearchRecipesViewModel: ViewModel() {
         indexName = IndexName("souschef-samsantech"),
         triggerSearchFor = SearchForQuery.lengthAtLeast(1),
         isDisjunctiveFacetingEnabled = false,
+        query = Query(
+            enablePersonalization = true,
+            personalizationImpact = 100
+        )
     )
     private val filterState = FilterState()
 

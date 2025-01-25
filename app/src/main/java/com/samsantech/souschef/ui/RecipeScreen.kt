@@ -424,7 +424,7 @@ fun TimeOrServing(title: String, text: String, modifier: Modifier = Modifier) {
         } else if (title == "Cook Time") {
             R.drawable.deadline
         } else {
-            R.drawable.knife
+            R.drawable.chopping_board
         }
 
         Icon(

@@ -146,7 +146,7 @@ fun ProfileScreen(
 
     Box {
         Column {
-            Header(onClickMenuBar = {
+            Header(showMenuBar = true, onClickMenuBar = {
                 showMenuBar = true
             })
             Column(

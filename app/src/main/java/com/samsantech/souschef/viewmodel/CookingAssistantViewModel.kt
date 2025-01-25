@@ -64,6 +64,8 @@ class CookingAssistantViewModel(
         //"start over"
         if (transcription.contains("start over")) {
             textToSpeechManager.synthesize(introText)
+            toNotDetect = toNotDetect.plus("to start")
+            toNotDetect = toNotDetect.plus("say start")
             updateCurrentStep(1)
         }
         //"start"
