@@ -65,6 +65,8 @@ fun HomeScreen(
 
     Box {
         Column {
+            Header()
+
             Column(
                 modifier = Modifier
                     .padding(paddingValues)

@@ -3,6 +3,7 @@ package com.samsantech.souschef.ui
 import android.Manifest
 import androidx.compose.runtime.getValue
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -377,23 +378,35 @@ fun shareRecipeViaEmail(recipe: Recipe, context: Context) {
         </html>
         """.trimIndent()
 
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/html"
-            putExtra(Intent.EXTRA_SUBJECT, subjectMessage)
-            putExtra(Intent.EXTRA_TEXT, fromHtml(htmlData))
-            putExtra(Intent.EXTRA_HTML_TEXT, htmlData)
-        }
+        AlertDialog.Builder(context)
+            .setTitle("Share Recipe")
+            .setMessage("We recommend using Outlook for the best image rendering. Do you wish to continue?")
+            .setPositiveButton("Continue") { _, _ ->
+                shareWithOutlook(context, subjectMessage, htmlData)
+            }
+            .setNegativeButton("Cancel") { _, _ ->
 
-        try {
-            context.startActivity(Intent.createChooser(intent, "Send mail..."))
-        } catch (e: ActivityNotFoundException) {
-            Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
-        }
+            }
+            .show()
+
     }.addOnFailureListener { exception ->
         Log.e("EmailSharing", "Failed to get image URL: ${exception.message}")
         Toast.makeText(context, "Failed to fetch image URL: ${exception.message}", Toast.LENGTH_SHORT).show()
     }
+}
 
+private fun shareWithOutlook(context: Context, subject: String, htmlData: String) {
+    val outlookIntent = context.packageManager.getLaunchIntentForPackage("com.microsoft.office.outlook")
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/html"
+        putExtra(Intent.EXTRA_SUBJECT, subject)
+        putExtra(Intent.EXTRA_TEXT, fromHtml(htmlData))
+        putExtra(Intent.EXTRA_HTML_TEXT, htmlData)
+        if (outlookIntent != null) {
+            `package` = "com.microsoft.office.outlook"
+        }
+    }
+    context.startActivity(intent)
 }
 
 @Composable
