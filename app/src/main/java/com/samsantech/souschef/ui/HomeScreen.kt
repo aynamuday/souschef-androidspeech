@@ -1,6 +1,7 @@
 package com.samsantech.souschef.ui
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,6 +61,7 @@ fun HomeScreen(
 ) {
     val recipes by recipesViewModel.allRecipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
+    val context = LocalContext.current
 
     Box {
         Column {
@@ -97,13 +100,49 @@ fun HomeScreen(
                                         Row(modifier = Modifier.fillMaxWidth()) {
                                             Text(
                                                 text = recipe.title,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.weight(1f),
                                                 fontSize = 16.sp,
-                                                fontWeight = FontWeight.Bold
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(top = 8.dp)
                                             )
                                             Spacer(modifier = Modifier.width(16.dp))
+
+
+                                        }
+                                        // Ratings Row
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 4.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Stars for User Rating
+                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                val userRating = recipe.userRating ?: 0f
+                                                val averageRating = recipe.averageRating ?: 0f
+                                                (1..5).forEach { star ->
+                                                    Icon(
+                                                        imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                                        contentDescription = "Rate $star stars",
+                                                        tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                                                        modifier = Modifier
+                                                            .size(12.dp)
+                                                            .clickable {
+                                                                recipesViewModel.rateRecipe(
+                                                                    recipe.id ?: "",
+                                                                    star.toFloat()
+                                                                ) { _, _ -> }
+                                                            }
+                                                    )
+                                                }
+                                            }
+
+                                            // Average Rating Text
+                                            Text(
+                                                text = String.format("%.1f", recipe.averageRating ?: 0f),
+                                                fontSize = 12.sp,
+                                                color = Color.Gray
+                                            )
 
                                             Icon(
                                                 imageVector = if (favoriteRecipes.contains(recipe.id)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
@@ -116,7 +155,14 @@ fun HomeScreen(
                                                             recipesViewModel.toggleFavoriteRecipe(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
-                                                            ) {}
+                                                            ) {
+                                                                val message = if (favoriteRecipes.contains(id)) {
+                                                                    "Recipe added to favorites"
+                                                                } else {
+                                                                    "Recipe removed from favorites"
+                                                                }
+                                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                            }
                                                         }
                                                     }
                                             )
@@ -151,6 +197,7 @@ fun RecipeCard(
     val isFavorite = recipe.id in favoriteRecipes
     val userRating = recipe.userRating ?: 0f
     val averageRating = recipe.averageRating ?: 0f
+    val context = LocalContext.current
 
     val photoUrl: Uri? = when {
         recipe.photosUrl["portrait"] != null -> Uri.parse("${recipe.photosUrl["portrait"]}")
@@ -246,7 +293,14 @@ fun RecipeCard(
                     .size(20.dp)
                     .clickable {
                         recipe.id?.let { id ->
-                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {}
+                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
+                                val message = if (isFavorite) {
+                                    "Recipe removed from favorites"
+                                } else {
+                                    "Recipe added to favorites"
+                                }
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
             )

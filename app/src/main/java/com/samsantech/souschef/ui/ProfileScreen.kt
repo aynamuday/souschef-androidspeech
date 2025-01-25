@@ -41,6 +41,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -339,6 +340,36 @@ fun ProfileScreen(
                                                         height = 180
                                                     )
                                                 }
+                                                IconButton(
+                                                    onClick = {
+                                                        recipe.id?.let {
+                                                            recipesViewModel.removeFromFavorites(it) { isSuccess ->
+                                                                if (isSuccess) {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "TikTok recipe removed from favorites",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                } else {
+                                                                    Toast.makeText(
+                                                                        context,
+                                                                        "Failed to remove TikTok recipe from favorites",
+                                                                        Toast.LENGTH_SHORT
+                                                                    ).show()
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    modifier = Modifier
+                                                        .align(Alignment.TopEnd)
+                                                        .offset(7.dp, -(5.dp))
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Bookmark,
+                                                        contentDescription = "Remove from favorites",
+                                                        tint = Green
+                                                    )
+                                                }
                                             }
                                         } else {
                                             val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
@@ -385,10 +416,12 @@ fun ProfileScreen(
                                                     },
                                                     modifier = Modifier
                                                         .align(Alignment.TopEnd)
+                                                        .offset(7.dp, -(5.dp))
                                                 ) {
                                                     Icon(
-                                                        imageVector = Icons.Default.Delete,
-                                                        contentDescription = "Remove from favorites"
+                                                        imageVector = Icons.Default.Bookmark,
+                                                        contentDescription = "Remove from favorites",
+                                                        tint = Green
                                                     )
                                                 }
                                             }
