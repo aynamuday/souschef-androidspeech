@@ -138,11 +138,7 @@ fun CookingAssistantUi(
 
                 Spacer(modifier = Modifier.width(20.dp))
 
-                IconButton(
-                    onClick = {
-                        sharedViewModel.stopCookingAssistantService(context)
-                    }
-                ) {
+                IconButton(onClick = { sharedViewModel.stopCookingAssistantService(context) }) {
                     Icon(
                         painter = painterResource(id = R.drawable.stop_icon),
                         contentDescription = null,
@@ -152,24 +148,6 @@ fun CookingAssistantUi(
                     )
                 }
             }
-
-//            if (!isNetworkAvailable) {
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .background(Color(40, 40, 43))
-//                        .padding(5.dp)
-//                ) {
-//                    Text(
-//                        text = "No connection",
-//                        fontSize = 14.sp,
-//                        textAlign = TextAlign.Center,
-//                        color = Color.White,
-//                        modifier = Modifier
-//                            .fillMaxWidth(),
-//                    )
-//                }
-//            }
 
             Spacer(modifier = Modifier.height(bottomHeight))
         }
