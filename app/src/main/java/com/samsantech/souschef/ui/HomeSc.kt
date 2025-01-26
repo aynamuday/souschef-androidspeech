@@ -194,7 +194,7 @@ fun HomeSc(
                                                     .size(20.dp)
                                                     .clickable {
                                                         item.objectID?.let { id ->
-                                                            recipesViewModel.addToFavorites(
+                                                            recipesViewModel.toggleFavorite(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
                                                             ) {
@@ -372,7 +372,7 @@ fun RecipeCa(
                     .size(20.dp)
                     .clickable {
                         recipe.objectID?.let { id ->
-                            recipesViewModel.addToFavorites(id, !isFavorite) {
+                            recipesViewModel.toggleFavorite(id, !isFavorite) {
                                 val message = if (isFavorite) {
                                     "Recipe removed from favorites"
                                 } else {
