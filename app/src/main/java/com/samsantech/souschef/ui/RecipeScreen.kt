@@ -63,11 +63,13 @@ import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import androidx.compose.ui.text.style.TextAlign
-import com.google.firebase.storage.FirebaseStorage
 import androidx.core.app.ActivityCompat
+import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.data.CookingAssistantState
 import com.samsantech.souschef.data.PreferencesManager
+import com.samsantech.souschef.data.Voice
 import com.samsantech.souschef.ui.components.KebabMenu
+import com.samsantech.souschef.ui.components.ManageVoiceSettings
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.PermissionRationaleDialog
 import com.samsantech.souschef.ui.components.ProgressSpinner
@@ -106,6 +108,9 @@ fun RecipeScreen(
     val displayVoiceCommandPopUp = remember {
         mutableStateOf(false)
     }
+    var manageVoiceSettings by remember {
+        mutableStateOf(false)
+    }
     var showRecipeActionMenu by remember {
         mutableStateOf(false)
     }
@@ -114,6 +119,9 @@ fun RecipeScreen(
     }
     var loading by remember {
         mutableStateOf(false)
+    }
+    var voice by remember {
+        mutableStateOf(Voice("English", "Woman", "Default"))
     }
 
     val userRating = remember { mutableFloatStateOf(0f) }
@@ -125,11 +133,6 @@ fun RecipeScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(bottom = if (cookingAssistantState.isCooking) 130.dp else 32.dp)
-            .pointerInput(Unit) {
-                detectTapGestures {
-                    displayVoiceCommandPopUp.value = false
-                }
-            }
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -207,6 +210,7 @@ fun RecipeScreen(
                 instructions = recipe.instructions,
                 recipe,
                 displayVoiceCommandPopUp = { displayVoiceCommandPopUp.value = it },
+                manageBluetoothSettings = { manageVoiceSettings = true },
                 cookingAssistantState
             )
         }
@@ -222,6 +226,18 @@ fun RecipeScreen(
                 displayVoiceCommandPopUp.value = false
             }
         }
+    }
+
+    if (manageVoiceSettings) {
+        ManageVoiceSettings(
+            voice,
+            isCloseIconClicked = { manageVoiceSettings = false },
+            onTry = {
+            },
+            onSave = {
+
+            }
+        )
     }
 
     if (recipe.userId == user?.uid) {
@@ -320,7 +336,7 @@ fun RecipeMetadata(
                         .size(28.dp)
                         .clickable {
                             recipe.id?.let { id ->
-                                recipesViewModel.addToFavorites(id, !isFavorite) {
+                                recipesViewModel.toggleFavorite(id, !isFavorite) {
                                     val message = if (isFavorite) {
                                         "Recipe removed from favorites"
                                     } else {
@@ -523,6 +539,7 @@ fun RecipeInstructions(
     instructions: List<String>,
     recipe: Recipe,
     displayVoiceCommandPopUp: (Boolean) -> Unit,
+    manageBluetoothSettings: (Boolean) -> Unit,
     cookingAssistantState: CookingAssistantState
 ) {
     val showRecordAudioRationaleDialog = remember {
@@ -598,15 +615,23 @@ fun RecipeInstructions(
                 )
             }
 
-            IconButton(onClick = {
-                displayVoiceCommandPopUp(true)
-            }) {
+            IconButton(onClick = { displayVoiceCommandPopUp(true) }, modifier = Modifier.offset(x = -(8.dp))) {
                 Icon(
                     painter = painterResource(id = R.drawable.manual_icon),
                     contentDescription = null,
-                    tint = Color(22, 166, 55, 255),
+                    tint = Color.Black.copy(.8f),
                     modifier = Modifier
-                        .size(25.dp)
+                        .size(21.dp)
+                )
+            }
+
+            IconButton(onClick = { manageBluetoothSettings(true) }, modifier = Modifier.offset(x = -(16.dp))) {
+                Icon(
+                    painter = painterResource(id = R.drawable.music),
+                    contentDescription = null,
+                    tint = Color.Black.copy(.8f),
+                    modifier = Modifier
+                        .size(21.dp)
                 )
             }
 
