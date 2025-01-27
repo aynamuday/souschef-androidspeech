@@ -44,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -113,9 +114,20 @@ fun RecipeScreen(
         mutableStateOf(false)
     }
 
-    val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
+//    var userRating: Float by remember {
+//        mutableFloatStateOf(user?.uid?.let { recipe.ratings?.get(it) } ?: 0f)
+//    }
+
+    var userRating: Float by remember {
+        mutableFloatStateOf(
+            recipe.ratings?.get(user?.uid) ?: 0f
+        )
+    }
+
     val isFavorite = recipe.id in favoriteRecipes
-    val averageRating = remember { mutableStateOf(recipe.averageRating ?: 0f) }
+    var averageRating by remember {
+        mutableFloatStateOf(recipe.averageRating ?: 0f)
+    }
 
     Column(
         modifier = Modifier
@@ -172,14 +184,14 @@ fun RecipeScreen(
                 recipe = recipe,
                 isFavorite = isFavorite,
                 recipesViewModel,
-                rating = userRating.value,
-                averageRating = averageRating.value,
+                rating = userRating.toFloat(),
+                averageRating = averageRating,
                 onRateRecipe = { newRating ->
                     recipe.id?.let {
                         recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
                             if (success) {
-                                userRating.value = newRating
-                                averageRating.value = (updatedAverageRating ?: averageRating.value) as Float
+                                userRating = newRating
+                                averageRating = (updatedAverageRating ?: averageRating)
                             }
                         }
                     }

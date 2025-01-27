@@ -436,19 +436,19 @@ fun SearchRecipeItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                FiveStar(
-                    rating = rating,
-                    onRateRecipe = { newRating ->
-                        onRateRecipe(newRating) // Pass the updated rating
-                    }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "( ${"%.1f".format(averageRating)} )",
-                    fontSize = 12.sp
-                )
-            }
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                FiveStar(
+//                    rating = rating,
+//                    onRateRecipe = { newRating ->
+//                        onRateRecipe(newRating) // Pass the updated rating
+//                    }
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text(
+//                    text = "( ${"%.1f".format(averageRating)} )",
+//                    fontSize = 12.sp
+//                )
+//            }
             Row(verticalAlignment = Alignment.CenterVertically) {
 //                Icon(
 //                    imageVector = Icons.Filled.Favorite,
