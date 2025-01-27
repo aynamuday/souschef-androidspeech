@@ -112,7 +112,7 @@ dependencies {
     implementation ("androidx.compose.material:material-icons-extended:1.7.6")
     implementation ("io.coil-kt:coil-compose:2.1.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-
+    implementation ("com.google.accompanist:accompanist-swiperefresh:0.24.13-rc")
 
 
     implementation (platform("com.google.cloud:libraries-bom:26.51.0"))
