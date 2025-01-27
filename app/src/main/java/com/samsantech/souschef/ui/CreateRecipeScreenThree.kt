@@ -53,7 +53,7 @@ fun CreateRecipeScreenThree(
     onNavigateToCreateRecipeFour: () -> Unit,
     closeCreateRecipe: () -> Unit
 ) {
-    val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
+    val recipe by ownRecipesViewModel.recipe.collectAsState()
 
     var error by remember {
         mutableStateOf("")

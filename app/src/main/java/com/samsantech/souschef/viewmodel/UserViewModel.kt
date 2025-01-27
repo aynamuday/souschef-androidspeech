@@ -1,7 +1,6 @@
 package com.samsantech.souschef.viewmodel
 
 import android.net.Uri
-import com.samsantech.souschef.data.OwnRecipesViewModelProvider
 import com.samsantech.souschef.data.User
 import com.samsantech.souschef.data.UserPreferences
 import com.samsantech.souschef.firebase.FirebaseAuthManager
@@ -16,8 +15,6 @@ class UserViewModel(
     val user = MutableStateFlow<User?>(User())
     val signUpPreferences = MutableStateFlow<UserPreferences>(UserPreferences())
     val otherCuisine = MutableStateFlow<String>("")
-    private val ownRecipesViewModel: OwnRecipesViewModel
-        get() = OwnRecipesViewModelProvider.ownRecipesViewModel
 
     init {
         refreshUser()
@@ -48,12 +45,9 @@ class UserViewModel(
     }
 
     fun setProfilePicture(imageUri: Uri, callback: (Boolean, String?) -> Unit) {
-        firebaseUserManager.updateProfilePhoto(imageUri) { isSuccess, error, photoUrl ->
+        firebaseUserManager.updateProfilePhoto(imageUri) { isSuccess, error ->
             if (isSuccess) {
                 refreshUser()
-                if (photoUrl != null) {
-                    ownRecipesViewModel.updateRecipesUserPhotoUrl(photoUrl)
-                }
             }
             callback(isSuccess, error)
         }
@@ -143,4 +137,25 @@ class UserViewModel(
     fun clearPreferencesSkillLevel() {
         signUpPreferences.value = signUpPreferences.value.copy(skillLevel = "")
     }
+
+//    fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
+//        val updatedFavorites = if (isAdd) {
+//            favoriteRecipes.value + recipeId
+//        } else {
+//            favoriteRecipes.value - recipeId
+//        }
+//
+//        favoriteRecipes.value = updatedFavorites
+//
+//        firebaseUserManager.addFavoriteRecipe(recipeId.toString(), isAdd) { isSuccess ->
+//            callback(isSuccess)
+//        }
+//    }
+
+//    fun loadFavoriteRecipes() {
+//        firebaseUserManager.getFavoriteRecipes { recipes ->
+//            favoriteRecipes.value = recipes.toSet()  // Convert to Set
+//
+//        }
+//    }
 }

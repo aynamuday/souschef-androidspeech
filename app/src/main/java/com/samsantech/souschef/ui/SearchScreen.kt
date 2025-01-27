@@ -222,7 +222,7 @@ fun SearchScreen(
                             onToggleFavorite = { recipeId ->
                                 val isAdd = !favoriteRecipes.contains(recipeId)
 
-                                recipesViewModel.toggleFavorite(
+                                recipesViewModel.toggleFavoriteRecipe(
                                     recipeId,
                                     isAdd
                                 ) { isSuccess ->

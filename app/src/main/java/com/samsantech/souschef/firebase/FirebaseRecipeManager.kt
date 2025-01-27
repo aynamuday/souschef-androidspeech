@@ -424,10 +424,21 @@ class FirebaseRecipeManager(
             val snapshot = transaction.get(recipeRef)
             val currentRatings = snapshot.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
             val updatedRatings = currentRatings.toMutableMap().apply { this[userId] = rating }
-            val newAverageRating = updatedRatings.values.average().toFloat()
+            //val newAverageRating = updatedRatings.values.average().toFloat()
 
             currentRatings[userId] = rating
 
+            if (rating == 0f) {  // Remove rating
+                updatedRatings.remove(userId)
+            } else {            // Add or update rating
+                updatedRatings[userId] = rating
+            }
+
+            val newAverageRating = if (updatedRatings.isEmpty()) {
+                0f // No ratings left
+            } else {
+                updatedRatings.values.average().toFloat()
+            }
             // Update Firestore
             transaction.update(recipeRef, mapOf(
                 "ratings" to updatedRatings,
@@ -441,4 +452,29 @@ class FirebaseRecipeManager(
             callback(false, null)
         }
     }
+
+    fun getUserRating(recipeId: String, callback: (Float?) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return callback(null)
+        db.collection("recipes").document(recipeId).get()
+            .addOnSuccessListener { document ->
+                val ratings = document.get("ratings") as? Map<String, Any>
+                val userRating = ratings?.get(userId) as? Double
+                callback(userRating?.toFloat())
+            }
+            .addOnFailureListener {
+                callback(null)
+            }
+    }
+
+    fun removeRecipe(recipeId: String, callback: (Boolean) -> Unit) {
+        db.collection("recipes").document(recipeId)
+            .delete()
+            .addOnSuccessListener {
+                callback(true)
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
 }

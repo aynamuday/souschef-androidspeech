@@ -76,7 +76,7 @@ fun CreateRecipeScreenOne(
     onNavigateToCreateRecipeTwo: () -> Unit,
     closeCreateRecipe: () -> Unit
 ) {
-    val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
+    val recipe by ownRecipesViewModel.recipe.collectAsState()
     val action by ownRecipesViewModel.action.collectAsState()
 
     var categories by remember {

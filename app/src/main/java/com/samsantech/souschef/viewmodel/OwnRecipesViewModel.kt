@@ -11,7 +11,7 @@ class OwnRecipesViewModel(
     private val firebaseRecipeManager: FirebaseRecipeManager,
     private val recipesViewModel: RecipesViewModel
 ) {
-    val actionRecipe = MutableStateFlow(Recipe())
+    val recipe = MutableStateFlow(Recipe())
     val recipes = MutableStateFlow<List<Recipe>>(listOf())
     val action = MutableStateFlow(OwnRecipeAction.ADD)
     val originalData = MutableStateFlow(Recipe())
@@ -32,7 +32,7 @@ class OwnRecipesViewModel(
 
         if (user != null) {
             firebaseRecipeManager.addRecipe(
-                recipe = actionRecipe.value,
+                recipe = recipe.value,
                 user = user,
                 callback = { isSuccess, error ->
                     callback(isSuccess, error)
@@ -48,7 +48,7 @@ class OwnRecipesViewModel(
     }
 
     fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
-        val recipe = actionRecipe.value
+        val recipe = recipe.value
 
         firebaseRecipeManager.updateRecipe(
             data,
@@ -62,11 +62,6 @@ class OwnRecipesViewModel(
                     updateRecipes(recipe)
                     if (recipesViewModel.displayRecipe.value.id == recipe.id) {
                         recipesViewModel.displayRecipe.value = recipe
-                    }
-                    if (data["audience"] == "Only me" && recipe.id != null) {
-                        recipesViewModel.favoriteRecipes.value = recipesViewModel.favoriteRecipes.value.filter {
-                            it != recipe.id
-                        }.toSet()
                     }
                     resetRecipe()
                 }
@@ -86,7 +81,6 @@ class OwnRecipesViewModel(
                 }
 
                 recipes.value = updatedRecipes
-                recipesViewModel.favoriteRecipes.value -= recipeId
             }
 
             callback(isSuccess, error)
@@ -94,7 +88,7 @@ class OwnRecipesViewModel(
     }
 
     fun resetRecipe() {
-        actionRecipe.value = Recipe()
+        recipe.value = Recipe()
         originalData.value = Recipe()
         deletePhotoKey = null
     }
@@ -115,188 +109,182 @@ class OwnRecipesViewModel(
     }
 
     fun addPhoto(key: String, value: Uri) {
-        val photos = HashMap<String, Uri>(actionRecipe.value.photosUri.toMap())
+        val photos = HashMap<String, Uri>(recipe.value.photosUri.toMap())
         photos[key] = value
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             photosUri = photos
         )
     }
 
     fun removePhoto(key: String) {
-        val photos = HashMap<String, Uri>(actionRecipe.value.photosUri.toMap())
+        val photos = HashMap<String, Uri>(recipe.value.photosUri.toMap())
         photos.remove(key)
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             photosUri = photos
         )
     }
 
+    fun updateRecipePhotosUriMap(photosUri: HashMap<String, Uri>) {
+        recipe.value = recipe.value.copy(
+            photosUri = photosUri
+        )
+    }
+
     fun setTitle(title: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             title = title
         )
     }
 
     fun setDescription(description: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             description = description
         )
     }
 
     fun setPrepTimeHr(prepTimeHr: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             prepTimeHr = prepTimeHr
         )
     }
 
     fun setPrepTimeMin(prepTimeMin: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             prepTimeMin = prepTimeMin
         )
     }
 
     fun setCookTimeHr(cookTimeHr: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             cookTimeHr = cookTimeHr
         )
     }
 
     fun setCookTimeMin(cookTimeMin: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             cookTimeMin = cookTimeMin
         )
     }
 
     fun setServing(serving: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             serving = serving
         )
     }
 
     fun setDifficulty(difficulty: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             difficulty = difficulty
         )
     }
 
     fun addMealType(mealType: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            mealTypes = actionRecipe.value.mealTypes.plus(mealType)
+        recipe.value = recipe.value.copy(
+            mealTypes = recipe.value.mealTypes.plus(mealType)
         )
     }
 
     fun removeMealType(mealType: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            mealTypes = actionRecipe.value.mealTypes.minus(mealType)
+        recipe.value = recipe.value.copy(
+            mealTypes = recipe.value.mealTypes.minus(mealType)
         )
     }
 
     fun addCategory(category: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            categories = actionRecipe.value.categories.plus(category)
+        recipe.value = recipe.value.copy(
+            categories = recipe.value.categories.plus(category)
         )
     }
 
     fun removeCategory(category: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            categories = actionRecipe.value.categories.minus(category)
+        recipe.value = recipe.value.copy(
+            categories = recipe.value.categories.minus(category)
         )
     }
 
     fun addIngredient() {
-        val newIngredients = actionRecipe.value.ingredients.toMutableList()
+        val newIngredients = recipe.value.ingredients.toMutableList()
         newIngredients.add("")
 
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             ingredients = newIngredients
         )
     }
 
     fun updateIngredients(ingredientIndex: Int, value: String) {
-        val newIngredients = actionRecipe.value.ingredients.mapIndexed { index, ingredient ->
+        val newIngredients = recipe.value.ingredients.mapIndexed { index, ingredient ->
             if(index == ingredientIndex) value else ingredient
         }
 
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             ingredients = newIngredients
         )
     }
 
     fun removeIngredient(ingredientIndex: Int) {
-        val newIngredients = actionRecipe.value.ingredients.toMutableList()
+        val newIngredients = recipe.value.ingredients.toMutableList()
         newIngredients.removeAt(ingredientIndex)
 
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             ingredients = newIngredients
         )
     }
 
     fun setIngredients(ingredients: List<String>) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             ingredients = ingredients
         )
     }
 
     fun addInstruction() {
-        val newInstructions = actionRecipe.value.instructions.toMutableList()
+        val newInstructions = recipe.value.instructions.toMutableList()
         newInstructions.add("")
 
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             instructions = newInstructions
         )
     }
 
     fun updateInstructions(instructionIndex: Int, value: String) {
-        val newInstructions = actionRecipe.value.instructions.mapIndexed { index, instruction ->
+        val newInstructions = recipe.value.instructions.mapIndexed { index, instruction ->
             if(index == instructionIndex) value else instruction
         }
 
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             instructions = newInstructions
         )
     }
 
     fun removeInstruction(instructionIndex: Int) {
-        val newInstructions = actionRecipe.value.instructions.toMutableList()
+        val newInstructions = recipe.value.instructions.toMutableList()
         newInstructions.removeAt(instructionIndex)
 
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             instructions = newInstructions
         )
     }
 
     fun setInstructions(instructions: List<String>) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             instructions = instructions
         )
     }
 
     fun addTag(tag: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            tags = actionRecipe.value.tags.plus(tag)
+        recipe.value = recipe.value.copy(
+            tags = recipe.value.tags.plus(tag)
         )
     }
 
     fun removeTag(tag: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            tags = actionRecipe.value.tags.minus(tag)
+        recipe.value = recipe.value.copy(
+            tags = recipe.value.tags.minus(tag)
         )
     }
 
     fun toggleAudience(audience: String) {
-        actionRecipe.value = actionRecipe.value.copy(
+        recipe.value = recipe.value.copy(
             audience = audience
         )
-    }
-    fun updateRecipesUserPhotoUrl(photoUrl: String) {
-        val updatedRecipes: MutableList<Recipe> = mutableListOf()
-
-        recipes.value.forEach {
-            val recipe = it.copy(userPhotoUrl = photoUrl)
-            updatedRecipes.add(0, recipe)
-        }
-        updatedRecipes.reverse()
-
-        recipes.value = updatedRecipes
-        println(updatedRecipes)
     }
 }

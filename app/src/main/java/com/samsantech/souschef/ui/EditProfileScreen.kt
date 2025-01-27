@@ -210,14 +210,14 @@ fun EditProfileScreen(
                         text = "Update Email",
                         border = BorderStroke(1.dp, Green)
                     )
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     ColoredButton(
                         onClick = onNavigateToChangePassword,
                         containerColor = Color.White, contentColor = Green,
                         text = "Change Password",
                         border = BorderStroke(1.dp, Green)
                     )
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     ColoredButton(
                         onClick = {
                             showLogoutConfirmation = true
