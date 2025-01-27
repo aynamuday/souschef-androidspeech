@@ -34,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,7 +76,7 @@ fun HomeSc(
 
     Column(
         modifier = Modifier
-            .padding(start = 12.dp, end = 12.dp, top = 40.dp, bottom = if (isCooking) 120.dp else 0.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 30.dp, bottom = if (isCooking) 120.dp else 0.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         if (loadingState.loading) {
@@ -181,7 +180,7 @@ fun HomeSc(
                                                     }
                                                 }
                                                 Text(
-                                                    text = averageRating.toString(),
+                                                    text = "%.1f".format(averageRating),
                                                     fontSize = 12.sp,
                                                     color = Color.Gray
                                                 )
@@ -195,7 +194,7 @@ fun HomeSc(
                                                     .size(20.dp)
                                                     .clickable {
                                                         item.objectID?.let { id ->
-                                                            recipesViewModel.toggleFavoriteRecipe(
+                                                            recipesViewModel.toggleFavorite(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
                                                             ) {
@@ -320,7 +319,7 @@ fun RecipeCa(
             }
         }
 
-        androidx.compose.material3.Text(
+        Text(
             text = recipe.title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -359,7 +358,7 @@ fun RecipeCa(
                 }
 
                 Text(
-                    text = averageRating.toString(),
+                    text = "%.1f".format(averageRating),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -373,7 +372,7 @@ fun RecipeCa(
                     .size(20.dp)
                     .clickable {
                         recipe.objectID?.let { id ->
-                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
+                            recipesViewModel.toggleFavorite(id, !isFavorite) {
                                 val message = if (isFavorite) {
                                     "Recipe removed from favorites"
                                 } else {
