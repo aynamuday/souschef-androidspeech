@@ -74,20 +74,4 @@ class RecipesViewModel (
             callback(isSuccess, updatedAverageRating)
         }
     }
-
-    fun getUserRatingForRecipe(recipeId: String, callback: (Float?) -> Unit) {
-        firebaseRecipeManager.getUserRating(recipeId) { rating ->
-            callback(rating)
-        }
-    }
-
-    fun removeRecipe(recipeId: String, callback: (Boolean) -> Unit) {
-        firebaseRecipeManager.removeRecipe(recipeId) { isSuccess ->
-            if (isSuccess) {
-                // Remove the recipe from the local list
-                allRecipes.value = allRecipes.value.filter { it.id != recipeId }
-            }
-            callback(isSuccess)
-        }
-    }
 }

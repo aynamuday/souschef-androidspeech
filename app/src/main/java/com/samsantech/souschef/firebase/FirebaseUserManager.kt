@@ -62,9 +62,6 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
             val updatedUser = hashMapOf<String, String>()
             updatedUser["username"] = username ?: ""
             updatedUser["email"] = if (email != null) "$email" else "${user.email}"
-            println(email)
-            println("$email")
-            println(updatedUser)
             if (updatedUser.isNotEmpty()) {
                 db.collection("users")
                     .document(user.uid)
@@ -80,7 +77,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
         }
     }
 
-    fun updateProfilePhoto(imageUri: Uri, callback: (Boolean, String?) -> Unit) {
+    fun updateProfilePhoto(imageUri: Uri, callback: (Boolean, String?, String?) -> Unit) {
         val user = auth.currentUser
 
         if (user != null) {
@@ -91,7 +88,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
 
             uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {
-                    callback(false, getErrorMessage(task.exception))
+                    callback(false, getErrorMessage(task.exception), null)
                     println(task.exception)
                 }
 
@@ -106,14 +103,27 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                     user.updateProfile(profileUpdates)
                         .addOnCompleteListener {
                             if (!it.isSuccessful) {
-                                callback(true, getErrorMessage(task.exception))
+                                callback(false, getErrorMessage(task.exception), null)
                             } else {
                                 user.reload()
-                                callback(true, null)
+                                callback(true, null, downloadUri.toString())
+                            }
+                        }
+
+                    db.collection("recipes")
+                        .whereEqualTo("userId", user.uid)
+                        .get()
+                        .addOnSuccessListener {
+                            if (!it.isEmpty) {
+                                it.forEach { document ->
+                                    db.collection("recipes")
+                                        .document(document.id)
+                                        .update("userPhotoUrl", Uri.parse("$downloadUri"))
+                                }
                             }
                         }
                 } else {
-                    callback(true, getErrorMessage(task.exception))
+                    callback(false, getErrorMessage(task.exception), null)
                     println(task.exception)
                 }
             }
@@ -171,50 +181,4 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                 isExists(!it.isEmpty)
             }
     }
-
-//    fun addFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
-//        val user = auth.currentUser
-//        if (user != null) {
-//            val userDocRef = db.collection("users").document(user.uid)
-//
-//            userDocRef.get().addOnSuccessListener { document ->
-//                if (document.exists()) {
-//                    val favoriteRecipes =
-//                        document.get("favoriteRecipes") as? List<String> ?: listOf()
-//                    val updatedFavorites = if (isAdd) {
-//                        if (!favoriteRecipes.contains(recipeId)) {
-//                            favoriteRecipes.toMutableList().apply { add(recipeId) }
-//                        } else {
-//                            favoriteRecipes
-//                        }
-//                    } else {
-//                        favoriteRecipes.toMutableList().apply { remove(recipeId) }
-//                    }
-//
-//                    userDocRef.update("favoriteRecipes", updatedFavorites).addOnSuccessListener {
-//                        callback(true)
-//                    }.addOnFailureListener {
-//                        callback(false)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    fun getFavoriteRecipes(callback: (List<String>) -> Unit) {
-//        val user = auth.currentUser
-//        if (user != null) {
-//            val userDocRef = db.collection("users").document(user.uid)
-//
-//            userDocRef.get().addOnSuccessListener { document ->
-//                if (document.exists()) {
-//                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
-//                    callback(favoriteRecipes)
-//                } else {
-//                    callback(emptyList())
-//                }
-//            }
-//        }
-//    }
-
 }
