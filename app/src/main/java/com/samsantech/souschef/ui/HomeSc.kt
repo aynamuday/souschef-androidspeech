@@ -34,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,7 +76,7 @@ fun HomeSc(
 
     Column(
         modifier = Modifier
-            .padding(start = 12.dp, end = 12.dp, top = 40.dp, bottom = if (isCooking) 120.dp else 0.dp)
+            .padding(start = 12.dp, end = 12.dp, top = 30.dp, bottom = if (isCooking) 120.dp else 0.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         if (loadingState.loading) {
@@ -152,9 +151,9 @@ fun HomeSc(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             // Stars for User Rating
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
                                                 Row {
                                                     (1..5).forEach { star ->
@@ -179,11 +178,19 @@ fun HomeSc(
                                                                 }
                                                         )
                                                     }
+
+                                                    Text(
+                                                        text = "%.1f".format(averageRating),
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray
+                                                    )
                                                 }
+
                                                 Text(
-                                                    text = averageRating.toString(),
+                                                    text = "${item.ratings?.size ?: 0} users rated this recipe",
                                                     fontSize = 12.sp,
-                                                    color = Color.Gray
+                                                    color = Color.Gray,
+                                                    fontStyle = FontStyle.Italic
                                                 )
                                             }
 
@@ -195,7 +202,7 @@ fun HomeSc(
                                                     .size(20.dp)
                                                     .clickable {
                                                         item.objectID?.let { id ->
-                                                            recipesViewModel.toggleFavoriteRecipe(
+                                                            recipesViewModel.toggleFavorite(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
                                                             ) {
@@ -320,7 +327,7 @@ fun RecipeCa(
             }
         }
 
-        androidx.compose.material3.Text(
+        Text(
             text = recipe.title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
@@ -332,37 +339,45 @@ fun RecipeCa(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row {
                     (1..5).forEach { star ->
                         Icon(
-                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
                             contentDescription = "Rate $star stars",
-                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                            tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
                             modifier = Modifier
                                 .size(18.dp)
-                                .clickable {
-                                    recipesViewModel.rateRecipe(
-                                        recipe.objectID ?: "",
-                                        star.toFloat()
-                                    ) { isSuccess, newAverageRating ->
-                                        if (isSuccess) {
-                                            updateRatings(star.toFloat(), if (recipe.ratings != null) newAverageRating else userRating)
-                                        }
-                                    }
-                                }
+//                                .clickable {
+//                                    recipesViewModel.rateRecipe(
+//                                        recipe.objectID ?: "",
+//                                        star.toFloat()
+//                                    ) { isSuccess, newAverageRating ->
+//                                        if (isSuccess) {
+//                                            updateRatings(star.toFloat(), if (recipe.ratings != null) newAverageRating else userRating)
+//                                        }
+//                                    }
+//                                }
                         )
                     }
+
+                    Text(
+                        text = "%.1f".format(averageRating),
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
                 }
 
                 Text(
-                    text = averageRating.toString(),
+                    text = "${recipe.ratings?.size ?: 0} users rated this recipe",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontStyle = FontStyle.Italic
                 )
+
             }
 
             Icon(
@@ -373,7 +388,7 @@ fun RecipeCa(
                     .size(20.dp)
                     .clickable {
                         recipe.objectID?.let { id ->
-                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
+                            recipesViewModel.toggleFavorite(id, !isFavorite) {
                                 val message = if (isFavorite) {
                                     "Recipe removed from favorites"
                                 } else {

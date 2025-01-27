@@ -34,22 +34,25 @@ class RecipesViewModel (
         }
     }
 
-    fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
-        val updatedFavorites = if (isAdd) {
-            favoriteRecipes.value + recipeId
-        } else {
-            favoriteRecipes.value - recipeId
-        }
-
-        favoriteRecipes.value = updatedFavorites
-
+    fun toggleFavorite(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
         firebaseRecipeManager.addFavoriteRecipe(recipeId, isAdd) { isSuccess ->
+            if (isSuccess) {
+                if (isAdd) {
+                    val updatedFavorites = favoriteRecipes.value.toMutableList()
+                    updatedFavorites.add(0, recipeId)
+                    println(updatedFavorites)
+                    favoriteRecipes.value = updatedFavorites.toSet()
+                } else {
+                    favoriteRecipes.value -= recipeId
+                    println(recipeId)
+                }
+            }
             callback(isSuccess)
         }
     }
 
     fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
-        firebaseRecipeManager.removeFromFavorites(recipeId) { isSuccess ->
+        firebaseRecipeManager.removeCurrentUserFavorite(recipeId) { isSuccess ->
             if (isSuccess) {
                 favoriteRecipes.value -= recipeId
             }
@@ -69,6 +72,22 @@ class RecipesViewModel (
                 allRecipes.value = updatedRecipes
             }
             callback(isSuccess, updatedAverageRating)
+        }
+    }
+
+    fun getUserRatingForRecipe(recipeId: String, callback: (Float?) -> Unit) {
+        firebaseRecipeManager.getUserRating(recipeId) { rating ->
+            callback(rating)
+        }
+    }
+
+    fun removeRecipe(recipeId: String, callback: (Boolean) -> Unit) {
+        firebaseRecipeManager.removeRecipe(recipeId) { isSuccess ->
+            if (isSuccess) {
+                // Remove the recipe from the local list
+                allRecipes.value = allRecipes.value.filter { it.id != recipeId }
+            }
+            callback(isSuccess)
         }
     }
 }

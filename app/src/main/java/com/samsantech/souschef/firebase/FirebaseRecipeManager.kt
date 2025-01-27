@@ -2,6 +2,7 @@ package com.samsantech.souschef.firebase
 
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -160,11 +161,11 @@ class FirebaseRecipeManager(
             )
         }
 
-        println(deletePhotoKey)
+        if (data["audience"] == "Only me") {
+            recipe.id?.let { removeFavoriteFromAllUsers(it) }
+        }
 
         if (deletePhotoKey != null) {
-//                val removePhoto = if (recipe.photosUri["portrait"] == null) "portrait" else "square"
-//                if (recipe.photosUrl[removePhoto] != null) {
             recipe.id?.let {
                 deleteRecipePhoto(it, deletePhotoKey) { isSuccess, err ->
                     if (isSuccess) {
@@ -189,11 +190,9 @@ class FirebaseRecipeManager(
                     }
                 }
             }
-//                }
         }
 
         if (data.isNotEmpty()) {
-            println("hey")
             data["updatedAt"] = FieldValue.serverTimestamp()
 
             recipe.id?.let { recipeId ->
@@ -229,6 +228,8 @@ class FirebaseRecipeManager(
                             println(it)
                         }
                 }
+
+                removeFavoriteFromAllUsers(document)
             }
             .addOnFailureListener {
                 callback(false, getErrorMessage(it))
@@ -332,13 +333,12 @@ class FirebaseRecipeManager(
 
             userDocRef.get().addOnSuccessListener { document ->
                 if (document.exists()) {
-                    val favoriteRecipes =
-                        document.get("favoriteRecipes") as? List<String> ?: listOf()
+                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
                     val updatedFavorites = if (isAdd) {
                         if (!favoriteRecipes.contains(recipeId)) {
                             favoriteRecipes.toMutableList().apply { add(recipeId) }
                         } else {
-                            favoriteRecipes
+                            return@addOnSuccessListener
                         }
                     } else {
                         favoriteRecipes.toMutableList().apply { remove(recipeId) }
@@ -373,26 +373,47 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
+    fun removeCurrentUserFavorite(recipeId: String, callback: (Boolean) -> Unit) {
         val user = auth.currentUser
         if (user != null) {
             val userDocRef = db.collection("users").document(user.uid)
 
             userDocRef.get().addOnSuccessListener { document ->
                 if (document.exists()) {
-                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
-                    val updatedFavorites = favoriteRecipes.toMutableList().apply { remove(recipeId) }
-
-                    userDocRef.update("favoriteRecipes", updatedFavorites).addOnSuccessListener {
-                        callback(true)
-                    }.addOnFailureListener {
-                        callback(false)
+                    removeUserFavorite(recipeId, document) {
+                        callback(it)
                     }
                 } else {
                     callback(false)
                 }
             }
         }
+    }
+
+    private fun removeFavoriteFromAllUsers(recipeId: String) {
+        db.collection("users")
+            .whereArrayContains("favoriteRecipes", recipeId)
+            .get()
+            .addOnSuccessListener { users ->
+                if (!users.isEmpty) {
+                    users.forEach { user ->
+                        removeUserFavorite(recipeId, user) {
+                            println(it)
+                        }
+                    }
+                }
+            }
+    }
+
+    private fun removeUserFavorite(recipeId: String, user: DocumentSnapshot, callback: (Boolean) -> Unit) {
+        val favoriteRecipes = user.get("favoriteRecipes") as? MutableList<String> ?: mutableListOf()
+        favoriteRecipes.remove(recipeId)
+
+        db.collection("users")
+            .document(user.id)
+            .update("favoriteRecipes", favoriteRecipes)
+            .addOnSuccessListener { callback(true) }
+            .addOnFailureListener { callback(false) }
     }
 
     fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Float?) -> Unit) {
@@ -403,10 +424,21 @@ class FirebaseRecipeManager(
             val snapshot = transaction.get(recipeRef)
             val currentRatings = snapshot.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
             val updatedRatings = currentRatings.toMutableMap().apply { this[userId] = rating }
-            val newAverageRating = updatedRatings.values.average().toFloat()
+            //val newAverageRating = updatedRatings.values.average().toFloat()
 
             currentRatings[userId] = rating
 
+            if (rating == 0f) {  // Remove rating
+                updatedRatings.remove(userId)
+            } else {            // Add or update rating
+                updatedRatings[userId] = rating
+            }
+
+            val newAverageRating = if (updatedRatings.isEmpty()) {
+                0f // No ratings left
+            } else {
+                updatedRatings.values.average().toFloat()
+            }
             // Update Firestore
             transaction.update(recipeRef, mapOf(
                 "ratings" to updatedRatings,
@@ -420,4 +452,29 @@ class FirebaseRecipeManager(
             callback(false, null)
         }
     }
+
+    fun getUserRating(recipeId: String, callback: (Float?) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return callback(null)
+        db.collection("recipes").document(recipeId).get()
+            .addOnSuccessListener { document ->
+                val ratings = document.get("ratings") as? Map<String, Any>
+                val userRating = ratings?.get(userId) as? Double
+                callback(userRating?.toFloat())
+            }
+            .addOnFailureListener {
+                callback(null)
+            }
+    }
+
+    fun removeRecipe(recipeId: String, callback: (Boolean) -> Unit) {
+        db.collection("recipes").document(recipeId)
+            .delete()
+            .addOnSuccessListener {
+                callback(true)
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
 }
