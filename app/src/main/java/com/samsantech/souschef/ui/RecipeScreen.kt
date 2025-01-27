@@ -43,8 +43,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +55,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,12 +124,20 @@ fun RecipeScreen(
         mutableStateOf(Voice("English", "Woman", "Default"))
     }
 
-    val userRatingState = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(recipe.id) {
-        recipesViewModel.getUserRatingForRecipe(recipe.id ?: "") { userRating ->
-            userRatingState.value = userRating ?: 0f
-        }
-    }
+//<<<<<<< master
+    val userRating = remember { mutableFloatStateOf(0f) }
+//=======
+//    var userRating: Float by remember {
+//        mutableFloatStateOf(user?.uid?.let { recipe.ratings?.get(it) } ?: 0f)
+//    }
+
+//    var userRating: Float by remember {
+//        mutableFloatStateOf(
+//            recipe.ratings?.get(user?.uid) ?: 0f
+//        )
+//    }
+
+//>>>>>>> nico
     val isFavorite = recipe.id in favoriteRecipes
     var averageRating by remember {
         mutableFloatStateOf(recipe.averageRating ?: 0f)
@@ -197,24 +202,13 @@ fun RecipeScreen(
                 recipe = recipe,
                 isFavorite = isFavorite,
                 recipesViewModel,
-                rating = userRatingState.value,
-                userRatingState = userRatingState,
+                rating = userRating.toFloat(),
                 averageRating = averageRating,
                 onRateRecipe = { newRating ->
                     recipe.id?.let {
                         recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
                             if (success) {
-                                userRatingState.value = newRating
-                                averageRating = (updatedAverageRating ?: averageRating)
-                            }
-                        }
-                    }
-                },
-                removeRating = {
-                    recipe.id?.let {
-                        recipesViewModel.rateRecipe(it, 0f) { success, updatedAverageRating ->
-                            if (success) {
-                                userRatingState.value = 0f
+                                userRating = newRating
                                 averageRating = (updatedAverageRating ?: averageRating)
                             }
                         }
@@ -292,8 +286,6 @@ fun RecipeMetadata(
     recipesViewModel: RecipesViewModel,
     rating: Float,
     averageRating: Float,
-    removeRating: () -> Unit,
-    userRatingState: MutableState<Float>,
     onRateRecipe: (Float) -> Unit,
     context: Context
 ) {
@@ -339,21 +331,6 @@ fun RecipeMetadata(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = "( ${"%.1f".format(averageRating)} ratings)", fontSize = 12.sp)
             }
-
-            Text(
-                text = if (rating > 0) "Remove rating" else "Leave a rating",
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .clickable {
-                        if (rating > 0) {
-                            removeRating()
-                        }
-                    }
-                ,
-                fontStyle = FontStyle.Italic,
-                color = if (rating > 0) Color.Blue else Color.LightGray // You can customize the color
-            )
 //            Text(
 //                text = "Leave a rating", // or edit rating if rated already
 //                fontSize = 12.sp,
@@ -504,7 +481,7 @@ fun FiveStarRate(
                 contentDescription = null,
                 tint = starColor,
                 modifier = Modifier
-                    .size(18.dp)
+                    .size(24.dp)
                     .clickable { onRateRecipe(i.toFloat()) }
             )
         }

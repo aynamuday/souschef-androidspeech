@@ -3,6 +3,7 @@ package com.samsantech.souschef.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,7 +38,12 @@ fun VoiceCommandsGuide(isWhereToViewTextIsVisible: Boolean, isGoBackIconVisible:
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(.3f)),
+            .background(Color.Black.copy(.3f))
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    isCloseIconClicked(true)
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -49,15 +55,7 @@ fun VoiceCommandsGuide(isWhereToViewTextIsVisible: Boolean, isGoBackIconVisible:
                 .background(Color.White)
                 .border(1.dp, Color.Gray.copy(.5f), RoundedCornerShape(20.dp))
                 .padding(15.dp)
-                .zIndex(1f)
-                .pointerInput(Unit)
-                {
-                    awaitPointerEventScope {
-                        while (true) {
-                            awaitPointerEvent()
-                        }
-                    }
-                },
+                .zIndex(10f),
         ) {
             Box(
                 modifier = Modifier
@@ -139,59 +137,6 @@ fun ManualUserGuideIcon() {
             tint = Color.White,
             modifier = Modifier
                 .size(20.dp)
-        )
-    }
-}
-
-@Composable
-fun EnableVoiceAssistantSection() {
-    Text(
-        text = "Enable Voice Assistant",
-        modifier = Modifier
-            .padding(top = 10.dp),
-        fontWeight = FontWeight(600)
-    )
-    Column(
-        modifier = Modifier
-            .padding(top = 10.dp, start = 5.dp)
-    ) {
-        Text(
-            text = "To enable voice-activated cooking assistance:",
-            fontSize = 15.sp,
-            lineHeight = 18.sp,
-            fontWeight = FontWeight(600)
-        )
-        Text(
-            text = "1. Select a recipe you'd like to cook.",
-            fontSize = 15.sp,
-            lineHeight = 18.sp,
-            modifier = Modifier
-                .padding(top = 3.dp)
-        )
-        Text(
-            text = "2. Click the Microphone icon beside Instructions.",
-            fontSize = 15.sp,
-            lineHeight = 18.sp
-        )
-    }
-}
-
-@Composable
-fun VoiceCommandUserGuideIcon() {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Color(22, 166, 55, 255))
-            .padding(5.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.voice_icon),
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier
-                .size(30.dp)
         )
     }
 }

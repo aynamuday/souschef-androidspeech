@@ -65,7 +65,7 @@ fun CreateRecipeScreenFour(
     closeCreateRecipe: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    val recipe by ownRecipesViewModel.recipe.collectAsState()
+    val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
     val action by ownRecipesViewModel.action.collectAsState()
     val originalData by ownRecipesViewModel.originalData.collectAsState()
     var changes by remember {

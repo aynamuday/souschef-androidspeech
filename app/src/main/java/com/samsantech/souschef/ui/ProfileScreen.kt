@@ -107,7 +107,10 @@ fun ProfileScreen(
     val ownRecipes by ownRecipesViewModel.recipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState(emptyList())
 
-    val favoriteRecipeList = allRecipes.filter { favoriteRecipes.contains(it.id) }
+    val favoriteRecipeList: MutableList<Recipe> = mutableListOf()
+    favoriteRecipes.forEach { recipe ->
+        allRecipes.find { recipe == it.id }?.let { favoriteRecipeList.add(it) }
+    }
 
     var loading by remember {
         mutableStateOf(false)
@@ -146,7 +149,7 @@ fun ProfileScreen(
     }
 
     Box {
-        Column(modifier = Modifier.padding(top = 30.dp)) {
+        Column(modifier = Modifier.padding(top = 20.dp)) {
 //            Header(showMenuBar = true, onClickMenuBar = {
 //                showMenuBar = true
 //            })
@@ -347,13 +350,13 @@ fun ProfileScreen(
                                                                 if (isSuccess) {
                                                                     Toast.makeText(
                                                                         context,
-                                                                        "TikTok recipe removed from favorites",
+                                                                        "TikTok recipe removed from favorites.",
                                                                         Toast.LENGTH_SHORT
                                                                     ).show()
                                                                 } else {
                                                                     Toast.makeText(
                                                                         context,
-                                                                        "Failed to remove TikTok recipe from favorites",
+                                                                        "Failed to remove TikTok recipe from favorites.",
                                                                         Toast.LENGTH_SHORT
                                                                     ).show()
                                                                 }
@@ -401,13 +404,13 @@ fun ProfileScreen(
                                                                 if (isSuccess) {
                                                                     Toast.makeText(
                                                                         context,
-                                                                        "Recipe removed from favorites",
+                                                                        "Recipe removed from favorites.",
                                                                         Toast.LENGTH_SHORT
                                                                     ).show()
                                                                 } else {
                                                                     Toast.makeText(
                                                                         context,
-                                                                        "Failed to remove from favorites",
+                                                                        "Failed to remove from favorites.",
                                                                         Toast.LENGTH_SHORT
                                                                     ).show()
                                                                 }
@@ -570,7 +573,7 @@ fun ProfileScreen(
                     Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 activityResultLauncher.launch(intent)
             },
-            onOkayText = "Update Profile Photo",
+            onOkayText = "Save",
             onBoxClick = { showProfileImage = false },
             withCloseButton = true,
             onCloseClick = { showProfileImage = false }
