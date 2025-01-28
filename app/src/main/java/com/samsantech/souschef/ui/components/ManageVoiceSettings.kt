@@ -140,6 +140,7 @@ fun ManageVoiceSettings(
             ) { selected ->
                 language = selected
                 selectLanguage = false
+                variety = "Default"
             }
             Spacer(modifier = Modifier.height(10.dp))
             DropdownMenu(
@@ -150,13 +151,14 @@ fun ManageVoiceSettings(
             ) { selected ->
                 gender = selected
                 selectGender = false
+                variety = "Default"
             }
             Spacer(modifier = Modifier.height(10.dp))
             val voices = hashMapOf(
                 "en-female" to listOf("Default", "Normal", "Calm"),
-                "en-male" to listOf("Default", "Podcast", "Radio"),
+                "en-male" to listOf("Default", "Podcast"),
                 "fil-female" to listOf("Default", "Normal"),
-                "fil-male" to listOf("Default", "Radio", "Outgoing")
+                "fil-male" to listOf("Default", "Radio")
             )
             val selection = if (language == "English" && gender == "Woman") {
                 "en-female"
