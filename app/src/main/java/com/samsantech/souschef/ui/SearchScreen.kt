@@ -1,6 +1,8 @@
 package com.samsantech.souschef.ui
 
+import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -54,6 +56,7 @@ import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 
 @Composable
 fun SearchScreen(
+    context: Context,
     paddingValues: PaddingValues,
     searchRecipesViewModel: SearchRecipesViewModel,
     recipesViewModel: RecipesViewModel,
@@ -229,6 +232,15 @@ fun SearchScreen(
                                     if (!isSuccess) {
                                         error = "Failed to toggle favorite status. Please try again later."
                                     }
+
+                                    val message = if (!isAdd) {
+                                        "Recipe removed from favorites"
+                                    } else {
+                                        "Recipe added to favorites"
+                                    }
+                                    Toast
+                                        .makeText(context, message, Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             },
                             view = view

@@ -358,6 +358,7 @@ fun SousChefApp(
                         ownRecipesViewModel
                     ) { paddingValues ->
                         SearchScreen(
+                            context,
                             paddingValues,
                             searchRecipesViewModel,
                             recipesViewModel,

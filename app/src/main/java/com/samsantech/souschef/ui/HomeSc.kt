@@ -151,16 +151,18 @@ fun HomeSc(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             // Stars for User Rating
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
-                                                Row {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
                                                     (1..5).forEach { star ->
                                                         Icon(
                                                             imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
                                                             contentDescription = "Rate $star stars",
-                                                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                                                            tint = if (star <= userRating) Color(
+                                                                0xFFFFA500
+                                                            ) else Color.Gray,
                                                             modifier = Modifier
                                                                 .size(18.dp)
                                                                 .clickable {
@@ -169,21 +171,24 @@ fun HomeSc(
                                                                         star.toFloat()
                                                                     ) { isSuccess, newAverageRating ->
                                                                         if (isSuccess) {
-                                                                            userRating = star.toFloat()
+                                                                            userRating =
+                                                                                star.toFloat()
                                                                             if (newAverageRating != null) {
-                                                                                averageRating = if (item.ratings != null) newAverageRating else userRating
+                                                                                averageRating =
+                                                                                    if (item.ratings != null) newAverageRating else userRating
                                                                             }
                                                                         }
                                                                     }
                                                                 }
                                                         )
                                                     }
+
+                                                    Text(
+                                                        text = "   %.1f".format(averageRating) + "  (${item.ratings?.size ?: 0} ratings)",
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray,
+                                                    )
                                                 }
-                                                Text(
-                                                    text = "%.1f".format(averageRating),
-                                                    fontSize = 12.sp,
-                                                    color = Color.Gray
-                                                )
                                             }
 
                                             Icon(
@@ -331,37 +336,37 @@ fun RecipeCa(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                //horizontalAlignment = Alignment.CenterHorizontally,
+                //verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     (1..5).forEach { star ->
                         Icon(
-                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
                             contentDescription = "Rate $star stars",
-                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                            tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
                             modifier = Modifier
                                 .size(18.dp)
-                                .clickable {
-                                    recipesViewModel.rateRecipe(
-                                        recipe.objectID ?: "",
-                                        star.toFloat()
-                                    ) { isSuccess, newAverageRating ->
-                                        if (isSuccess) {
-                                            updateRatings(star.toFloat(), if (recipe.ratings != null) newAverageRating else userRating)
-                                        }
-                                    }
-                                }
+//                                .clickable {
+//                                    recipesViewModel.rateRecipe(
+//                                        recipe.objectID ?: "",
+//                                        star.toFloat()
+//                                    ) { isSuccess, newAverageRating ->
+//                                        if (isSuccess) {
+//                                            updateRatings(star.toFloat(), if (recipe.ratings != null) newAverageRating else userRating)
+//                                        }
+//                                    }
+//                                }
                         )
                     }
-                }
 
-                Text(
-                    text = "%.1f".format(averageRating),
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                    Text(
+                        text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                    )
+                }
             }
 
             Icon(
