@@ -119,6 +119,8 @@ fun HomeScreen(
                                 mutableFloatStateOf(item.averageRating ?: 0f)
                             }
 
+                            val isFavorite = item.objectID in favoriteRecipes
+
                             if (item.isTikTok == true) {
                                 BoxWithConstraints {
                                     val maxWidth = maxWidth
@@ -164,17 +166,20 @@ fun HomeScreen(
                                                             modifier = Modifier
                                                                 .size(18.dp)
                                                                 .clickable {
-                                                                    recipesViewModel.rateRecipe(
-                                                                        item.objectID ?: "",
-                                                                        star.toFloat()
-                                                                    ) { isSuccess, newAverageRating ->
-                                                                        if (isSuccess) {
-                                                                            userRating =
-                                                                                star.toFloat()
-                                                                            if (newAverageRating != null) {
-                                                                                averageRating =
-                                                                                    if (item.ratings != null) newAverageRating else userRating
+                                                                    item.objectID?.let {
+                                                                        recipesViewModel.rateRecipe(it, star.toFloat()) { isSuccess, newAverageRating ->
+                                                                            if (isSuccess) {
+                                                                                userRating =
+                                                                                    star.toFloat()
+                                                                                if (newAverageRating != null) {
+                                                                                    averageRating =
+                                                                                        if (item.ratings != null) newAverageRating else userRating
+                                                                                }
                                                                             }
+                                                                        }
+
+                                                                        if (star.toFloat() >= 4.0) {
+                                                                            algoliaInsightsViewModel.sendRatedARecipeEvent(it)
                                                                         }
                                                                     }
                                                                 }
@@ -197,23 +202,17 @@ fun HomeScreen(
                                                     .size(20.dp)
                                                     .clickable {
                                                         item.objectID?.let { id ->
-                                                            recipesViewModel.toggleFavorite(
-                                                                id,
-                                                                !favoriteRecipes.contains(id)
-                                                            ) {
-                                                                val message =
-                                                                    if (favoriteRecipes.contains(id)) {
+                                                            recipesViewModel.toggleFavorite(id, !favoriteRecipes.contains(id)) {
+                                                                val message = if (favoriteRecipes.contains(id)) {
                                                                         "Recipe added to favorites"
                                                                     } else {
                                                                         "Recipe removed from favorites"
                                                                     }
-                                                                Toast
-                                                                    .makeText(
-                                                                        context,
-                                                                        message,
-                                                                        Toast.LENGTH_SHORT
-                                                                    )
-                                                                    .show()
+                                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                            }
+
+                                                            if (!favoriteRecipes.contains(id)) {
+                                                                algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
                                                             }
                                                         }
                                                     }
@@ -224,18 +223,37 @@ fun HomeScreen(
                             } else {
                                 RecipeCard(
                                     recipe = item,
-                                    recipesViewModel = recipesViewModel,
-                                    favoriteRecipes = favoriteRecipes,
-                                    onNavigateToRecipe,
-                                    userRating,
+                                    isFavorite = isFavorite,
                                     averageRating,
-                                    updateRatings = { user, average ->
-                                        if (user != null) {
-                                            userRating = user
+                                    onDisplayRecipe = { id ->
+                                        recipesViewModel.getRecipe(id) { isSuccess, err, recipe ->
+                                            if (isSuccess) {
+                                                if (recipe != null) {
+                                                    recipesViewModel.displayRecipe.value = recipe
+                                                    onNavigateToRecipe()
+                                                }
+                                            } else {
+                                                Toast
+                                                    .makeText(context, err, Toast.LENGTH_LONG)
+                                                    .show()
+                                            }
                                         }
-                                        if (average != null) {
-                                            averageRating = average
+
+                                        algoliaInsightsViewModel.sendViewedARecipeEvent(id)
+                                    },
+                                    onToggleFavorite = { id ->
+                                        recipesViewModel.toggleFavorite(id, !isFavorite) {
+                                            val message = if (isFavorite) {
+                                                "Recipe removed from favorites"
+                                            } else {
+                                                "Recipe added to favorites"
+                                            }
+                                            Toast
+                                                .makeText(context, message, Toast.LENGTH_SHORT)
+                                                .show()
                                         }
+
+                                        algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
                                     }
                                 )
                             }
@@ -251,16 +269,11 @@ fun HomeScreen(
 @Composable
 fun RecipeCard(
     recipe: SearchRecipe,
-    recipesViewModel: RecipesViewModel,
-    favoriteRecipes: Set<String>,
-    onNavigateToRecipe: () -> Unit,
-    userRating: Float,
+    isFavorite: Boolean,
     averageRating: Float,
-    updateRatings: (userRating: Float?, averageRating: Float?) -> Unit
+    onDisplayRecipe: (String) -> Unit,
+    onToggleFavorite: (String) -> Unit
 ) {
-    val isFavorite = recipe.objectID in favoriteRecipes
-    val context = LocalContext.current
-
     val photoUrl: Uri? = when {
         recipe.photosUrl["portrait"] != null -> Uri.parse("${recipe.photosUrl["portrait"]}")
         recipe.photosUrl["square"] != null -> Uri.parse("${recipe.photosUrl["square"]}")
@@ -272,18 +285,7 @@ fun RecipeCard(
             .fillMaxWidth()
             .clickable {
                 if (recipe.objectID != null) {
-                    recipesViewModel.getRecipe(recipe.objectID!!) { isSuccess, err, recipe ->
-                        if (isSuccess) {
-                            if (recipe != null) {
-                                recipesViewModel.displayRecipe.value = recipe
-                                onNavigateToRecipe()
-                            }
-                        } else {
-                            Toast
-                                .makeText(context, err, Toast.LENGTH_LONG)
-                                .show()
-                        }
-                    }
+                    onDisplayRecipe(recipe.objectID!!)
                 }
             }
     ) {
@@ -362,16 +364,7 @@ fun RecipeCard(
                     .size(20.dp)
                     .clickable {
                         recipe.objectID?.let { id ->
-                            recipesViewModel.toggleFavorite(id, !isFavorite) {
-                                val message = if (isFavorite) {
-                                    "Recipe removed from favorites"
-                                } else {
-                                    "Recipe added to favorites"
-                                }
-                                Toast
-                                    .makeText(context, message, Toast.LENGTH_SHORT)
-                                    .show()
-                            }
+                            onToggleFavorite(id)
                         }
                     }
             )

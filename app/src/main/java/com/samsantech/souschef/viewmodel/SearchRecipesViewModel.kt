@@ -37,10 +37,14 @@ class SearchRecipesViewModel: ViewModel() {
     val hasSearched = MutableStateFlow(false)
     val gridState = MutableStateFlow(LazyGridState())
 
+    private val appID = ApplicationID("JLQPKQBVUP")
+    private val apiKey = APIKey("26ef1633753e107ebeecd0d69264f86e")
+    private val indexName = IndexName("souschef-recipes")
+
     private var searcher = HitsSearcher(
-        applicationID = ApplicationID("VP98Z77775"),
-        apiKey = APIKey("f5fad5c803ab4df0ea8c02f45496c71c"),
-        indexName = IndexName("souschef-samsantech"),
+        applicationID = appID,
+        apiKey = apiKey,
+        indexName = indexName,
         triggerSearchFor = SearchForQuery.lengthAtLeast(1),
         isDisjunctiveFacetingEnabled = false,
         query = Query(

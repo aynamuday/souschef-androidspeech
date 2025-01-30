@@ -375,7 +375,8 @@ fun SousChefApp(
                         onNavigateToProfile = { navController.navigate(route = Profile) {
                             popUpTo(Recipe) {inclusive = true}
                         } },
-                        sharedViewModel = sharedViewModel
+                        sharedViewModel = sharedViewModel,
+                        algoliaInsightsViewModel = algoliaInsightsViewModel
                     )
                     DisplayCookingAssistantUi(
                         context,
@@ -384,7 +385,7 @@ fun SousChefApp(
                         sharedViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe) {
-                                popUpTo<Recipe>() { inclusive = true }
+                                popUpTo<Recipe> { inclusive = true }
                             }
                         },
                         isCooking = cookingAssistantState.isCooking

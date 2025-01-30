@@ -218,6 +218,8 @@ fun SearchScreen(
                                         error = "A problem occurred while getting the recipe information. Please try again later."
                                     }
                                 }
+
+                                algoliaInsightsViewModel.sendViewedARecipeEvent(id)
                             },
                             favoriteRecipes = favoriteRecipes,
                             onToggleFavorite = { recipeId ->
@@ -239,6 +241,10 @@ fun SearchScreen(
                                     Toast
                                         .makeText(context, message, Toast.LENGTH_SHORT)
                                         .show()
+                                }
+
+                                if (isAdd) {
+                                    algoliaInsightsViewModel.sendAddedToFavoritesEvent(recipeId)
                                 }
                             },
                             view = view
