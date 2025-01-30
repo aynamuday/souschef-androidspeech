@@ -8,8 +8,6 @@ class AuthViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
 ) {
     val signUpInformation = MutableStateFlow(User())
-    val otpState = MutableStateFlow("")
-    val newPassword = MutableStateFlow("")
 
     fun login(email: String, password: String, onComplete: (Boolean, String?) -> Unit) {
         firebaseAuthManager.login(email, password) { isSuccess, error ->

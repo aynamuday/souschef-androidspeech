@@ -87,9 +87,6 @@ import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
-val sharedViewModel = SharedViewModel()
-
-//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun RecipeScreen(
     context: Context,
@@ -99,6 +96,7 @@ fun RecipeScreen(
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
     cookingAssistantViewModel: CookingAssistantViewModel,
+    sharedViewModel: SharedViewModel,
     onNavigateToCreateRecipeOne: () -> Unit,
     onNavigateToProfile: () -> Unit,
 ) {
@@ -231,7 +229,8 @@ fun RecipeScreen(
                 recipe,
                 displayVoiceCommandPopUp = { displayVoiceCommandPopUp.value = it },
                 manageBluetoothSettings = { manageVoiceSettings = true },
-                cookingAssistantState
+                cookingAssistantState,
+                sharedViewModel
             )
         }
     }
@@ -582,7 +581,8 @@ fun RecipeInstructions(
     recipe: Recipe,
     displayVoiceCommandPopUp: (Boolean) -> Unit,
     manageBluetoothSettings: (Boolean) -> Unit,
-    cookingAssistantState: CookingAssistantState
+    cookingAssistantState: CookingAssistantState,
+    sharedViewModel: SharedViewModel
 ) {
     val showRecordAudioRationaleDialog = remember {
         mutableStateOf(false)
