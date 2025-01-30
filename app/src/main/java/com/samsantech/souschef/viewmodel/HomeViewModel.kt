@@ -18,11 +18,13 @@ import com.algolia.instantsearch.searchbox.SearchMode
 import com.algolia.instantsearch.searchbox.connectView
 import com.algolia.instantsearch.searcher.connectFilterState
 import com.algolia.instantsearch.searcher.hits.HitsSearcher
+import com.algolia.search.client.ClientSearch
 import com.algolia.search.model.APIKey
 import com.algolia.search.model.ApplicationID
 import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
+import com.algolia.search.model.insights.UserToken
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.data.SearchRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,13 +32,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class HomeViewModel: ViewModel() {
     val lazyState = MutableStateFlow(LazyGridState())
 
+    private val appID = ApplicationID("VP98Z77775")
+    private val apiKey = APIKey("f5fad5c803ab4df0ea8c02f45496c71c")
+    private val indexName = IndexName("souschef-samsantech")
+
     private var searcher = HitsSearcher(
-        applicationID = ApplicationID("VP98Z77775"),
-        apiKey = APIKey("f5fad5c803ab4df0ea8c02f45496c71c"),
-        indexName = IndexName("souschef-samsantech"),
+        ClientSearch(appID, apiKey),
+        indexName,
         query = Query(
-            enablePersonalization = true,
-            personalizationImpact = 100
+            personalizationImpact = 70
         )
     )
 
@@ -82,7 +86,8 @@ class HomeViewModel: ViewModel() {
         searchBoxState.setText("", true)
     }
 
-    fun search(text: String, ) {
-        searchBoxState.setText(text, true)
+    fun updateUserToken(userId: String?) {
+        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+        searchBoxState.setText("", true)
     }
 }

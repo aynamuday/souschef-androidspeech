@@ -9,8 +9,18 @@ import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.utils.CookingAssistantService
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class SharedViewModel {
+class SharedViewModel(
+    private val algoliaInsightsViewModel: AlgoliaInsightsViewModel?,
+    private val homeViewModel: HomeViewModel?,
+    private val searchRecipesViewModel: SearchRecipesViewModel?
+) {
     val isLoading = MutableStateFlow(false)
+
+    fun updateAlgoliaQueriesUserToken(userId: String?) {
+        algoliaInsightsViewModel?.updateUserToken(userId)
+        homeViewModel?.updateUserToken(userId)
+        searchRecipesViewModel?.updateUserToken(userId)
+    }
 
     fun openAppSettings(context: Context) {
         val intent = Intent(

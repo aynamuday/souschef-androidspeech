@@ -111,6 +111,8 @@ dependencies {
 
     implementation("com.algolia:instantsearch-compose:3.3.1")
     implementation("com.algolia:instantsearch-android-paging3:3.3.1")
+    implementation("com.algolia:instantsearch-insights-android:3.+")
+
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
     implementation("androidx.compose.material:material-icons-extended:1.7.6")

@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class UserViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
-    private val firebaseUserManager: FirebaseUserManager
+    private val firebaseUserManager: FirebaseUserManager,
+    private val sharedViewModel: SharedViewModel
 ) {
     val favoriteRecipes: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
     val user = MutableStateFlow<User?>(User())
-    val signUpPreferences = MutableStateFlow<UserPreferences>(UserPreferences())
-    val otherCuisine = MutableStateFlow<String>("")
+    val signUpPreferences = MutableStateFlow(UserPreferences())
+    val otherCuisine = MutableStateFlow("")
     private val ownRecipesViewModel: OwnRecipesViewModel
         get() = OwnRecipesViewModelProvider.ownRecipesViewModel
 
@@ -45,6 +46,8 @@ class UserViewModel(
         } else {
             user.value = null
         }
+
+        sharedViewModel.updateAlgoliaQueriesUserToken(currentUser?.uid)
     }
 
     fun setProfilePicture(imageUri: Uri, callback: (Boolean, String?) -> Unit) {

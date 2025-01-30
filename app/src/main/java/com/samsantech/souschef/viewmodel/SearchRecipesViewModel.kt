@@ -25,6 +25,7 @@ import com.algolia.search.model.ApplicationID
 import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
+import com.algolia.search.model.insights.UserToken
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.data.SearchRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,8 +44,7 @@ class SearchRecipesViewModel: ViewModel() {
         triggerSearchFor = SearchForQuery.lengthAtLeast(1),
         isDisjunctiveFacetingEnabled = false,
         query = Query(
-            enablePersonalization = true,
-            personalizationImpact = 100
+            personalizationImpact = 70
         )
     )
     private val filterState = FilterState()
@@ -78,6 +78,11 @@ class SearchRecipesViewModel: ViewModel() {
                 )
             )
         }
+    }
+
+    fun updateUserToken(userId: String?) {
+        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+        searchBoxState.setText("", true)
     }
 
     override fun onCleared() {
