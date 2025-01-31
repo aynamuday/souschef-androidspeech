@@ -18,20 +18,6 @@ class FirebaseAuthManager(
         return auth.currentUser
     }
 
-    fun getUser(uid: String, callback: (User?) -> Unit) {
-        db.collection("users")
-            .document(uid)
-            .get()
-            .addOnSuccessListener {
-                val user = it.toObject(User::class.java)
-                if (user != null) {
-                    callback(user)
-                } else {
-                    callback(null)
-                }
-            }
-    }
-
     fun signUp(user: User, isSuccess: (Boolean, String?) -> Unit) {
         auth.createUserWithEmailAndPassword(user.email, user.password)
             .addOnCompleteListener {
@@ -51,7 +37,6 @@ class FirebaseAuthManager(
                         }
                         createUser(signedUpUser.uid, user.email, user.username) {
                             isSuccess(true, error)
-                            println(isSuccess)
                         }
                     }
                 }

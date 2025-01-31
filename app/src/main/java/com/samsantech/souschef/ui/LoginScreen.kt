@@ -47,7 +47,7 @@ fun LoginScreen(
     onNavigateToVerifyEmail: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToSelectCuisines: () -> Unit
+    onNavigateToSelectCategories: () -> Unit
 ) {
     var email by remember {
         mutableStateOf("")
@@ -148,7 +148,7 @@ fun LoginScreen(
                                         if (it) {
                                             onNavigateToHome()
                                         } else {
-                                            onNavigateToSelectCuisines()
+                                            onNavigateToSelectCategories()
                                         }
                                     }
                                     ownRecipesViewModel.getOwnRecipes()

@@ -10,8 +10,11 @@ import com.algolia.search.model.IndexName
 import com.algolia.search.model.ObjectID
 import com.algolia.search.model.insights.EventName
 import com.algolia.search.model.insights.UserToken
+import com.samsantech.souschef.data.UserViewModelProvider
 
 class AlgoliaInsightsViewModel(private val context: Context) {
+    private val userViewModel: UserViewModel
+        get() = UserViewModelProvider.userViewModel
     private val appID = ApplicationID("JLQPKQBVUP")
     private val apiKey = APIKey("26ef1633753e107ebeecd0d69264f86e")
     private val indexName = IndexName("souschef-recipes")
@@ -38,6 +41,7 @@ class AlgoliaInsightsViewModel(private val context: Context) {
             eventName = EventName("Viewed a recipe"),
             objectIDs = listOf(ObjectID(objectId))
         )
+        incrementSentEventsCount()
     }
 
     fun sendAddedToFavoritesEvent(objectId: String) {
@@ -45,6 +49,7 @@ class AlgoliaInsightsViewModel(private val context: Context) {
             eventName = EventName("Added recipe to favorites"),
             objectIDs = listOf(ObjectID(objectId))
         )
+        incrementSentEventsCount()
     }
 
     fun sendSharedARecipeEvent(objectId: String) {
@@ -52,6 +57,7 @@ class AlgoliaInsightsViewModel(private val context: Context) {
             eventName = EventName("Shared a recipe"),
             objectIDs = listOf(ObjectID(objectId))
         )
+        incrementSentEventsCount()
     }
 
     fun sendRatedARecipeEvent(objectId: String) {
@@ -59,5 +65,13 @@ class AlgoliaInsightsViewModel(private val context: Context) {
             eventName = EventName("Rated a recipe"),
             objectIDs = listOf(ObjectID(objectId))
         )
+        incrementSentEventsCount()
+    }
+
+    private fun incrementSentEventsCount() {
+        val user = userViewModel.user.value
+        if (user != null && user.sentEventsCount < 30.0) {
+            userViewModel.incrementSentEventsCount()
+        }
     }
 }

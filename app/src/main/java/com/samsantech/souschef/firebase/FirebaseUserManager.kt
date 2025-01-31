@@ -4,11 +4,45 @@ import android.net.Uri
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.samsantech.souschef.data.User
 import com.samsantech.souschef.data.UserPreferences
 
 class FirebaseUserManager(private val auth: FirebaseAuth, private val db: FirebaseFirestore, private val storage: FirebaseStorage) {
+    fun getUser(uid: String, callback: (User?) -> Unit) {
+        db.collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener {
+                val user = it.toObject(User::class.java)
+                if (user != null) {
+                    callback(user)
+                } else {
+                    callback(null)
+                }
+            }
+    }
+
+    fun getUserPreferences(callback: (UserPreferences?) -> Unit) {
+        val user = auth.currentUser
+
+        if (user != null) {
+            db.collection("preferences")
+                .document(user.uid)
+                .get()
+                .addOnSuccessListener {
+                    val userPreferences = it.toObject(UserPreferences::class.java)
+                    if (userPreferences != null) {
+                        callback(userPreferences)
+                    } else {
+                        callback(null)
+                    }
+                }
+        }
+    }
+
     fun updateUserPreferences(preferences: UserPreferences, isSuccess: (Boolean) -> Unit) {
         val user = auth.currentUser
 
@@ -195,5 +229,19 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
             .addOnSuccessListener {
                 isExists(!it.isEmpty)
             }
+    }
+
+    fun incrementSentEventsCount() {
+        val user = auth.currentUser
+        val data: Map<String, Any> = mapOf(
+            "sentEventsCount" to FieldValue.increment(1.0),
+            "lastSentEventTimestamp" to FieldValue.serverTimestamp()
+        )
+
+        user?.uid?.let { userId ->
+            db.collection("users")
+                .document(userId)
+                .update(data)
+        }
     }
 }

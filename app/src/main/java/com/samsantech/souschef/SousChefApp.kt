@@ -37,7 +37,7 @@ import com.samsantech.souschef.ui.CreateRecipeScreenFour
 import com.samsantech.souschef.ui.HomeScreen
 import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.SearchScreen
-import com.samsantech.souschef.ui.SelectCuisinesScreen
+import com.samsantech.souschef.ui.SelectCategoriesScreen
 import com.samsantech.souschef.ui.SelectDislikesScreen
 import com.samsantech.souschef.ui.SelectSkillLevelScreen
 import com.samsantech.souschef.ui.SignUpOrLoginScreen
@@ -126,8 +126,8 @@ fun SousChefApp(
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
                         },
-                        onNavigateToSelectCuisines = {
-                            navController.navigate(route = SelectCuisines) {
+                        onNavigateToSelectCategories = {
+                            navController.navigate(route = SelectCategories) {
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
                         }
@@ -182,18 +182,23 @@ fun SousChefApp(
                         }
                     )
                 }
-                composable<SelectCuisines> {
-                    SelectCuisinesScreen(
+                composable<SelectCategories> {
+                    SelectCategoriesScreen(
                         activity,
                         userViewModel = userViewModel,
-                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) },
+                        onNavigateToHome = {
+                            navController.navigate(route = Home) {
+                                popUpTo(navController.graph.id) { inclusive = true }
+                            }
+                        }
+//                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) },
                     )
                 }
                 composable<SelectDislikes> {
                     SelectDislikesScreen(
                         userViewModel = userViewModel,
-                        onNavigateToSelectCuisines = { navController.navigate(route = SelectCuisines) {
-                            popUpTo<SelectCuisines> { inclusive = true }
+                        onNavigateToSelectCategories = { navController.navigate(route = SelectCategories) {
+                            popUpTo<SelectCategories> { inclusive = true }
                         } },
                         onNavigateToSelectSkillLevel = { navController.navigate(route = SelectSkillLevel) },
                     )
@@ -259,9 +264,10 @@ fun SousChefApp(
                             }
                         },
                         ownRecipesViewModel
-                    ) { _ ->
+                    ) { paddingValues ->
                         HomeScreen(
                             context,
+                            paddingValues,
                             homeViewModel,
                             recipesViewModel,
                             userViewModel,
@@ -521,7 +527,7 @@ object SignUpOrLogin
 object SignUp
 
 @Serializable
-object SelectCuisines
+object SelectCategories
 
 @Serializable
 object SelectDislikes
