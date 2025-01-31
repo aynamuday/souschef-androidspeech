@@ -53,7 +53,7 @@ class SearchRecipesViewModel: ViewModel() {
         )
     )
 
-    private var filterState = FilterState()
+    private lateinit var filterState: FilterState
     private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
     private var searchBoxState = SearchBoxState()
     lateinit var hitsPaginator: Paginator<SearchRecipe>
@@ -63,22 +63,12 @@ class SearchRecipesViewModel: ViewModel() {
 
     init {
         updateUserToken(null)
-
-        val audienceId = FilterGroupID("audienceId", FilterOperator.Or)
-        filterState.notify {
-            add(
-                audienceId,
-                setOf(
-                    Filter.Facet(Attribute("audience"), "Public"),
-                    Filter.Facet(Attribute("isTikTok"), true)
-                )
-            )
-        }
     }
 
     fun updateUserToken(userId: String?) {
         searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
 
+        filterState = FilterState()
         searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
         hitsPaginator = Paginator(searcher) {
             it.deserialize(SearchRecipe.serializer())
@@ -93,6 +83,17 @@ class SearchRecipesViewModel: ViewModel() {
         connections += searchBoxConnector.connectView(searchBoxState)
         connections += searchBoxConnector.connectPaginator(hitsPaginator)
         connections += loadingConnector.connectView(loadingState)
+
+        val audienceIdFilter = mutableSetOf(Filter.Facet(Attribute("audience"), "Public"))
+        if (userId != null) {
+            audienceIdFilter.add(Filter.Facet(Attribute("userId"), userId))
+        }
+        filterState.notify {
+            add(
+                FilterGroupID("audienceId", FilterOperator.Or),
+                audienceIdFilter
+            )
+        }
 
         searchBoxState.setText("", true)
     }

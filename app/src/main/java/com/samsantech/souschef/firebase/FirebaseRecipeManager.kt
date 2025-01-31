@@ -465,4 +465,15 @@ class FirebaseRecipeManager(
                 callback(false)
             }
     }
+
+    fun setSeenPost(recipeId: String) {
+        val user = auth.currentUser
+
+        user?.uid.let { userId ->
+            db.collection("recipes")
+                .document(recipeId)
+                .update("seenBy", FieldValue.arrayUnion(userId))
+//                .update("seenBy", FieldValue.arrayRemove(userId))
+        }
+    }
 }

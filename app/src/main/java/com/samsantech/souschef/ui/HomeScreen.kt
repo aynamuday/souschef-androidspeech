@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -30,11 +32,13 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,10 +60,12 @@ import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun HomeScreen(
     context: Context,
+    paddingValues: PaddingValues,
     homeViewModel: HomeViewModel,
     recipesViewModel: RecipesViewModel,
     userViewModel: UserViewModel,
@@ -68,15 +74,27 @@ fun HomeScreen(
     isCooking: Boolean
 ) {
     val pagingHits = homeViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
-    val lazyState by homeViewModel.lazyState.collectAsState()
+    val lazyState = rememberLazyGridState()
     val loadingState = homeViewModel.loadingState
     val user = userViewModel.user
 
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
+    LaunchedEffect(lazyState) {
+        snapshotFlow { lazyState.layoutInfo.visibleItemsInfo }
+            .collectLatest { visibleItems ->
+                if (visibleItems.isNotEmpty()) {
+                    val index = visibleItems.first().index
+                    val recipe = pagingHits[index]
+                    recipe?.objectID?.let { recipesViewModel.setSeenPost(it) }
+                }
+            }
+    }
+
     Column(
         modifier = Modifier
-            .padding(start = 12.dp, end = 12.dp, top = 30.dp, bottom = if (isCooking) 120.dp else 0.dp)
+            .padding(paddingValues)
+            .padding(start = 12.dp, end = 12.dp, top = 30.dp, bottom = if (isCooking) 120.dp else 20.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         if (loadingState.loading) {
@@ -130,7 +148,10 @@ fun HomeScreen(
                                             TikTokWebView(
                                                 postId = item.postId,
                                                 width = width.value.toInt(),
-                                                height = 550
+                                                height = 550,
+                                                onPlayed = {
+                                                    item.objectID?.let { algoliaInsightsViewModel.sendViewedARecipeEvent(it) }
+                                                }
                                             )
                                         }
                                         Row(modifier = Modifier.fillMaxWidth()) {

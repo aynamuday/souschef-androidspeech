@@ -37,11 +37,11 @@ class HomeViewModel: ViewModel() {
         ClientSearch(appID, apiKey),
         indexName,
         query = Query(
-            personalizationImpact = 70,
+            personalizationImpact = 70
         )
     )
 
-    private var filterState = FilterState()
+    private lateinit var filterState: FilterState
     private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
     private var searchBoxState = SearchBoxState()
     lateinit var hitsPaginator: Paginator<SearchRecipe>
@@ -51,22 +51,15 @@ class HomeViewModel: ViewModel() {
 
     init {
         updateUserToken(null)
-
-        val audienceId = FilterGroupID("audienceId", FilterOperator.Or)
-        filterState.notify {
-            add(
-                audienceId,
-                setOf(
-                    Filter.Facet(Attribute("audience"), "Public"),
-                    Filter.Facet(Attribute("isTikTok"), true)
-                )
-            )
-        }
     }
 
     fun updateUserToken(userId: String?) {
         searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+        if (userId != null) {
+            searcher.query.optionalFilters = listOf(listOf("seenBy:-$userId"))
+        }
 
+        filterState = FilterState()
         searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
         hitsPaginator = Paginator(searcher) {
             it.deserialize(SearchRecipe.serializer())
@@ -81,6 +74,17 @@ class HomeViewModel: ViewModel() {
         connections += searchBoxConnector.connectView(searchBoxState)
         connections += searchBoxConnector.connectPaginator(hitsPaginator)
         connections += loadingConnector.connectView(loadingState)
+
+        val audienceIdFilter = mutableSetOf(Filter.Facet(Attribute("audience"), "Public"))
+        if (userId != null) {
+            audienceIdFilter.add(Filter.Facet(Attribute("userId"), userId, isNegated = true))
+        }
+        filterState.notify {
+            add(
+                FilterGroupID("audienceId", FilterOperator.And),
+                audienceIdFilter
+            )
+        }
 
         searchBoxState.setText("", true)
     }
