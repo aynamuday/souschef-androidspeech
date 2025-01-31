@@ -53,10 +53,22 @@ class HomeViewModel: ViewModel() {
         updateUserToken(null)
     }
 
-    fun updateUserToken(userId: String?) {
+    fun updateUserToken(userId: String?, categories: List<String>? = null) {
         searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+        val optionalFilters = mutableListOf<List<String>>()
         if (userId != null) {
-            searcher.query.optionalFilters = listOf(listOf("seenBy:-$userId"))
+            optionalFilters.add(listOf("seenBy:-$userId"))
+
+            if (!categories.isNullOrEmpty()) {
+                val categoriesFilter = mutableListOf<String>()
+                categories.forEach {
+                    categoriesFilter.add("categories:$it")
+                }
+                optionalFilters.add(categoriesFilter)
+            }
+        }
+        if (optionalFilters.isNotEmpty()) {
+            searcher.query.optionalFilters = optionalFilters
         }
 
         filterState = FilterState()
