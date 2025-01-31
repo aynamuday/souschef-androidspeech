@@ -26,6 +26,7 @@ import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
 import com.algolia.search.model.insights.UserToken
+import com.algolia.search.model.response.ResponseSearch
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.data.SearchRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,26 +52,17 @@ class SearchRecipesViewModel: ViewModel() {
             personalizationImpact = 70
         )
     )
-    private val filterState = FilterState()
 
-    private var searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
-    private val searchBoxState = SearchBoxState()
-    var hitsPaginator = Paginator(searcher) {
-        it.deserialize(SearchRecipe.serializer())
-    }
-    val loadingState = LoadingState()
-    private val loadingConnector = LoadingConnector(searcher)
-
-    private val connections = ConnectionHandler(
-        searchBoxConnector,
-        loadingConnector
-    )
+    private var filterState = FilterState()
+    private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
+    private var searchBoxState = SearchBoxState()
+    lateinit var hitsPaginator: Paginator<SearchRecipe>
+    var loadingState = LoadingState()
+    private var loadingConnector = LoadingConnector(searcher)
+    private lateinit var connections: ConnectionHandler
 
     init {
-        connections += searcher.connectFilterState(filterState)
-        connections += searchBoxConnector.connectView(searchBoxState)
-        connections += searchBoxConnector.connectPaginator(hitsPaginator)
-        connections += loadingConnector.connectView(loadingState)
+        updateUserToken(null)
 
         val audienceId = FilterGroupID("audienceId", FilterOperator.Or)
         filterState.notify {
@@ -86,6 +78,22 @@ class SearchRecipesViewModel: ViewModel() {
 
     fun updateUserToken(userId: String?) {
         searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+
+        searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
+        hitsPaginator = Paginator(searcher) {
+            it.deserialize(SearchRecipe.serializer())
+        }
+        loadingConnector = LoadingConnector(searcher)
+        connections = ConnectionHandler(
+            searchBoxConnector,
+            loadingConnector
+        )
+
+        connections += searcher.connectFilterState(filterState)
+        connections += searchBoxConnector.connectView(searchBoxState)
+        connections += searchBoxConnector.connectPaginator(hitsPaginator)
+        connections += loadingConnector.connectView(loadingState)
+
         searchBoxState.setText("", true)
     }
 

@@ -1,6 +1,5 @@
 package com.samsantech.souschef.viewmodel
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.lifecycle.ViewModel
 import com.algolia.instantsearch.android.paging3.Paginator
 import com.algolia.instantsearch.android.paging3.searchbox.connectPaginator
@@ -25,13 +24,11 @@ import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
 import com.algolia.search.model.insights.UserToken
+import com.algolia.search.model.response.ResponseSearch
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.data.SearchRecipe
-import kotlinx.coroutines.flow.MutableStateFlow
 
 class HomeViewModel: ViewModel() {
-    val lazyState = MutableStateFlow(LazyGridState())
-
     private val appID = ApplicationID("JLQPKQBVUP")
     private val apiKey = APIKey("26ef1633753e107ebeecd0d69264f86e")
     private val indexName = IndexName("souschef-recipes")
@@ -40,28 +37,20 @@ class HomeViewModel: ViewModel() {
         ClientSearch(appID, apiKey),
         indexName,
         query = Query(
-            personalizationImpact = 70
+            personalizationImpact = 70,
         )
     )
 
-    private val filterState = FilterState()
-    private var searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
-    private val searchBoxState = SearchBoxState()
-    var hitsPaginator = Paginator(searcher) {
-        it.deserialize(SearchRecipe.serializer())
-    }
-    val loadingState = LoadingState()
-    private val loadingConnector = LoadingConnector(searcher)
-    private val connections = ConnectionHandler(
-        searchBoxConnector,
-        loadingConnector
-    )
+    private var filterState = FilterState()
+    private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
+    private var searchBoxState = SearchBoxState()
+    lateinit var hitsPaginator: Paginator<SearchRecipe>
+    var loadingState = LoadingState()
+    private var loadingConnector = LoadingConnector(searcher)
+    private lateinit var connections: ConnectionHandler
 
     init {
-        connections += searcher.connectFilterState(filterState)
-        connections += searchBoxConnector.connectView(searchBoxState)
-        connections += searchBoxConnector.connectPaginator(hitsPaginator)
-        connections += loadingConnector.connectView(loadingState)
+        updateUserToken(null)
 
         val audienceId = FilterGroupID("audienceId", FilterOperator.Or)
         filterState.notify {
@@ -75,6 +64,27 @@ class HomeViewModel: ViewModel() {
         }
     }
 
+    fun updateUserToken(userId: String?) {
+        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+
+        searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
+        hitsPaginator = Paginator(searcher) {
+            it.deserialize(SearchRecipe.serializer())
+        }
+        loadingConnector = LoadingConnector(searcher)
+        connections = ConnectionHandler(
+            searchBoxConnector,
+            loadingConnector
+        )
+
+        connections += searcher.connectFilterState(filterState)
+        connections += searchBoxConnector.connectView(searchBoxState)
+        connections += searchBoxConnector.connectPaginator(hitsPaginator)
+        connections += loadingConnector.connectView(loadingState)
+
+        searchBoxState.setText("", true)
+    }
+
     override fun onCleared() {
         super.onCleared()
         cancelSearch()
@@ -83,11 +93,6 @@ class HomeViewModel: ViewModel() {
 
     private fun cancelSearch() {
         searcher.cancel()
-        searchBoxState.setText("", true)
-    }
-
-    fun updateUserToken(userId: String?) {
-        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
         searchBoxState.setText("", true)
     }
 }
