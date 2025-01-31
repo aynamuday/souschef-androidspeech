@@ -297,6 +297,17 @@ class OwnRecipesViewModel(
         updatedRecipes.reverse()
 
         recipes.value = updatedRecipes
-        println(updatedRecipes)
+    }
+
+    fun updateRecipesUserName(userName: String) {
+        val updatedRecipes: MutableList<Recipe> = mutableListOf()
+
+        recipes.value.forEach {
+            val recipe = it.copy(userName = userName)
+            updatedRecipes.add(0, recipe)
+        }
+        updatedRecipes.reverse()
+
+        recipes.value = updatedRecipes
     }
 }

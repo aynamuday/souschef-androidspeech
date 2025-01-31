@@ -227,6 +227,7 @@ class CookingAssistantViewModel(
     }
 
     fun changeVoice(voice: Voice) {
+        instructionsAudioLocalDataSource.clearInstructionsAudioDirectory()
         textToSpeechManager.changeVoice(voice)
         this.voice.value = voice
     }

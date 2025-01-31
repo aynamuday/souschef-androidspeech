@@ -69,6 +69,21 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                     .addOnSuccessListener {
                         callback(true, null)
                         user.reload()
+
+                        if (!updatedUser["username"].isNullOrEmpty()) {
+                            db.collection("recipes")
+                                .whereEqualTo("userId", user.uid)
+                                .get()
+                                .addOnSuccessListener { recipes ->
+                                    if (!recipes.isEmpty) {
+                                        recipes.forEach { document ->
+                                            db.collection("recipes")
+                                                .document(document.id)
+                                                .update("userName", updatedUser["username"])
+                                        }
+                                    }
+                                }
+                        }
                     }
                     .addOnFailureListener{
                         println(it.message)
@@ -101,25 +116,25 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         photoUri = Uri.parse("$downloadUri")
                     }
                     user.updateProfile(profileUpdates)
-                        .addOnCompleteListener {
+                        .addOnCompleteListener { it ->
                             if (!it.isSuccessful) {
                                 callback(false, getErrorMessage(task.exception), null)
                             } else {
                                 user.reload()
                                 callback(true, null, downloadUri.toString())
-                            }
-                        }
 
-                    db.collection("recipes")
-                        .whereEqualTo("userId", user.uid)
-                        .get()
-                        .addOnSuccessListener {
-                            if (!it.isEmpty) {
-                                it.forEach { document ->
-                                    db.collection("recipes")
-                                        .document(document.id)
-                                        .update("userPhotoUrl", Uri.parse("$downloadUri"))
-                                }
+                                db.collection("recipes")
+                                    .whereEqualTo("userId", user.uid)
+                                    .get()
+                                    .addOnSuccessListener { recipes ->
+                                        if (!recipes.isEmpty) {
+                                            recipes.forEach { document ->
+                                                db.collection("recipes")
+                                                    .document(document.id)
+                                                    .update("userPhotoUrl", Uri.parse("$downloadUri"))
+                                            }
+                                        }
+                                    }
                             }
                         }
                 } else {

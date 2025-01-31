@@ -66,6 +66,10 @@ class UserViewModel(
         firebaseUserManager.updateProfile(newDisplayName = name, username = username) { isSuccess, error ->
             if (isSuccess) {
                 refreshUser()
+
+                if (!username.isNullOrEmpty()) {
+                    ownRecipesViewModel.updateRecipesUserName(username)
+                }
             }
             callback(isSuccess, error)
         }

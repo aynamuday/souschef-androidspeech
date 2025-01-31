@@ -4,7 +4,6 @@ import android.app.Activity.RESULT_OK
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Paint.Align
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -43,7 +42,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.Icon
@@ -74,7 +72,6 @@ import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.DisplayProfileImage
-import com.samsantech.souschef.ui.components.Header
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
@@ -305,7 +302,9 @@ fun ProfileScreen(
                                             onClickKebabMenu = {
                                                 showRecipeActionMenu = !showRecipeActionMenu
                                                 recipeWithAction = if (recipeWithAction == null) recipe else null
-                                            }
+                                            },
+                                            showPrivacyIcon = true,
+                                            privacy = recipe.audience
                                         )
                                     }
                                 }
@@ -558,7 +557,7 @@ fun ProfileScreen(
                         imageUri = null
                     }
                 },
-                onOkayText = "Set Profile Photo",
+                onOkayText = "Save",
             )
         }
     }
@@ -573,7 +572,7 @@ fun ProfileScreen(
                     Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 activityResultLauncher.launch(intent)
             },
-            onOkayText = "Save",
+            onOkayText = "Update Profile Photo",
             onBoxClick = { showProfileImage = false },
             withCloseButton = true,
             onCloseClick = { showProfileImage = false }
