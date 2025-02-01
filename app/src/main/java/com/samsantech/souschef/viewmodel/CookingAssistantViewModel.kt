@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import com.samsantech.souschef.data.CookingAssistantState
 import com.samsantech.souschef.data.InstructionsAudioLocalDataSource
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.data.Voice
 import com.samsantech.souschef.utils.SpeechToTextManager
 import com.samsantech.souschef.utils.TextToSpeechManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +24,10 @@ class CookingAssistantViewModel(
     private var mediaPlayer: MediaPlayer? = null
     private val instructionsAudioLocalDataSource: InstructionsAudioLocalDataSource = InstructionsAudioLocalDataSource(context)
     private val instructionsAudioDir = instructionsAudioLocalDataSource.getInstructionsAudioDir()
-    private val introText = "Hi, I'm SousChef. I will guide you in this cooking session. To start, say \"Start\"."
+    private val englishIntroText = "Hi, I'm SousChef. I will guide you in this cooking session. To start, say \"Start\"."
+    private val filipinoIntroText = "Hello, ako si SousChef. Ako ang magiging gabay mo sa pagluluto na ito. Para magsimula, sabihin mo lang ang \"Start\"."
     private val commands = listOf("start over", "start", "next", "go back", "again", "stop", "continue", "skip to", "escape to")
+    var voice = MutableStateFlow(Voice("English", "Woman", "Default"))
 
 //    @RequiresApi(Build.VERSION_CODES.Q)
     fun startCookingAssistance(recipe: Recipe) {
@@ -43,9 +46,10 @@ class CookingAssistantViewModel(
         mediaPlayer = MediaPlayer()
         instructionsAudioLocalDataSource.clearInstructionsAudioDirectory()
 
-        textToSpeechManager.synthesize(introText)
-        toNotDetect = toNotDetect.plus("to start")
-        toNotDetect = toNotDetect.plus("say start")
+        textToSpeechManager.changeVoice(voice.value)
+        textToSpeechManager.synthesize(if (voice.value.language == "English") englishIntroText else filipinoIntroText)
+        toNotDetect = toNotDetect.plus("start")
+        toNotDetect = toNotDetect.plus("start")
     }
 
     fun stopCookingAssistance() {
@@ -63,9 +67,9 @@ class CookingAssistantViewModel(
 
         //"start over"
         if (transcription.contains("start over")) {
-            textToSpeechManager.synthesize(introText)
-            toNotDetect = toNotDetect.plus("to start")
-            toNotDetect = toNotDetect.plus("say start")
+            textToSpeechManager.synthesize(if (voice.value.language == "English") englishIntroText else filipinoIntroText)
+            toNotDetect = toNotDetect.plus("start")
+            toNotDetect = toNotDetect.plus("start")
             updateCurrentStep(1)
         }
         //"start"
@@ -73,15 +77,21 @@ class CookingAssistantViewModel(
             if (currentStep == 1) {
                 synthesizeInstructionAndPlay(currentStep)
             } else {
-                textToSpeechManager.synthesize("You are in Step Number $currentStep. To start over, say \"Start Over\".")
-                toNotDetect = toNotDetect.plus("start over")
-                toNotDetect = toNotDetect.plus("start over")
+                textToSpeechManager.synthesize(
+                    if (voice.value.language == "English") "You are in Step Number $currentStep. To start over, say \"Start Over\"."
+                    else "Nasa ika-$currentStep na hakbang ka. Para magsimula muli, sabihin ang \"Start Over\"."
+                )
+                toNotDetect = toNotDetect.plus("start")
+                toNotDetect = toNotDetect.plus("start")
             }
         }
         //"next"
         else if (transcription.contains("next")) {
             if(currentStep == totalInstructions) {
-                textToSpeechManager.synthesize("You've already come to the last instruction.")
+                textToSpeechManager.synthesize(
+                    if (voice.value.language == "English") "You've already come to the last instruction."
+                    else "Narating mo na ang huling hakbang."
+                )
             } else {
                 synthesizeInstructionAndPlay(currentStep+1)
                 updateCurrentStep(currentStep+1)
@@ -90,7 +100,10 @@ class CookingAssistantViewModel(
         //"go back"
         else if(transcription.contains("go back")) {
             if (currentStep <= 1) {
-                textToSpeechManager.synthesize("You are in the first step - cannot go back")
+                textToSpeechManager.synthesize(
+                    if (voice.value.language == "English") "You are in the first step - cannot go back"
+                    else "Nasa unang hakbang ka - hindi pwedeng bumalik."
+                )
                 toNotDetect = toNotDetect.plus("cannot go back")
             } else {
                 synthesizeInstructionAndPlay(currentStep-1)
@@ -124,7 +137,10 @@ class CookingAssistantViewModel(
                     updateCurrentStep(skipToNumber)
                     synthesizeInstructionAndPlay(skipToNumber)
                 } else {
-                    textToSpeechManager.synthesize("There is no Step Number $skipToNumber.")
+                    textToSpeechManager.synthesize(
+                        if (voice.value.language == "English") "There is no Step Number $skipToNumber."
+                        else "Walang ika-$skipToNumber na hakbang."
+                    )
                 }
             }
         }
@@ -143,7 +159,8 @@ class CookingAssistantViewModel(
         }
 
         if (instructionNumber == totalInstructions) {
-            instruction = "This is the last step. ".plus(instruction)
+            instruction = if (voice.value.language == "English") "This is the last step. ".plus(instruction)
+                        else "Ito na ang huling hakbang. ".plus(instruction)
         }
 
         val instructionFileName = "instruction_".plus(instructionNumber.toString())
@@ -207,5 +224,19 @@ class CookingAssistantViewModel(
         }
 
         return skipToNumber
+    }
+
+    fun changeVoice(voice: Voice) {
+        instructionsAudioLocalDataSource.clearInstructionsAudioDirectory()
+        textToSpeechManager.changeVoice(voice)
+        this.voice.value = voice
+    }
+
+    fun testVoice(voice: Voice) {
+        textToSpeechManager.testVoice(voice, if (voice.language == "English") englishIntroText else filipinoIntroText)
+    }
+
+    fun stopSynthesis() {
+        textToSpeechManager.stop()
     }
 }

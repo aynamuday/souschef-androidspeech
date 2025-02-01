@@ -7,15 +7,17 @@ import com.samsantech.souschef.data.UserPreferences
 import com.samsantech.souschef.firebase.FirebaseAuthManager
 import com.samsantech.souschef.firebase.FirebaseUserManager
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.Calendar
 
 class UserViewModel(
     private val firebaseAuthManager: FirebaseAuthManager,
-    private val firebaseUserManager: FirebaseUserManager
+    private val firebaseUserManager: FirebaseUserManager,
+    private val sharedViewModel: SharedViewModel,
+    private val homeViewModel: HomeViewModel
 ) {
-    val favoriteRecipes: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
     val user = MutableStateFlow<User?>(User())
-    val signUpPreferences = MutableStateFlow<UserPreferences>(UserPreferences())
-    val otherCuisine = MutableStateFlow<String>("")
+    val signUpPreferences = MutableStateFlow(UserPreferences())
+    //    val otherCuisine = MutableStateFlow("")
     private val ownRecipesViewModel: OwnRecipesViewModel
         get() = OwnRecipesViewModelProvider.ownRecipesViewModel
 
@@ -27,7 +29,7 @@ class UserViewModel(
         val currentUser = firebaseAuthManager.getCurrentUser()
 
         if (currentUser != null) {
-            firebaseAuthManager.getUser(currentUser.uid) {
+            firebaseUserManager.getUser(currentUser.uid) {
                 if (it != null) {
                     user.value = currentUser.email?.let { email ->
                         currentUser.displayName?.let { displayName ->
@@ -36,8 +38,24 @@ class UserViewModel(
                                 username = it.username,
                                 email = email,
                                 displayName = displayName,
-                                photoUrl = currentUser.photoUrl.toString()
+                                photoUrl = currentUser.photoUrl.toString(),
+                                sentEventsCount = it.sentEventsCount
                             )
+                        }
+                    }
+
+                    val lastSentEventTimeStamp = it.lastSentEventTimestamp
+                    if (lastSentEventTimeStamp != null) {
+                        val currentTime = Calendar.getInstance().time
+                        val differenceInMillis = lastSentEventTimeStamp.time - currentTime.time
+                        val threeHoursInMillis = 3 * 60 * 60 * 1000
+
+                        if (differenceInMillis >= threeHoursInMillis && it.sentEventsCount < 30) {
+                            firebaseUserManager.getUserPreferences { preferences ->
+                                if (preferences != null && !preferences.categories.isNullOrEmpty()) {
+                                    homeViewModel.updateUserToken(user.value?.uid, preferences.categories)
+                                }
+                            }
                         }
                     }
                 }
@@ -45,6 +63,8 @@ class UserViewModel(
         } else {
             user.value = null
         }
+
+        sharedViewModel.updateAlgoliaQueriesUserToken(currentUser?.uid)
     }
 
     fun setProfilePicture(imageUri: Uri, callback: (Boolean, String?) -> Unit) {
@@ -63,6 +83,10 @@ class UserViewModel(
         firebaseUserManager.updateProfile(newDisplayName = name, username = username) { isSuccess, error ->
             if (isSuccess) {
                 refreshUser()
+
+                if (!username.isNullOrEmpty()) {
+                    ownRecipesViewModel.updateRecipesUserName(username)
+                }
             }
             callback(isSuccess, error)
         }
@@ -96,26 +120,34 @@ class UserViewModel(
     }
 
     fun setUserPreferences(isSuccess: (Boolean) -> Unit) {
-        signUpPreferences.value.cuisines = signUpPreferences.value.cuisines?.plus(otherCuisine.value)
+//        signUpPreferences.value.categories = signUpPreferences.value.categories?.plus(otherCuisine.value)
         firebaseUserManager.updateUserPreferences(signUpPreferences.value) {
             isSuccess(it)
+//            userPreferences.value = signUpPreferences.value
+
+            val categories = signUpPreferences.value.categories
+            if (!categories.isNullOrEmpty()) {
+                homeViewModel.updateUserToken(user.value?.uid, categories)
+            }
+
+            signUpPreferences.value = UserPreferences()
         }
     }
 
     fun addPreferencesCuisine(cuisine: String) {
         signUpPreferences.value = signUpPreferences.value.copy(
-            cuisines = signUpPreferences.value.cuisines?.plus(cuisine) ?: listOf(cuisine)
+            categories = signUpPreferences.value.categories?.plus(cuisine) ?: listOf(cuisine)
         )
     }
 
     fun removePreferencesCuisine(cuisine: String) {
         signUpPreferences.value = signUpPreferences.value.copy(
-            cuisines = signUpPreferences.value.cuisines?.minus(cuisine) ?: listOf(cuisine)
+            categories = signUpPreferences.value.categories?.minus(cuisine) ?: listOf(cuisine)
         )
     }
 
-    fun clearPreferencesCuisine() {
-        signUpPreferences.value = signUpPreferences.value.copy(cuisines = listOf())
+    fun clearPreferencesCategories() {
+        signUpPreferences.value = signUpPreferences.value.copy(categories = listOf())
     }
 
     fun addPreferencesDislike(dislike: String) {
@@ -142,5 +174,9 @@ class UserViewModel(
 
     fun clearPreferencesSkillLevel() {
         signUpPreferences.value = signUpPreferences.value.copy(skillLevel = "")
+    }
+
+    fun incrementSentEventsCount() {
+        firebaseUserManager.incrementSentEventsCount()
     }
 }

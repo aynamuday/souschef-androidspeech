@@ -1,5 +1,7 @@
 package com.samsantech.souschef.data
 
+import java.util.Date
+
 data class User(
     var uid: String = "",
     var displayName: String = "",
@@ -7,5 +9,6 @@ data class User(
     var email: String = "",
     var photoUrl: String? = null,
     var password: String = "",
-    //var favoriteRecipes: List<String> = listOf()
+    var sentEventsCount: Double = 0.0,
+    var lastSentEventTimestamp: Date? = null,
 )

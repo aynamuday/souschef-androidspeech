@@ -1,6 +1,8 @@
 package com.samsantech.souschef.ui
 
+import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -49,20 +51,21 @@ import com.samsantech.souschef.ui.components.SearchBox
 import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
+import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 
 @Composable
 fun SearchScreen(
+    context: Context,
     paddingValues: PaddingValues,
     searchRecipesViewModel: SearchRecipesViewModel,
     recipesViewModel: RecipesViewModel,
+    algoliaInsightsViewModel: AlgoliaInsightsViewModel,
     onNavigateToRecipe: () -> Unit,
-//    isCooking: Boolean
 ) {
     val pagingHits = searchRecipesViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
     val gridState by searchRecipesViewModel.gridState.collectAsState()
-    val categoriesRowState = rememberLazyListState()
     val loadingState = searchRecipesViewModel.loadingState
     val search by searchRecipesViewModel.search.collectAsState()
     val hasSearched by searchRecipesViewModel.hasSearched.collectAsState()
@@ -83,7 +86,6 @@ fun SearchScreen(
         modifier = Modifier
             .padding(start = 12.dp, end = 12.dp, top = 40.dp, bottom = 20.dp)
             .padding(paddingValues)
-//            .padding(bottom = if (isCooking) 150.dp else 20.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -216,9 +218,10 @@ fun SearchScreen(
                                         error = "A problem occurred while getting the recipe information. Please try again later."
                                     }
                                 }
+
+                                algoliaInsightsViewModel.sendViewedARecipeEvent(id)
                             },
                             favoriteRecipes = favoriteRecipes,
-                            recipesViewModel = recipesViewModel,
                             onToggleFavorite = { recipeId ->
                                 val isAdd = !favoriteRecipes.contains(recipeId)
 
@@ -229,6 +232,19 @@ fun SearchScreen(
                                     if (!isSuccess) {
                                         error = "Failed to toggle favorite status. Please try again later."
                                     }
+
+                                    val message = if (!isAdd) {
+                                        "Recipe removed from favorites"
+                                    } else {
+                                        "Recipe added to favorites"
+                                    }
+                                    Toast
+                                        .makeText(context, message, Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+
+                                if (isAdd) {
+                                    algoliaInsightsViewModel.sendAddedToFavoritesEvent(recipeId)
                                 }
                             },
                             view = view
@@ -301,7 +317,6 @@ fun RecipesList(
     lazyGridState: LazyGridState,
     onDisplayRecipe: (id: String) -> Unit,
     favoriteRecipes: Set<String>,
-    recipesViewModel: RecipesViewModel,
     onToggleFavorite: (String) -> Unit,
     view: String = "grid" // or list
 ) {
@@ -317,11 +332,6 @@ fun RecipesList(
 
             val width = if (view == "grid") ((maxWidth/2) - 8.dp) else maxWidth
             val height = if (view == "grid") (width/2)+width else 300.dp
-
-            val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
-
-            val userRating = remember { mutableStateOf(recipe.userRating ?: 0f) }
-            val averageRating = remember { mutableStateOf(recipe.averageRating ?: 0f) }
 
             if (item.isTikTok == true) {
                 Column {
@@ -368,18 +378,6 @@ fun RecipesList(
                     itemWidth = width,
                     itemHeight = height,
                     item = item,
-                    rating = userRating.value,
-                    averageRating = averageRating.value,
-                    onRateRecipe = { newRating ->
-                        recipe.id?.let {
-                            recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
-                                if (success) {
-                                    userRating.value = newRating
-                                    averageRating.value = (updatedAverageRating ?: averageRating.value) as Float
-                                }
-                            }
-                        }
-                    },
                     onDisplayRecipe = {
                         item.objectID?.let { onDisplayRecipe(it) }
                     },
@@ -402,9 +400,6 @@ fun SearchRecipeItem(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     view: String = "grid",
-    rating: Float,
-    averageRating: Float,
-    onRateRecipe: (Float) -> Unit,
 ) {
     val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
         Uri.parse("${item.photosUrl["portrait"]}")
@@ -430,40 +425,6 @@ fun SearchRecipeItem(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Spacer(modifier = Modifier.height(2.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-//            Row(verticalAlignment = Alignment.CenterVertically) {
-//                FiveStar(
-//                    rating = rating,
-//                    onRateRecipe = { newRating ->
-//                        onRateRecipe(newRating) // Pass the updated rating
-//                    }
-//                )
-//                Spacer(modifier = Modifier.width(8.dp))
-//                Text(
-//                    text = "( ${"%.1f".format(averageRating)} )",
-//                    fontSize = 12.sp
-//                )
-//            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-//                Icon(
-//                    imageVector = Icons.Filled.Favorite,
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .size(if (view == "grid") 16.dp else 22.dp)
-//                        .clickable {
-//                            //onToggleFavorite()
-//                        },
-//                    //tint = if (isFavorite) Color(0xfff73056) else Color.Gray
-//                )
-//                Spacer(modifier = Modifier.width(if (view == "grid") 2.dp else 5.dp))
-//                Text(text = "999k", fontSize = if (view == "grid") 12.sp else 14.sp)
-            }
-        }
         Spacer(modifier = Modifier.height(5.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -486,29 +447,6 @@ fun SearchRecipeItem(
                     .clickable {
                         onToggleFavorite()
                     },
-            )
-        }
-    }
-}
-
-@Composable
-fun FiveStar(
-    rating: Float,
-    onRateRecipe: (Float) -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        for (i in 1..5) {
-            val starColor = if (rating >= i) Color(0xFFFFA500) else Color.Gray
-            Icon(
-                imageVector = Icons.Filled.Star,
-                contentDescription = null,
-                tint = starColor,
-                modifier = Modifier
-                    .size(14.dp)
-                    .clickable { onRateRecipe(i.toFloat()) }
             )
         }
     }

@@ -32,7 +32,7 @@ import com.samsantech.souschef.viewmodel.UserViewModel
 @Composable
 fun SelectDislikesScreen(
     userViewModel: UserViewModel,
-    onNavigateToSelectCuisines: () -> Unit,
+    onNavigateToSelectCategories: () -> Unit,
     onNavigateToSelectSkillLevel: () -> Unit
 ) {
     val preferences by userViewModel.signUpPreferences.collectAsState()
@@ -92,7 +92,7 @@ fun SelectDislikesScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             ColoredButton(
-                onClick = onNavigateToSelectCuisines,
+                onClick = onNavigateToSelectCategories,
                 text = "Previous",
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(12.dp, 12.dp),

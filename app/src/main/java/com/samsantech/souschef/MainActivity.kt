@@ -28,6 +28,7 @@ import com.google.firebase.storage.storage
 import com.samsantech.souschef.data.CookingAssistantViewModelProvider
 import com.samsantech.souschef.data.NetworkStateProvider
 import com.samsantech.souschef.data.OwnRecipesViewModelProvider
+import com.samsantech.souschef.data.UserViewModelProvider
 import com.samsantech.souschef.firebase.FirebaseAuthManager
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import com.samsantech.souschef.firebase.FirebaseUserManager
@@ -35,6 +36,7 @@ import com.samsantech.souschef.ui.theme.SousChefTheme
 import com.samsantech.souschef.utils.BluetoothHelper
 import com.samsantech.souschef.utils.NetworkHelper
 import com.samsantech.souschef.utils.TextToSpeechManager
+import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
 import com.samsantech.souschef.viewmodel.HomeViewModel
@@ -55,10 +57,9 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
     private var isBluetoothManaged = false
 
     private var textToSpeechManager : TextToSpeechManager? = null
-    private val sharedViewModel = SharedViewModel()
+    private lateinit var sharedViewModel: SharedViewModel
     private lateinit var cookingAssistantViewModel: CookingAssistantViewModel
 
-//    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -89,18 +90,21 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
                 val firebaseAuthManager = FirebaseAuthManager(auth, db, firebaseUserManager, functions)
                 val firebaseRecipeManager = FirebaseRecipeManager(auth, db, storage)
 
-                val user = auth.currentUser
-
+                val algoliaInsightsViewModel = AlgoliaInsightsViewModel(this.applicationContext)
+                val homeViewModel = HomeViewModel()
+                val searchRecipesViewModel = SearchRecipesViewModel()
+                sharedViewModel = SharedViewModel(algoliaInsightsViewModel, homeViewModel, searchRecipesViewModel)
                 val authViewModel = AuthViewModel(firebaseAuthManager)
-                val userViewModel = UserViewModel(firebaseAuthManager, firebaseUserManager)
+                val userViewModel = UserViewModel(firebaseAuthManager, firebaseUserManager, sharedViewModel, homeViewModel)
                 val recipesViewModel = RecipesViewModel(firebaseRecipeManager)
                 val ownRecipesViewModel = OwnRecipesViewModel(userViewModel, firebaseRecipeManager, recipesViewModel)
-                val searchRecipesViewModel = SearchRecipesViewModel()
                 val cookingAssistantViewModel = CookingAssistantViewModel(context = this.applicationContext, textToSpeechManager = textToSpeechManager!!)
                 CookingAssistantViewModelProvider.cookingAssistantViewModel = cookingAssistantViewModel
                 OwnRecipesViewModelProvider.ownRecipesViewModel = ownRecipesViewModel
-                val homeViewModel = HomeViewModel()
+                UserViewModelProvider.userViewModel = userViewModel
 
+                val user = auth.currentUser
+                sharedViewModel.updateAlgoliaQueriesUserToken(user?.uid)
                 SousChefApp(
                     systemNavigationBarHeight,
                     user,
@@ -113,16 +117,17 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
                     recipesViewModel,
                     searchRecipesViewModel,
                     cookingAssistantViewModel,
-                    homeViewModel
+                    homeViewModel,
+                    algoliaInsightsViewModel
                 )
             }
         }
 
-    networkChangeReceiver = networkHelper.networkChangeReceiver(this)
-    registerReceiver(networkChangeReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
-    NetworkStateProvider.isNetworkAvailable = isNetworkAvailable
+        networkChangeReceiver = networkHelper.networkChangeReceiver(this)
+        registerReceiver(networkChangeReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        NetworkStateProvider.isNetworkAvailable = isNetworkAvailable
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
             == PackageManager.PERMISSION_GRANTED) {
             manageBluetooth()
         }
@@ -137,7 +142,7 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
         }
     }
 
-//    @RequiresApi(Build.VERSION_CODES.Q)
+    //    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onDestroy() {
         super.onDestroy()
         textToSpeechManager?.destroy()

@@ -1,6 +1,5 @@
 package com.samsantech.souschef.viewmodel
 
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.lifecycle.ViewModel
 import com.algolia.instantsearch.android.paging3.Paginator
 import com.algolia.instantsearch.android.paging3.searchbox.connectPaginator
@@ -18,57 +17,88 @@ import com.algolia.instantsearch.searchbox.SearchMode
 import com.algolia.instantsearch.searchbox.connectView
 import com.algolia.instantsearch.searcher.connectFilterState
 import com.algolia.instantsearch.searcher.hits.HitsSearcher
+import com.algolia.search.client.ClientSearch
 import com.algolia.search.model.APIKey
 import com.algolia.search.model.ApplicationID
 import com.algolia.search.model.Attribute
 import com.algolia.search.model.IndexName
 import com.algolia.search.model.filter.Filter
+import com.algolia.search.model.insights.UserToken
+import com.algolia.search.model.response.ResponseSearch
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.data.SearchRecipe
-import kotlinx.coroutines.flow.MutableStateFlow
 
 class HomeViewModel: ViewModel() {
-    val lazyState = MutableStateFlow(LazyGridState())
+    private val appID = ApplicationID("JLQPKQBVUP")
+    private val apiKey = APIKey("26ef1633753e107ebeecd0d69264f86e")
+    private val indexName = IndexName("souschef-recipes")
 
     private var searcher = HitsSearcher(
-        applicationID = ApplicationID("VP98Z77775"),
-        apiKey = APIKey("f5fad5c803ab4df0ea8c02f45496c71c"),
-        indexName = IndexName("souschef-samsantech"),
+        ClientSearch(appID, apiKey),
+        indexName,
         query = Query(
-            enablePersonalization = true,
-            personalizationImpact = 100
+            personalizationImpact = 70
         )
     )
 
-    private val filterState = FilterState()
-    private var searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
-    private val searchBoxState = SearchBoxState()
-    var hitsPaginator = Paginator(searcher) {
-        it.deserialize(SearchRecipe.serializer())
-    }
-    val loadingState = LoadingState()
-    private val loadingConnector = LoadingConnector(searcher)
-    private val connections = ConnectionHandler(
-        searchBoxConnector,
-        loadingConnector
-    )
+    private lateinit var filterState: FilterState
+    private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
+    private var searchBoxState = SearchBoxState()
+    lateinit var hitsPaginator: Paginator<SearchRecipe>
+    var loadingState = LoadingState()
+    private var loadingConnector = LoadingConnector(searcher)
+    private lateinit var connections: ConnectionHandler
 
     init {
+        updateUserToken(null)
+    }
+
+    fun updateUserToken(userId: String?, categories: List<String>? = null) {
+        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+        val optionalFilters = mutableListOf<List<String>>()
+        if (userId != null) {
+            optionalFilters.add(listOf("seenBy:-$userId"))
+
+            if (!categories.isNullOrEmpty()) {
+                val categoriesFilter = mutableListOf<String>()
+                categories.forEach {
+                    categoriesFilter.add("categories:$it")
+                }
+                optionalFilters.add(categoriesFilter)
+            }
+        }
+        if (optionalFilters.isNotEmpty()) {
+            searcher.query.optionalFilters = optionalFilters
+        }
+
+        filterState = FilterState()
+        searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
+        hitsPaginator = Paginator(searcher) {
+            it.deserialize(SearchRecipe.serializer())
+        }
+        loadingConnector = LoadingConnector(searcher)
+        connections = ConnectionHandler(
+            searchBoxConnector,
+            loadingConnector
+        )
+
         connections += searcher.connectFilterState(filterState)
         connections += searchBoxConnector.connectView(searchBoxState)
         connections += searchBoxConnector.connectPaginator(hitsPaginator)
         connections += loadingConnector.connectView(loadingState)
 
-        val audienceId = FilterGroupID("audienceId", FilterOperator.Or)
+        val audienceIdFilter = mutableSetOf(Filter.Facet(Attribute("audience"), "Public"))
+        if (userId != null) {
+            audienceIdFilter.add(Filter.Facet(Attribute("userId"), userId, isNegated = true))
+        }
         filterState.notify {
             add(
-                audienceId,
-                setOf(
-                    Filter.Facet(Attribute("audience"), "Public"),
-                    Filter.Facet(Attribute("isTikTok"), true)
-                )
+                FilterGroupID("audienceId", FilterOperator.And),
+                audienceIdFilter
             )
         }
+
+        searchBoxState.setText("", true)
     }
 
     override fun onCleared() {
@@ -80,9 +110,5 @@ class HomeViewModel: ViewModel() {
     private fun cancelSearch() {
         searcher.cancel()
         searchBoxState.setText("", true)
-    }
-
-    fun search(text: String, ) {
-        searchBoxState.setText(text, true)
     }
 }

@@ -34,10 +34,10 @@ import com.samsantech.souschef.ui.OpeningScreen
 import com.samsantech.souschef.ui.ProfileScreen
 import com.samsantech.souschef.ui.ChangePasswordScreen
 import com.samsantech.souschef.ui.CreateRecipeScreenFour
-import com.samsantech.souschef.ui.HomeSc
+import com.samsantech.souschef.ui.HomeScreen
 import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.SearchScreen
-import com.samsantech.souschef.ui.SelectCuisinesScreen
+import com.samsantech.souschef.ui.SelectCategoriesScreen
 import com.samsantech.souschef.ui.SelectDislikesScreen
 import com.samsantech.souschef.ui.SelectSkillLevelScreen
 import com.samsantech.souschef.ui.SignUpOrLoginScreen
@@ -46,6 +46,7 @@ import com.samsantech.souschef.ui.UpdateEmailScreen
 import com.samsantech.souschef.ui.VerifyEmailScreen
 import com.samsantech.souschef.ui.components.ContentBottomNavigationWrapper
 import com.samsantech.souschef.ui.components.CookingAssistantUi
+import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.AuthViewModel
 import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
 import com.samsantech.souschef.viewmodel.HomeViewModel
@@ -56,7 +57,6 @@ import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.serialization.Serializable
 
-//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun SousChefApp(
     systemNavigationBarHeight: Dp,
@@ -70,7 +70,8 @@ fun SousChefApp(
     recipesViewModel: RecipesViewModel,
     searchRecipesViewModel: SearchRecipesViewModel,
     cookingAssistantViewModel: CookingAssistantViewModel,
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel,
+    algoliaInsightsViewModel: AlgoliaInsightsViewModel
 ) {
 //    val isLoading = sharedViewModel.isLoading.collectAsState()
     val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
@@ -125,8 +126,8 @@ fun SousChefApp(
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
                         },
-                        onNavigateToSelectCuisines = {
-                            navController.navigate(route = SelectCuisines) {
+                        onNavigateToSelectCategories = {
+                            navController.navigate(route = SelectCategories) {
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
                         }
@@ -181,18 +182,23 @@ fun SousChefApp(
                         }
                     )
                 }
-                composable<SelectCuisines> {
-                    SelectCuisinesScreen(
+                composable<SelectCategories> {
+                    SelectCategoriesScreen(
                         activity,
                         userViewModel = userViewModel,
-                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) },
+                        onNavigateToHome = {
+                            navController.navigate(route = Home) {
+                                popUpTo(navController.graph.id) { inclusive = true }
+                            }
+                        }
+//                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) },
                     )
                 }
                 composable<SelectDislikes> {
                     SelectDislikesScreen(
                         userViewModel = userViewModel,
-                        onNavigateToSelectCuisines = { navController.navigate(route = SelectCuisines) {
-                            popUpTo<SelectCuisines> { inclusive = true }
+                        onNavigateToSelectCategories = { navController.navigate(route = SelectCategories) {
+                            popUpTo<SelectCategories> { inclusive = true }
                         } },
                         onNavigateToSelectSkillLevel = { navController.navigate(route = SelectSkillLevel) },
                     )
@@ -259,20 +265,13 @@ fun SousChefApp(
                         },
                         ownRecipesViewModel
                     ) { paddingValues ->
-//                    HomeScreen(
-//                        paddingValues,
-//                        recipesViewModel,
-//                        onNavigateToRecipe = {
-//                            navController.navigate(route = Recipe)
-//                        },
-//                        cookingAssistantState.isCooking
-//                    )
-                        HomeSc(
+                        HomeScreen(
                             context,
                             paddingValues,
                             homeViewModel,
                             recipesViewModel,
                             userViewModel,
+                            algoliaInsightsViewModel,
                             onNavigateToRecipe = {
                                 navController.navigate(route = Recipe)
                             },
@@ -358,26 +357,15 @@ fun SousChefApp(
                         ownRecipesViewModel
                     ) { paddingValues ->
                         SearchScreen(
+                            context,
                             paddingValues,
                             searchRecipesViewModel,
                             recipesViewModel,
+                            algoliaInsightsViewModel,
                             onNavigateToRecipe = {
                                 navController.navigate(route = Recipe)
-                            },
-//                        isCooking = cookingAssistantState.isCooking
+                            }
                         )
-//                    DisplayCookingAssistantUi(
-//                        isNetworkAvailable = isNetworkAvailable,
-//                        cookingAssistantViewModel = cookingAssistantViewModel,
-//                        recipesViewModel = recipesViewModel,
-//                        onNavigateToRecipe = {
-//                            navController.navigate(route = Recipe) {
-//                                popUpTo<Recipe>() { inclusive = true }
-//                            }
-//                        },
-//                        bottomHeight = 45.dp,
-//                        isCooking = cookingAssistantState.isCooking
-//                    )
                     }
                 }
                 composable<Recipe> {
@@ -392,7 +380,9 @@ fun SousChefApp(
                         onNavigateToCreateRecipeOne = {navController.navigate(route = CreateRecipeOne)},
                         onNavigateToProfile = { navController.navigate(route = Profile) {
                             popUpTo(Recipe) {inclusive = true}
-                        } }
+                        } },
+                        sharedViewModel = sharedViewModel,
+                        algoliaInsightsViewModel = algoliaInsightsViewModel
                     )
                     DisplayCookingAssistantUi(
                         context,
@@ -401,7 +391,7 @@ fun SousChefApp(
                         sharedViewModel,
                         onNavigateToRecipe = {
                             navController.navigate(route = Recipe) {
-                                popUpTo<Recipe>() { inclusive = true }
+                                popUpTo<Recipe> { inclusive = true }
                             }
                         },
                         isCooking = cookingAssistantState.isCooking
@@ -537,7 +527,7 @@ object SignUpOrLogin
 object SignUp
 
 @Serializable
-object SelectCuisines
+object SelectCategories
 
 @Serializable
 object SelectDislikes
