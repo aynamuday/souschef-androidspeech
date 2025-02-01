@@ -154,7 +154,7 @@ fun HomeScreen(
                                                     .size(20.dp)
                                                     .clickable {
                                                         recipe.id?.let { id ->
-                                                            recipesViewModel.toggleFavoriteRecipe(
+                                                            recipesViewModel.toggleFavorite(
                                                                 id,
                                                                 !favoriteRecipes.contains(id)
                                                             ) {
@@ -306,7 +306,7 @@ fun RecipeCard(
                     .size(20.dp)
                     .clickable {
                         recipe.id?.let { id ->
-                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
+                            recipesViewModel.toggleFavorite(id, !isFavorite) {
                                 val message = if (isFavorite) {
                                     "Recipe removed from favorites"
                                 } else {

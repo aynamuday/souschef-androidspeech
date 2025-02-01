@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "528770464856",
+    "project_id": "souschef-samsantech",
+    "storage_bucket": "souschef-samsantech.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:528770464856:android:9461fcd350366f3d9f5e2d",
+        "android_client_info": {
+          "package_name": "com.samsantech.souschef"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcKBuL1Wdc6n3Ej4gh9JZTKoDwK4t-gRk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
