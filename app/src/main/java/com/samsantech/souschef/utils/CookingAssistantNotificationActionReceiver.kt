@@ -7,7 +7,7 @@ import com.samsantech.souschef.viewmodel.SharedViewModel
 
 class CookingAssistantNotificationActionReceiver: BroadcastReceiver() {
 
-    private val sharedViewModel = SharedViewModel()
+    private val sharedViewModel = SharedViewModel(null, null, null)
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             "STOP" -> {

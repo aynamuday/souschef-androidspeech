@@ -424,21 +424,10 @@ class FirebaseRecipeManager(
             val snapshot = transaction.get(recipeRef)
             val currentRatings = snapshot.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
             val updatedRatings = currentRatings.toMutableMap().apply { this[userId] = rating }
-            //val newAverageRating = updatedRatings.values.average().toFloat()
+            val newAverageRating = updatedRatings.values.average().toFloat()
 
             currentRatings[userId] = rating
 
-            if (rating == 0f) {  // Remove rating
-                updatedRatings.remove(userId)
-            } else {            // Add or update rating
-                updatedRatings[userId] = rating
-            }
-
-            val newAverageRating = if (updatedRatings.isEmpty()) {
-                0f // No ratings left
-            } else {
-                updatedRatings.values.average().toFloat()
-            }
             // Update Firestore
             transaction.update(recipeRef, mapOf(
                 "ratings" to updatedRatings,
@@ -477,4 +466,14 @@ class FirebaseRecipeManager(
             }
     }
 
+    fun setSeenPost(recipeId: String) {
+        val user = auth.currentUser
+
+        user?.uid.let { userId ->
+            db.collection("recipes")
+                .document(recipeId)
+                .update("seenBy", FieldValue.arrayUnion(userId))
+//                .update("seenBy", FieldValue.arrayRemove(userId))
+        }
+    }
 }

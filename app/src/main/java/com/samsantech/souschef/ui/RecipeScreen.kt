@@ -81,15 +81,13 @@ import com.samsantech.souschef.ui.components.VoiceCommandsGuide
 import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.NetworkHelper
 import com.samsantech.souschef.utils.getRecipeTimeText
+import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.CookingAssistantViewModel
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SharedViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 
-val sharedViewModel = SharedViewModel()
-
-//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun RecipeScreen(
     context: Context,
@@ -99,6 +97,8 @@ fun RecipeScreen(
     userViewModel: UserViewModel,
     ownRecipesViewModel: OwnRecipesViewModel,
     cookingAssistantViewModel: CookingAssistantViewModel,
+    sharedViewModel: SharedViewModel,
+    algoliaInsightsViewModel: AlgoliaInsightsViewModel,
     onNavigateToCreateRecipeOne: () -> Unit,
     onNavigateToProfile: () -> Unit,
 ) {
@@ -107,6 +107,7 @@ fun RecipeScreen(
     val recipe: Recipe by recipesViewModel.displayRecipe.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
     val cookingAssistantState by cookingAssistantViewModel.cookingAssistantState.collectAsState()
+    val voice by cookingAssistantViewModel.voice.collectAsState()
 
     val displayVoiceCommandPopUp = remember {
         mutableStateOf(false)
@@ -123,9 +124,7 @@ fun RecipeScreen(
     var loading by remember {
         mutableStateOf(false)
     }
-    var voice by remember {
-        mutableStateOf(Voice("English", "Woman", "Default"))
-    }
+
 
     val userRatingState = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(recipe.id) {
@@ -198,7 +197,6 @@ fun RecipeScreen(
                 isFavorite = isFavorite,
                 recipesViewModel,
                 rating = userRatingState.value,
-                userRatingState = userRatingState,
                 averageRating = averageRating,
                 onRateRecipe = { newRating ->
                     recipe.id?.let {
@@ -207,6 +205,9 @@ fun RecipeScreen(
                                 userRatingState.value = newRating
                                 averageRating = (updatedAverageRating ?: averageRating)
                             }
+                        }
+                        if (newRating >= 4.0) {
+                            algoliaInsightsViewModel.sendRatedARecipeEvent(it)
                         }
                     }
                 },
@@ -220,7 +221,8 @@ fun RecipeScreen(
                         }
                     }
                 },
-                context = context
+                context = context,
+                algoliaInsightsViewModel = algoliaInsightsViewModel
             )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
@@ -232,7 +234,8 @@ fun RecipeScreen(
                 recipe,
                 displayVoiceCommandPopUp = { displayVoiceCommandPopUp.value = it },
                 manageBluetoothSettings = { manageVoiceSettings = true },
-                cookingAssistantState
+                cookingAssistantState,
+                sharedViewModel
             )
         }
     }
@@ -252,11 +255,16 @@ fun RecipeScreen(
     if (manageVoiceSettings) {
         ManageVoiceSettings(
             voice,
-            isCloseIconClicked = { manageVoiceSettings = false },
+            isCloseIconClicked = {
+                manageVoiceSettings = false
+            },
             onTry = {
+                cookingAssistantViewModel.testVoice(it)
             },
             onSave = {
-
+                cookingAssistantViewModel.changeVoice(it)
+                cookingAssistantViewModel.stopSynthesis()
+                manageVoiceSettings = false
             }
         )
     }
@@ -293,9 +301,9 @@ fun RecipeMetadata(
     rating: Float,
     averageRating: Float,
     removeRating: () -> Unit,
-    userRatingState: MutableState<Float>,
     onRateRecipe: (Float) -> Unit,
-    context: Context
+    context: Context,
+    algoliaInsightsViewModel: AlgoliaInsightsViewModel
 ) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
@@ -337,7 +345,7 @@ fun RecipeMetadata(
                     rating = rating,
                     onRateRecipe = onRateRecipe)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "( ${"%.1f".format(averageRating)} ratings)", fontSize = 12.sp)
+                Text(text = "( ${"%.1f".format(averageRating)})", fontSize = 12.sp)
             }
 
             Text(
@@ -352,7 +360,7 @@ fun RecipeMetadata(
                     }
                 ,
                 fontStyle = FontStyle.Italic,
-                color = if (rating > 0) Color.Blue else Color.LightGray // You can customize the color
+                color = Color.Gray
             )
 //            Text(
 //                text = "Leave a rating", // or edit rating if rated already
@@ -384,6 +392,10 @@ fun RecipeMetadata(
                                         .makeText(context, message, Toast.LENGTH_SHORT)
                                         .show()
                                 }
+
+                                if (isFavorite) {
+                                    recipe.id?.let { algoliaInsightsViewModel.sendAddedToFavoritesEvent(it) }
+                                }
                             }
                         },
                 )
@@ -396,6 +408,7 @@ fun RecipeMetadata(
                     .size(28.dp)
                     .clickable {
                         shareRecipeViaEmail(recipe, context)
+                        recipe.id?.let { algoliaInsightsViewModel.sendSharedARecipeEvent(it) }
                     }
             )
         }
@@ -504,7 +517,7 @@ fun FiveStarRate(
                 contentDescription = null,
                 tint = starColor,
                 modifier = Modifier
-                    .size(18.dp)
+                    .size(24.dp)
                     .clickable { onRateRecipe(i.toFloat()) }
             )
         }
@@ -578,7 +591,8 @@ fun RecipeInstructions(
     recipe: Recipe,
     displayVoiceCommandPopUp: (Boolean) -> Unit,
     manageBluetoothSettings: (Boolean) -> Unit,
-    cookingAssistantState: CookingAssistantState
+    cookingAssistantState: CookingAssistantState,
+    sharedViewModel: SharedViewModel
 ) {
     val showRecordAudioRationaleDialog = remember {
         mutableStateOf(false)

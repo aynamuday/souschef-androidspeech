@@ -41,7 +41,7 @@ fun OwnRecipeActionMenu(
                 } else if (key == "Edit") {
                     setShowRecipeActionMenu(false)
                     ownRecipesViewModel.action.value = OwnRecipeAction.EDIT
-                    ownRecipesViewModel.recipe.value = recipeWithAction!!
+                    ownRecipesViewModel.actionRecipe.value = recipeWithAction!!
                     ownRecipesViewModel.originalData.value = recipeWithAction
                     onNavigateToCreateRecipeOne()
                 }

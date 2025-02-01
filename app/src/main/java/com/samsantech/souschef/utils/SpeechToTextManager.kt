@@ -97,7 +97,7 @@ class SpeechToTextManager(private val context: Context) {
         )
         recognizerIntent!!.putExtra(
             RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
-            4000
+            3000
         )
         recognizerIntent!!.putExtra(
             RecognizerIntent.EXTRA_AUDIO_SOURCE,

@@ -118,7 +118,7 @@ fun SelectSkillLevelScreen(
                 Spacer(modifier = Modifier.width(12.dp))
                 ColoredButton(
                     onClick = {
-                        if (preferences.cuisines?.isEmpty() == true && preferences.dislikes?.isEmpty() == true && preferences.skillLevel.isEmpty()) {
+                        if (preferences.categories?.isEmpty() == true && preferences.dislikes?.isEmpty() == true && preferences.skillLevel.isEmpty()) {
                             loading = true
 
                             userViewModel.setUserPreferences() {

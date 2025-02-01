@@ -1,5 +1,6 @@
 package com.samsantech.souschef.ui
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -18,92 +19,149 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.data.SearchRecipe
 import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
+import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
+import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
-import com.samsantech.souschef.ui.components.Header
+import com.samsantech.souschef.viewmodel.UserViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun HomeScreen(
+    context: Context,
     paddingValues: PaddingValues,
+    homeViewModel: HomeViewModel,
     recipesViewModel: RecipesViewModel,
+    userViewModel: UserViewModel,
+    algoliaInsightsViewModel: AlgoliaInsightsViewModel,
     onNavigateToRecipe: () -> Unit,
     isCooking: Boolean
 ) {
-    val recipes by recipesViewModel.allRecipes.collectAsState()
+    val pagingHits = homeViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
+    val lazyState = rememberLazyGridState()
+    val loadingState = homeViewModel.loadingState
+    val user = userViewModel.user
+
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
-    val context = LocalContext.current
 
-    Box {
-        Column(modifier = Modifier.padding(top = 30.dp)) {
-//            Header()
+    LaunchedEffect(lazyState) {
+        snapshotFlow { lazyState.layoutInfo.visibleItemsInfo }
+            .collectLatest { visibleItems ->
+                if (visibleItems.isNotEmpty()) {
+                    val index = visibleItems.first().index
+                    val recipe = pagingHits[index]
+                    recipe?.objectID?.let { recipesViewModel.setSeenPost(it) }
+                }
+            }
+    }
 
-            Column(
+    Column(
+        modifier = Modifier
+            .padding(paddingValues)
+            .padding(start = 12.dp, end = 12.dp, top = 30.dp, bottom = if (isCooking) 120.dp else 20.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        if (loadingState.loading) {
+            Box(
                 modifier = Modifier
-                    .padding(paddingValues)
-                    .padding(bottom = if (isCooking) 120.dp else 0.dp)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .width(25.dp),
+                    color = Color.White,
+                    trackColor = Green,
+                    strokeWidth = 3.dp
+                )
+            }
+        } else {
+            if (pagingHits.itemCount <= 0) {
+                Text(
+                    text = "No recipes",
+                    fontStyle = FontStyle.Italic,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                BoxWithConstraints {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(1),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        state = lazyState
                     ) {
-                        items(recipes) { recipe ->
-                            if (recipe.isTikTok) {
+                        items(pagingHits.itemCount) { index ->
+                            val item = pagingHits[index] ?: return@items
+
+                            var userRating by remember {
+                                mutableFloatStateOf(item.ratings?.get(user.value?.uid) ?: 0f)
+                            }
+                            var averageRating by remember {
+                                mutableFloatStateOf(item.averageRating ?: 0f)
+                            }
+
+                            val isFavorite = item.objectID in favoriteRecipes
+
+                            if (item.isTikTok == true) {
                                 BoxWithConstraints {
                                     val maxWidth = maxWidth
                                     Column {
                                         Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
                                             val width = maxWidth
-                                            recipe.postId?.let {
-                                                TikTokWebView(
-                                                    postId = it,
-                                                    width = width.value.toInt(),
-                                                    height = 550
-                                                )
-                                            }
+                                            TikTokWebView(
+                                                postId = item.postId,
+                                                width = width.value.toInt(),
+                                                height = 550,
+                                                onPlayed = {
+                                                    item.objectID?.let { algoliaInsightsViewModel.sendViewedARecipeEvent(it) }
+                                                }
+                                            )
                                         }
                                         Row(modifier = Modifier.fillMaxWidth()) {
-                                            Text(
-                                                text = recipe.title,
+                                            androidx.compose.material3.Text(
+                                                text = item.title,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(top = 8.dp)
                                             )
                                             Spacer(modifier = Modifier.width(16.dp))
-
-
                                         }
                                         // Ratings Row
                                         Row(
@@ -114,63 +172,68 @@ fun HomeScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             // Stars for User Rating
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
-                                                Row {
-                                                    val userRating = recipe.userRating ?: 0f
-                                                    val averageRating = recipe.averageRating ?: 0f
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
                                                     (1..5).forEach { star ->
                                                         Icon(
-                                                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
+                                                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
                                                             contentDescription = "Rate $star stars",
-                                                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                                                            tint = if (star <= userRating) Color(
+                                                                0xFFFFA500
+                                                            ) else Color.Gray,
                                                             modifier = Modifier
                                                                 .size(18.dp)
                                                                 .clickable {
-                                                                    recipesViewModel.rateRecipe(
-                                                                        recipe.id ?: "",
-                                                                        star.toFloat()
-                                                                    ) { _, _ -> }
+                                                                    item.objectID?.let {
+                                                                        recipesViewModel.rateRecipe(it, star.toFloat()) { isSuccess, newAverageRating ->
+                                                                            if (isSuccess) {
+                                                                                userRating =
+                                                                                    star.toFloat()
+                                                                                if (newAverageRating != null) {
+                                                                                    averageRating =
+                                                                                        if (item.ratings != null) newAverageRating else userRating
+                                                                                }
+                                                                            }
+                                                                        }
+
+                                                                        if (star.toFloat() >= 4.0) {
+                                                                            algoliaInsightsViewModel.sendRatedARecipeEvent(it)
+                                                                        }
+                                                                    }
                                                                 }
                                                         )
                                                     }
-                                                }
 
-                                                // Average Rating Text
-                                                Text(
-                                                    text = String.format("%.1f", recipe.averageRating ?: 0f),
-                                                    fontSize = 12.sp,
-                                                    color = Color.Gray
-                                                )
+                                                    Text(
+                                                        text = "   %.1f".format(averageRating) + "  (${item.ratings?.size ?: 0} ratings)",
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray,
+                                                    )
+                                                }
                                             }
 
                                             Icon(
-                                                imageVector = if (favoriteRecipes.contains(recipe.id)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                                                imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                                                 contentDescription = "Bookmark",
-                                                tint = if (favoriteRecipes.contains(recipe.id)) Green else Color.Gray,
+                                                tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
                                                 modifier = Modifier
                                                     .size(20.dp)
                                                     .clickable {
-                                                        recipe.id?.let { id ->
-                                                            recipesViewModel.toggleFavoriteRecipe(
-                                                                id,
-                                                                !favoriteRecipes.contains(id)
-                                                            ) {
-                                                                val message =
-                                                                    if (favoriteRecipes.contains(id)) {
+                                                        item.objectID?.let { id ->
+                                                            recipesViewModel.toggleFavorite(id, !favoriteRecipes.contains(id)) {
+                                                                val message = if (favoriteRecipes.contains(id)) {
                                                                         "Recipe added to favorites"
                                                                     } else {
                                                                         "Recipe removed from favorites"
                                                                     }
-                                                                Toast
-                                                                    .makeText(
-                                                                        context,
-                                                                        message,
-                                                                        Toast.LENGTH_SHORT
-                                                                    )
-                                                                    .show()
+                                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                                            }
+
+                                                            if (!favoriteRecipes.contains(id)) {
+                                                                algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
                                                             }
                                                         }
                                                     }
@@ -180,12 +243,40 @@ fun HomeScreen(
                                 }
                             } else {
                                 RecipeCard(
-                                    recipe = recipe,
-                                    recipesViewModel = recipesViewModel,
-                                    favoriteRecipes = favoriteRecipes
-                                ) {
-                                    onNavigateToRecipe()
-                                }
+                                    recipe = item,
+                                    isFavorite = isFavorite,
+                                    averageRating,
+                                    onDisplayRecipe = { id ->
+                                        recipesViewModel.getRecipe(id) { isSuccess, err, recipe ->
+                                            if (isSuccess) {
+                                                if (recipe != null) {
+                                                    recipesViewModel.displayRecipe.value = recipe
+                                                    onNavigateToRecipe()
+                                                }
+                                            } else {
+                                                Toast
+                                                    .makeText(context, err, Toast.LENGTH_LONG)
+                                                    .show()
+                                            }
+                                        }
+
+                                        algoliaInsightsViewModel.sendViewedARecipeEvent(id)
+                                    },
+                                    onToggleFavorite = { id ->
+                                        recipesViewModel.toggleFavorite(id, !isFavorite) {
+                                            val message = if (isFavorite) {
+                                                "Recipe removed from favorites"
+                                            } else {
+                                                "Recipe added to favorites"
+                                            }
+                                            Toast
+                                                .makeText(context, message, Toast.LENGTH_SHORT)
+                                                .show()
+                                        }
+
+                                        algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
+                                    }
+                                )
                             }
                         }
                     }
@@ -198,16 +289,12 @@ fun HomeScreen(
 
 @Composable
 fun RecipeCard(
-    recipe: Recipe,
-    recipesViewModel: RecipesViewModel,
-    favoriteRecipes: Set<String>,
-    onNavigateToRecipe: () -> Unit
+    recipe: SearchRecipe,
+    isFavorite: Boolean,
+    averageRating: Float,
+    onDisplayRecipe: (String) -> Unit,
+    onToggleFavorite: (String) -> Unit
 ) {
-    val isFavorite = recipe.id in favoriteRecipes
-    val userRating = recipe.userRating ?: 0f
-    val averageRating = recipe.averageRating ?: 0f
-    val context = LocalContext.current
-
     val photoUrl: Uri? = when {
         recipe.photosUrl["portrait"] != null -> Uri.parse("${recipe.photosUrl["portrait"]}")
         recipe.photosUrl["square"] != null -> Uri.parse("${recipe.photosUrl["square"]}")
@@ -218,8 +305,9 @@ fun RecipeCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                recipesViewModel.displayRecipe.value = recipe
-                onNavigateToRecipe()
+                if (recipe.objectID != null) {
+                    onDisplayRecipe(recipe.objectID!!)
+                }
             }
     ) {
         Box(
@@ -246,7 +334,7 @@ fun RecipeCard(
                         .align(Alignment.Center)
                 )
             } else {
-                Text(
+                androidx.compose.material3.Text(
                     text = "No Image",
                     color = Color.Gray,
                     fontSize = 14.sp,
@@ -269,33 +357,24 @@ fun RecipeCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     (1..5).forEach { star ->
                         Icon(
-                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
                             contentDescription = "Rate $star stars",
-                            tint = if (star <= userRating) Color(0xFFFFA500) else Color.Gray,
+                            tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
                             modifier = Modifier
                                 .size(18.dp)
-                                .clickable {
-                                    recipesViewModel.rateRecipe(
-                                        recipe.id ?: "",
-                                        star.toFloat()
-                                    ) { _, _ -> }
-                                }
                         )
                     }
-                }
 
-                Text(
-                    text = String.format("%.1f", averageRating),
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                    Text(
+                        text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                    )
+                }
             }
 
             Icon(
@@ -305,17 +384,8 @@ fun RecipeCard(
                 modifier = Modifier
                     .size(20.dp)
                     .clickable {
-                        recipe.id?.let { id ->
-                            recipesViewModel.toggleFavoriteRecipe(id, !isFavorite) {
-                                val message = if (isFavorite) {
-                                    "Recipe removed from favorites"
-                                } else {
-                                    "Recipe added to favorites"
-                                }
-                                Toast
-                                    .makeText(context, message, Toast.LENGTH_SHORT)
-                                    .show()
-                            }
+                        recipe.objectID?.let { id ->
+                            onToggleFavorite(id)
                         }
                     }
             )

@@ -22,7 +22,7 @@ class RecipesViewModel (
         }
     }
 
-    fun refreshFavoriteRecipes() {
+    private fun refreshFavoriteRecipes() {
         firebaseRecipeManager.getUserFavoriteRecipes { favorites ->
             favoriteRecipes.value = favorites.toSet()
         }
@@ -89,5 +89,9 @@ class RecipesViewModel (
             }
             callback(isSuccess)
         }
+    }
+
+    fun setSeenPost(recipeId: String) {
+        firebaseRecipeManager.setSeenPost(recipeId)
     }
 }

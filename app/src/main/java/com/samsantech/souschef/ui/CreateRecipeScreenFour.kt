@@ -65,7 +65,7 @@ fun CreateRecipeScreenFour(
     closeCreateRecipe: () -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    val recipe by ownRecipesViewModel.recipe.collectAsState()
+    val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
     val action by ownRecipesViewModel.action.collectAsState()
     val originalData by ownRecipesViewModel.originalData.collectAsState()
     var changes by remember {
@@ -196,16 +196,12 @@ fun CreateRecipeScreenFour(
                     Spacer(modifier = Modifier.height(20.dp))
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = recipe.audience, fontWeight = FontWeight(600))
+                            Text(text = "Public", fontWeight = FontWeight(600))
                             Spacer(modifier = Modifier.width(12.dp))
                             Switch(
                                 checked = recipe.audience == "Public",
                                 onCheckedChange = {
-                                    val audience: String = if (recipe.audience == "Public") {
-                                        "Only me"
-                                    } else {
-                                        "Public"
-                                    }
+                                    val audience: String = if (recipe.audience == "Public") "Only me" else "Public"
                                     ownRecipesViewModel.toggleAudience(audience)
                                 },
                                 modifier = Modifier
@@ -220,11 +216,6 @@ fun CreateRecipeScreenFour(
                                 )
                             )
                         }
-                        Text(
-                            text = if (recipe.audience == "Only me") "Only you can see this recipe" else "Other users can see your recipe",
-                            fontSize = 12.sp,
-                            fontStyle = FontStyle.Italic
-                        )
                     }
 
                 }
