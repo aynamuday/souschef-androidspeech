@@ -17,32 +17,21 @@ import com.algolia.instantsearch.searchbox.SearchMode
 import com.algolia.instantsearch.searchbox.connectView
 import com.algolia.instantsearch.searcher.connectFilterState
 import com.algolia.instantsearch.searcher.hits.HitsSearcher
-import com.algolia.search.client.ClientSearch
-import com.algolia.search.model.APIKey
-import com.algolia.search.model.ApplicationID
-import com.algolia.search.model.Attribute
-import com.algolia.search.model.IndexName
-import com.algolia.search.model.filter.Filter
-import com.algolia.search.model.insights.UserToken
-import com.algolia.search.model.response.ResponseSearch
+import com.algolia.search.helper.deserialize
+import com.algolia.instantsearch.filter.Filter
 import com.algolia.search.model.search.Query
+import com.samsantech.souschef.BuildConfig
 import com.samsantech.souschef.data.SearchRecipe
 
 class HomeViewModel: ViewModel() {
-    private val appID = ApplicationID("JLQPKQBVUP")
-    private val apiKey = APIKey("26ef1633753e107ebeecd0d69264f86e")
-    private val indexName = IndexName("souschef-recipes")
-
     private var searcher = HitsSearcher(
-        ClientSearch(appID, apiKey),
-        indexName,
+        BuildConfig.ALGOLIA_APP_ID, BuildConfig.ALGOLIA_API_KEY, BuildConfig.ALGOLIA_INDEX_NAME,
         query = Query(
             personalizationImpact = 70
         )
     )
 
     private lateinit var filterState: FilterState
-    private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
     private var searchBoxState = SearchBoxState()
     lateinit var hitsPaginator: Paginator<SearchRecipe>
     var loadingState = LoadingState()
@@ -54,25 +43,25 @@ class HomeViewModel: ViewModel() {
     }
 
     fun updateUserToken(userId: String?, categories: List<String>? = null) {
-        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
-        val optionalFilters = mutableListOf<List<String>>()
+        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
+//        val optionalFilters = mutableListOf<List<String>>()
         if (userId != null) {
-            optionalFilters.add(listOf("seenBy:-$userId"))
+//            optionalFilters.add(listOf("seenBy:-$userId"))
 
             if (!categories.isNullOrEmpty()) {
                 val categoriesFilter = mutableListOf<String>()
                 categories.forEach {
                     categoriesFilter.add("categories:$it")
                 }
-                optionalFilters.add(categoriesFilter)
+//                optionalFilters.add(categoriesFilter)
             }
         }
-        if (optionalFilters.isNotEmpty()) {
-            searcher.query.optionalFilters = optionalFilters
-        }
+//        if (optionalFilters.isNotEmpty()) {
+//            searcher.query.optionalFilters = optionalFilters
+//        }
 
         filterState = FilterState()
-        searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
+        val searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
         hitsPaginator = Paginator(searcher) {
             it.deserialize(SearchRecipe.serializer())
         }
@@ -87,9 +76,9 @@ class HomeViewModel: ViewModel() {
         connections += searchBoxConnector.connectPaginator(hitsPaginator)
         connections += loadingConnector.connectView(loadingState)
 
-        val audienceIdFilter = mutableSetOf(Filter.Facet(Attribute("audience"), "Public"))
+        val audienceIdFilter = mutableSetOf(Filter.Facet("audience", "Public"))
         if (userId != null) {
-            audienceIdFilter.add(Filter.Facet(Attribute("userId"), userId, isNegated = true))
+            audienceIdFilter.add(Filter.Facet("userId", userId, isNegated = true))
         }
         filterState.notify {
             add(

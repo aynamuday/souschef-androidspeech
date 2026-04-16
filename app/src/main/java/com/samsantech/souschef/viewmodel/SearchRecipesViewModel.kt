@@ -4,8 +4,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.lifecycle.ViewModel
 import com.algolia.instantsearch.android.paging3.Paginator
 import com.algolia.instantsearch.android.paging3.searchbox.connectPaginator
-import com.algolia.instantsearch.compose.loading.LoadingState
-import com.algolia.instantsearch.compose.searchbox.SearchBoxState
 import com.algolia.instantsearch.core.connection.ConnectionHandler
 import com.algolia.instantsearch.filter.state.FilterGroupID
 import com.algolia.instantsearch.filter.state.FilterOperator
@@ -20,14 +18,12 @@ import com.algolia.instantsearch.searchbox.connectView
 import com.algolia.instantsearch.searcher.connectFilterState
 import com.algolia.instantsearch.searcher.hits.HitsSearcher
 import com.algolia.instantsearch.searcher.hits.SearchForQuery
-import com.algolia.search.model.APIKey
-import com.algolia.search.model.ApplicationID
-import com.algolia.search.model.Attribute
-import com.algolia.search.model.IndexName
-import com.algolia.search.model.filter.Filter
-import com.algolia.search.model.insights.UserToken
-import com.algolia.search.model.response.ResponseSearch
+import com.algolia.instantsearch.filter.Filter
+import com.algolia.instantsearch.compose.loading.LoadingState
+import com.algolia.instantsearch.compose.searchbox.SearchBoxState
+import com.algolia.search.helper.deserialize
 import com.algolia.search.model.search.Query
+import com.samsantech.souschef.BuildConfig
 import com.samsantech.souschef.data.SearchRecipe
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -38,14 +34,8 @@ class SearchRecipesViewModel: ViewModel() {
     val hasSearched = MutableStateFlow(false)
     val gridState = MutableStateFlow(LazyGridState())
 
-    private val appID = ApplicationID("JLQPKQBVUP")
-    private val apiKey = APIKey("26ef1633753e107ebeecd0d69264f86e")
-    private val indexName = IndexName("souschef-recipes")
-
     private var searcher = HitsSearcher(
-        applicationID = appID,
-        apiKey = apiKey,
-        indexName = indexName,
+        BuildConfig.ALGOLIA_APP_ID, BuildConfig.ALGOLIA_API_KEY, BuildConfig.ALGOLIA_INDEX_NAME,
         triggerSearchFor = SearchForQuery.lengthAtLeast(1),
         isDisjunctiveFacetingEnabled = false,
         query = Query(
@@ -54,10 +44,11 @@ class SearchRecipesViewModel: ViewModel() {
     )
 
     private lateinit var filterState: FilterState
-    private lateinit var searchBoxConnector: SearchBoxConnector<ResponseSearch>
+    private var searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
     private var searchBoxState = SearchBoxState()
     lateinit var hitsPaginator: Paginator<SearchRecipe>
-    var loadingState = LoadingState()
+    var loadingState = LoadingState();
+
     private var loadingConnector = LoadingConnector(searcher)
     private lateinit var connections: ConnectionHandler
 
@@ -66,7 +57,7 @@ class SearchRecipesViewModel: ViewModel() {
     }
 
     fun updateUserToken(userId: String?) {
-        searcher.query.userToken = if (userId.isNullOrEmpty()) null else UserToken(userId)
+        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
 
         filterState = FilterState()
         searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
@@ -84,9 +75,9 @@ class SearchRecipesViewModel: ViewModel() {
         connections += searchBoxConnector.connectPaginator(hitsPaginator)
         connections += loadingConnector.connectView(loadingState)
 
-        val audienceIdFilter = mutableSetOf(Filter.Facet(Attribute("audience"), "Public"))
+        val audienceIdFilter = mutableSetOf(Filter.Facet("audience", "Public"))
         if (userId != null) {
-            audienceIdFilter.add(Filter.Facet(Attribute("userId"), userId))
+            audienceIdFilter.add(Filter.Facet("userId", userId))
         }
         filterState.notify {
             add(
@@ -121,7 +112,7 @@ class SearchRecipesViewModel: ViewModel() {
             add(
                 categoriesId,
                 setOf(
-                    Filter.Facet(Attribute("categories"), category)
+                    Filter.Facet("categories", category)
                 )
             )
         }
@@ -135,7 +126,7 @@ class SearchRecipesViewModel: ViewModel() {
             remove(
                 categoriesId,
                 setOf(
-                    Filter.Facet(Attribute("categories"), category)
+                    Filter.Facet("categories", category)
                 )
             )
         }
