@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
@@ -91,20 +92,21 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
                 val firebaseRecipeManager = FirebaseRecipeManager(auth, db, storage)
 
                 val algoliaInsightsViewModel = AlgoliaInsightsViewModel(this.applicationContext)
-                val homeViewModel = HomeViewModel()
-                val searchRecipesViewModel = SearchRecipesViewModel()
+                val homeViewModel = viewModel<HomeViewModel>()
+                val searchRecipesViewModel = viewModel<SearchRecipesViewModel>()
                 sharedViewModel = SharedViewModel(algoliaInsightsViewModel, homeViewModel, searchRecipesViewModel)
                 val authViewModel = AuthViewModel(firebaseAuthManager)
                 val userViewModel = UserViewModel(firebaseAuthManager, firebaseUserManager, sharedViewModel, homeViewModel)
                 val recipesViewModel = RecipesViewModel(firebaseRecipeManager)
                 val ownRecipesViewModel = OwnRecipesViewModel(userViewModel, firebaseRecipeManager, recipesViewModel)
-                val cookingAssistantViewModel = CookingAssistantViewModel(context = this.applicationContext, textToSpeechManager = textToSpeechManager!!)
+                cookingAssistantViewModel = CookingAssistantViewModel(context = this.applicationContext, textToSpeechManager = textToSpeechManager!!)
                 CookingAssistantViewModelProvider.cookingAssistantViewModel = cookingAssistantViewModel
                 OwnRecipesViewModelProvider.ownRecipesViewModel = ownRecipesViewModel
                 UserViewModelProvider.userViewModel = userViewModel
 
                 val user = auth.currentUser
                 sharedViewModel.updateAlgoliaQueriesUserToken(user?.uid)
+
                 SousChefApp(
                     systemNavigationBarHeight,
                     user,
@@ -123,13 +125,14 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
             }
         }
 
-    networkChangeReceiver = networkHelper.networkChangeReceiver(this)
-    registerReceiver(networkChangeReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
-    NetworkStateProvider.isNetworkAvailable = isNetworkAvailable
+        networkChangeReceiver = networkHelper.networkChangeReceiver(this)
+        registerReceiver(networkChangeReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        NetworkStateProvider.isNetworkAvailable = isNetworkAvailable
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-            == PackageManager.PERMISSION_GRANTED) {
-            manageBluetooth()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED)
+        {
+                manageBluetooth()
         }
     }
 

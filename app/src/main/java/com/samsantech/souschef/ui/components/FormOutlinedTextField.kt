@@ -37,9 +37,9 @@ fun FormOutlinedTextField(value: String, onValueChange: (String) -> Unit,
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         shape = RoundedCornerShape(16.dp),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = Color.Black,
-            unfocusedBorderColor = Color.Black
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Black,
+            unfocusedIndicatorColor = Color.Black
         ),
     )
 }

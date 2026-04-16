@@ -66,9 +66,9 @@ fun PasswordOutlinedTextField(value: String, onValueChange: (String) -> Unit,
         },
         shape = RoundedCornerShape(16.dp),
         visualTransformation = if (!showPassword) { PasswordVisualTransformation() } else { VisualTransformation.None } ,
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = Color.Black,
-            unfocusedBorderColor = Color.Black
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Black,
+            unfocusedIndicatorColor = Color.Black
         ),
     )
 }

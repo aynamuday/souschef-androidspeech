@@ -27,9 +27,9 @@ fun FormTextField(modifier: Modifier = Modifier, value: String, onValueChange: (
         ),
         maxLines = maxLines,
         modifier = modifier,
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = Color.Black,
-            unfocusedBorderColor = Color.Black
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Black,
+            unfocusedIndicatorColor = Color.Black
         ),
         placeholder = {
             Text(text = placeholder, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
