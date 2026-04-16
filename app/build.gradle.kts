@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -9,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.samsantech.souschef"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.samsantech.souschef"
@@ -22,6 +24,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val properties = Properties()
+        properties.load(project.rootProject.file("local.properties").inputStream())
+        buildConfigField("String", "ALGOLIA_APP_ID", "${properties.getProperty("algoliaAppId")}")
+        buildConfigField("String", "ALGOLIA_API_KEY", "${properties.getProperty("algoliaApiKey")}")
+        buildConfigField("String", "ALGOLIA_INDEX_NAME", "${properties.getProperty("algoliaIndexName")}")
     }
 
     buildTypes {
@@ -42,6 +50,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -62,8 +71,6 @@ android {
 }
 
 dependencies {
-
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -101,20 +108,19 @@ dependencies {
     implementation ("com.sendgrid:sendgrid-java:4.9.3")
     implementation("com.itextpdf:itextg:5.5.10")
 
-    implementation ("com.algolia:instantsearch-compose:3.3.1")
-    implementation ("com.algolia:instantsearch-android-paging3:3.3.1")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
     implementation ("androidx.compose.material:material-icons-extended:1.7.6")
     implementation ("io.coil-kt:coil-compose:2.1.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
-    implementation("com.algolia:instantsearch-compose:3.3.1")
-    implementation("com.algolia:instantsearch-android-paging3:3.3.1")
-    implementation("com.algolia:instantsearch-insights-android:3.+")
+    implementation("com.algolia:instantsearch-android:4.+")
+    implementation("com.algolia:instantsearch-android-paging3:4.+")
+    implementation("com.algolia:instantsearch-insights-android:4.0.1")
+    implementation("com.algolia:instantsearch-compose:4.+")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.+")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.+")
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
     implementation("androidx.compose.material:material-icons-extended:1.7.6")
 }
 
