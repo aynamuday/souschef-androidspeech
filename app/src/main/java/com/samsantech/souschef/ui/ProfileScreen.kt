@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -223,7 +224,7 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(5.dp))
 
-                ColoredButton(onClick = onNavigateToEditProfile, text = "Edit Profile")
+                ColoredButton(onClick = onNavigateToEditProfile, text = "Settings")
                 Spacer(modifier = Modifier.height(3.dp))
 
                 Row(
@@ -318,7 +319,10 @@ fun ProfileScreen(
                         if (favoriteRecipeList.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
-                                modifier = Modifier.padding(top = 8.dp),
+                                modifier = Modifier
+                                    .padding(top = 8.dp)
+                                    .fillMaxWidth(),
+                                fontSize = 14.sp,
                                 fontStyle = FontStyle.Italic,
                                 color = Color.Black.copy(.7f),
                                 textAlign = TextAlign.Center

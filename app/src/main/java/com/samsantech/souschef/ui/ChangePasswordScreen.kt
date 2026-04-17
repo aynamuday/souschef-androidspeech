@@ -168,6 +168,7 @@ fun ChangePasswordScreen(
                     authViewModel.logout()
                     onNavigateToLogin()
                 } else {
+                    showConfirmDialog = false
                     error = errorMessage ?: "An error occurred. Please try again."
                 }
             }

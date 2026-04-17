@@ -48,7 +48,7 @@ fun GetStartedScreen(activity: ComponentActivity, onNavigateToSignUpOrLogin: () 
         Spacer(
             modifier = Modifier
                 .matchParentSize()
-                .background(Color.Gray.copy(alpha = .2f))
+                .background(Color.Black.copy(alpha = .3f))
         )
         Column(
             modifier = Modifier
@@ -64,29 +64,13 @@ fun GetStartedScreen(activity: ComponentActivity, onNavigateToSignUpOrLogin: () 
                     text = "SOUCHEF",
                     color = Color.White,
                     fontSize = 40.sp,
-                    fontFamily = Konkhmer_Sleokcher,
-                    style = LocalTextStyle.current.merge(
-                        TextStyle(
-                            lineHeight = 0.em,
-                            platformStyle = PlatformTextStyle(
-                                includeFontPadding = false
-                            )
-                        )
-                    )
+                    fontFamily = Konkhmer_Sleokcher
                 )
                 Text(
                     text = "Your Assistant to Culinary Success",
                     color = Color(0xFFFFD600),
                     fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Bold,
-                    style = LocalTextStyle.current.merge(
-                        TextStyle(
-                            lineHeight = 0.em,
-                            platformStyle = PlatformTextStyle(
-                                includeFontPadding = false
-                            )
-                        )
-                    )
+                    fontWeight = FontWeight.Bold
                 )
             }
             ColoredButton(
