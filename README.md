@@ -14,15 +14,19 @@
 3. Set the package name to `com.samsantech.souschef`
 4. Download the configuration file (`google-services.json`) and copy to Android Studio project's app-level directory
 5. Setup **Authentication**
-   - Under sign-in method tab, choose *Email/Password*
-   - Under settings tab, enforce password policy
-6. Initialize **Firestore** and **Storage**
+   - Under Sign-in Method tab, choose *Email/Password*
+   - Under Settings tab, enforce password policy
+6. Initialize **Firestore**
+   - Under Indexes tab, create an index with the following:
+     - Collection ID: *recipes*
+     - Fields to index: *userId (ascending), createdAt (descending), __name__ (descending)*
+7. Initialize **Storage**
 
 ## Algolia
 1. In Firebase Extensions, install **Search Firestore with Algolia**
 2. Configure the following:
    - Collection Path: *recipes*
-   - Indexable Fields: *userName,title,mealTypes,categories,tags,ingredients,userRating,averageRating*
+   - Indexable Fields: *userName,title,categories,tags,ingredients,userRating,averageRating,photosUrl*
    - Algolia Index Name: *souschef*
    - Algolia Application ID
    - Algolia API Key
