@@ -42,7 +42,7 @@ import com.samsantech.souschef.viewmodel.UserViewModel
 fun UpdateEmailScreen(
     authViewModel: AuthViewModel,
     userViewModel: UserViewModel,
-    onNavigateToLogin: () -> Unit,
+    onNavigateToVerifyEmail: () -> Unit,
 ) {
     val user by userViewModel.user.collectAsState()
 
@@ -160,7 +160,7 @@ fun UpdateEmailScreen(
         if (showConfirmDialog) {
             ConfirmDialog(
                 message = "Are you sure?",
-                subMessage = "You will be logged out to verify your email.",
+                subMessage = "You will be logged out. Please verify your email with the message sent to your inbox.",
                 buttonOkayName = "Update",
                 onClickCancel = { showConfirmDialog = false }) {
                     loading = true
@@ -173,7 +173,7 @@ fun UpdateEmailScreen(
                                 println()
                             }
                             authViewModel.logout()
-                            onNavigateToLogin()
+                            onNavigateToVerifyEmail()
                         } else {
                             showConfirmDialog = false
                             if (errorMessage != null) {

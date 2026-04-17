@@ -194,7 +194,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         if (!task.isSuccessful) {
                             callback(false, getErrorMessage(task.exception))
                         } else {
-                            user.updateEmail(newEmail)
+                            user.verifyBeforeUpdateEmail(newEmail)
                                 .addOnCompleteListener {
                                     if (it.isSuccessful) {
                                         updateProfile(username = username, email = newEmail) { _, err ->

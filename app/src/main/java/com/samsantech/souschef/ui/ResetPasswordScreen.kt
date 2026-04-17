@@ -36,10 +36,12 @@ import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.viewmodel.AuthViewModel
+import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun ResetPasswordScreen(
     authViewModel: AuthViewModel,
+    userViewModel: UserViewModel,
     onNavigateToLogin: () -> Unit
 ) {
     var email by remember {
@@ -106,11 +108,19 @@ fun ResetPasswordScreen(
                             error = "Please provide a valid email address."
                         } else {
                             loading = true
-                            authViewModel.resetPassword(email) { isSuccess, errorMessage ->
-                                loading = false
-                                success = isSuccess
-                                if (errorMessage != null) {
-                                    error = errorMessage
+
+                            userViewModel.isEmailExists(email) {isExists ->
+                                if (!isExists) {
+                                    loading = false
+                                    error = "Account not found."
+                                } else {
+                                    authViewModel.resetPassword(email) { isSuccess, errorMessage ->
+                                        loading = false
+                                        success = isSuccess
+                                        if (errorMessage != null) {
+                                            error = errorMessage
+                                        }
+                                    }
                                 }
                             }
                         }

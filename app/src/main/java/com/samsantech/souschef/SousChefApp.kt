@@ -145,6 +145,7 @@ fun SousChefApp(
                 composable<ResetPassword> {
                     ResetPasswordScreen(
                         authViewModel,
+                        userViewModel,
                         onNavigateToLogin = { navController.navigate(route = Login) {
                             popUpTo<Login> { inclusive = true }
                         } }
@@ -239,8 +240,8 @@ fun SousChefApp(
                     UpdateEmailScreen(
                         authViewModel,
                         userViewModel,
-                        onNavigateToLogin = {
-                            navController.navigate(route = Login) {
+                        onNavigateToVerifyEmail = {
+                            navController.navigate(route = VerifyEmail) {
                                 popUpTo(navController.graph.id) { inclusive = true }
                             }
                         }
