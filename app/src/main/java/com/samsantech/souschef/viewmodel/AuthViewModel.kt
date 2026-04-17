@@ -61,18 +61,18 @@ class AuthViewModel(
     }
 
     // Send OTP to email
-    fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
-        firebaseAuthManager.sendOtpToEmail(email) { isSuccess, error ->
-            callback(isSuccess, error)
-        }
-    }
+//    fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
+//        firebaseAuthManager.sendOtpToEmail(email) { isSuccess, error ->
+//            callback(isSuccess, error)
+//        }
+//    }
 
     // Verify OTP
-    fun verifyOtp(email: String, otp: String, callback: (Boolean, String?) -> Unit) {
-        firebaseAuthManager.verifyOtp(email, otp) { isSuccess, error ->
-            callback(isSuccess, error)
-        }
-    }
+//    fun verifyOtp(email: String, otp: String, callback: (Boolean, String?) -> Unit) {
+//        firebaseAuthManager.verifyOtp(email, otp) { isSuccess, error ->
+//            callback(isSuccess, error)
+//        }
+//    }
 
     // Reset password after OTP verification
 //    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {

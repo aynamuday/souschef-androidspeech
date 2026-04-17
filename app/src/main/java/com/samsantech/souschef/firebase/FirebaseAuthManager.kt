@@ -138,28 +138,28 @@ class FirebaseAuthManager(
     }
 
     // Send OTP to the user's email using Firebase Functions
-    fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
-        val data = hashMapOf("email" to email)
-        functions.getHttpsCallable("sendOtpEmail")
-            .call(data)
-            .addOnSuccessListener { callback(true, null) }
-            .addOnFailureListener { callback(false, "Failed to send OTP.") }
-    }
+//    fun sendOtpToEmail(email: String, callback: (Boolean, String?) -> Unit) {
+//        val data = hashMapOf("email" to email)
+//        functions.getHttpsCallable("sendOtpEmail")
+//            .call(data)
+//            .addOnSuccessListener { callback(true, null) }
+//            .addOnFailureListener { callback(false, "Failed to send OTP.") }
+//    }
 
     // Verify OTP
-    fun verifyOtp(email: String, otp: String, callback: (Boolean, String?) -> Unit) {
-        val data = hashMapOf("email" to email, "otp" to otp)
-        functions.getHttpsCallable("verifyOtp")
-            .call(data)
-            .addOnSuccessListener { callback(true, null) }
-            .addOnFailureListener { callback(false, "OTP verification failed.") }
-    }
+//    fun verifyOtp(email: String, otp: String, callback: (Boolean, String?) -> Unit) {
+//        val data = hashMapOf("email" to email, "otp" to otp)
+//        functions.getHttpsCallable("verifyOtp")
+//            .call(data)
+//            .addOnSuccessListener { callback(true, null) }
+//            .addOnFailureListener { callback(false, "OTP verification failed.") }
+//    }
 
     // Reset password
-    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {
-        val user = getCurrentUser()
-        user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
-            callback(task.isSuccessful, task.exception?.message)
-        }
-    }
+//    fun resetPassword(newPassword: String, callback: (Boolean, String?) -> Unit) {
+//        val user = getCurrentUser()
+//        user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
+//            callback(task.isSuccessful, task.exception?.message)
+//        }
+//    }
 }
