@@ -28,8 +28,8 @@
    - Collection Path: *recipes*
    - Indexable Fields: *userName,title,categories,tags,ingredients,userRating,averageRating,photosUrl*
    - Algolia Index Name: *souschef*
-   - Algolia Application ID
-   - Algolia API Key
+   - Algolia Application ID: *your_algolia_app_id*
+   - Algolia API Key: *your_algolia_write_api_key*
 3. Copy API keys and index name to `local.properties`
 
     ```bash
