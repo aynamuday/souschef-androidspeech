@@ -33,11 +33,11 @@
     ```
 
 ## Troubleshooting
-### I.  Illegal Argument Exception: source must not be null
-  ```bash
-  FileAnalysisException: While analysing MainActivity.kt: java.lang.IllegalArgumentException: source must not be null
-  ```
-This is a common issue when updating some Gradle configurations. You must update the kotlin version in `libs.version.toml`.
+1. **Illegal Argument Exception: source must not be null**
+     ```bash
+     FileAnalysisException: While analysing MainActivity.kt: java.lang.IllegalArgumentException: source must not be null
+     ```
+      This is a common issue when updating some Gradle configurations. You must update the kotlin version in `libs.version.toml`.
 
-### II. Others
-- You may need to revise some code syntax due to updates in Android and SDK packages.
+2. **Others**
+   - You may need to revise some code syntax due to updates in Android and SDK packages.
