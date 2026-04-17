@@ -13,7 +13,9 @@
 2. Add an Android app
 3. Set the package name to `com.samsantech.souschef`
 4. Download the configuration file (`google-services.json`) and copy to Android Studio project's app-level directory
-5. Setup **Authentication** to *Email/Password* sign-in method
+5. Setup **Authentication**
+   - Under sign-in method tab, choose *Email/Password*
+   - Under settings tab, enforce password policy
 6. Initialize **Firestore** and **Storage**
 
 ## Algolia
