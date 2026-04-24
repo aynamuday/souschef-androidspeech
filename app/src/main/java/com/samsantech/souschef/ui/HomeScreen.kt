@@ -267,14 +267,13 @@ fun HomeScreen(
                                             val message = if (isFavorite) {
                                                 "Recipe removed from favorites"
                                             } else {
+                                                algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
                                                 "Recipe added to favorites"
                                             }
                                             Toast
                                                 .makeText(context, message, Toast.LENGTH_SHORT)
                                                 .show()
                                         }
-
-                                        algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
                                     }
                                 )
                             }
@@ -312,7 +311,7 @@ fun RecipeCard(
     ) {
         Box(
             modifier = Modifier
-                .height(400.dp)
+                .height(300.dp)
                 .fillMaxWidth()
                 .background(Color.White)
                 .clip(RoundedCornerShape(10.dp))
@@ -345,37 +344,41 @@ fun RecipeCard(
             }
         }
 
-        Text(
-            text = recipe.title,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        Spacer(modifier = Modifier.height(6.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    (1..5).forEach { star ->
-                        Icon(
-                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
-                            contentDescription = "Rate $star stars",
-                            tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
-                            modifier = Modifier
-                                .size(18.dp)
-                        )
-                    }
-
-                    Text(
-                        text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
-                        fontSize = 12.sp,
-                        color = Color.Gray,
-                    )
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = recipe.title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
+
+//            Column {
+//                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    (1..5).forEach { star ->
+//                        Icon(
+//                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
+//                            contentDescription = "Rate $star stars",
+//                            tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
+//                            modifier = Modifier
+//                                .size(18.dp)
+//                        )
+//                    }
+//
+//                    Text(
+//                        text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
+//                        fontSize = 12.sp,
+//                        color = Color.Gray,
+//                    )
+//                }
+//            }
 
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
@@ -390,7 +393,8 @@ fun RecipeCard(
                     }
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(modifier = Modifier.height(3.dp))
 
         Row(
             modifier = Modifier

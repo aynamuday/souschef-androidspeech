@@ -371,8 +371,8 @@ fun RecipeMetadata(
 //            )
         }
         Spacer(modifier = Modifier.width(32.dp))
-        Column(horizontalAlignment = Alignment.End) {
-            if (recipe.audience == "Public") {
+//        Column(horizontalAlignment = Alignment.End) {
+//            if (recipe.audience == "Public") {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
                     contentDescription = null,
@@ -386,32 +386,29 @@ fun RecipeMetadata(
                                     val message = if (isFavorite) {
                                         "Recipe removed from favorites"
                                     } else {
+                                        recipe.id?.let { algoliaInsightsViewModel.sendAddedToFavoritesEvent(it) }
                                         "Recipe added to favorites"
                                     }
                                     Toast
                                         .makeText(context, message, Toast.LENGTH_SHORT)
                                         .show()
                                 }
-
-                                if (isFavorite) {
-                                    recipe.id?.let { algoliaInsightsViewModel.sendAddedToFavoritesEvent(it) }
-                                }
                             }
                         },
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            Icon(
-                imageVector = Icons.Filled.Share,
-                contentDescription = "Share Recipe",
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable {
-                        shareRecipeViaEmail(recipe, context)
-                        recipe.id?.let { algoliaInsightsViewModel.sendSharedARecipeEvent(it) }
-                    }
-            )
-        }
+//                Spacer(modifier = Modifier.height(16.dp))
+//            }
+//            Icon(
+//                imageVector = Icons.Filled.Share,
+//                contentDescription = "Share Recipe",
+//                modifier = Modifier
+//                    .size(28.dp)
+//                    .clickable {
+//                        shareRecipeViaEmail(recipe, context)
+//                        recipe.id?.let { algoliaInsightsViewModel.sendSharedARecipeEvent(it) }
+//                    }
+//            )
+//        }
     }
     Spacer(modifier = Modifier.height(20.dp))
     UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
