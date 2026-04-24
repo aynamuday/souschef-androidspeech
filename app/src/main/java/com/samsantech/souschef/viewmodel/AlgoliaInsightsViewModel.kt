@@ -5,12 +5,15 @@ import com.algolia.instantsearch.insights.Insights
 import com.algolia.instantsearch.insights.registerInsights
 import com.algolia.instantsearch.insights.sharedInsights
 import com.samsantech.souschef.BuildConfig
-
+import com.samsantech.souschef.data.SharedViewModelProvider
 import com.samsantech.souschef.data.UserViewModelProvider
 
 class AlgoliaInsightsViewModel(private val context: Context) {
     private val userViewModel: UserViewModel
         get() = UserViewModelProvider.userViewModel
+
+    private val sharedViewModel: SharedViewModel
+        get() = SharedViewModelProvider.sharedViewModel
 
     fun updateUserToken(userId: String?) {
         if (userId.isNullOrEmpty()) {
@@ -21,8 +24,10 @@ class AlgoliaInsightsViewModel(private val context: Context) {
                 readTimeoutInMilliseconds = 5000,
                 defaultUserToken = userId
             )
-            registerInsights(context, BuildConfig.ALGOLIA_APP_ID, BuildConfig.ALGOLIA_API_KEY, BuildConfig.ALGOLIA_INDEX_NAME, configuration)
-            sharedInsights("souschef").apply {
+            registerInsights(context, BuildConfig.ALGOLIA_APP_ID, BuildConfig.ALGOLIA_API_KEY, BuildConfig.ALGOLIA_INDEX_NAME, configuration).apply {
+                loggingEnabled = true
+            }
+            sharedInsights(BuildConfig.ALGOLIA_INDEX_NAME).apply {
                 minBatchSize = 1
                 userToken = userId
             }
@@ -38,26 +43,40 @@ class AlgoliaInsightsViewModel(private val context: Context) {
     }
 
     fun sendAddedToFavoritesEvent(objectId: String) {
-        sharedInsights?.convertedObjectIDs(
-            eventName = "Added recipe to favorites",
-            objectIDs = listOf(objectId)
-        )
+        val queryId: String = sharedViewModel.searchQueryId.value ?: ""
+
+        if (queryId.isNotEmpty()) {
+            sharedInsights?.convertedObjectIDsAfterSearch(
+                eventName = "Added recipe to favorites",
+                objectIDs = listOf(objectId),
+                timestamp = System.currentTimeMillis(),
+                queryID = queryId
+            )
+        }
         incrementSentEventsCount()
     }
 
-    fun sendSharedARecipeEvent(objectId: String) {
-        sharedInsights?.convertedObjectIDs(
-            eventName = "Shared a recipe",
-            objectIDs = listOf(objectId)
-        )
-        incrementSentEventsCount()
-    }
+//    fun sendSharedARecipeEvent(objectId: String) {
+//        println("event: shared a recipe")
+//
+//        sharedInsights?.convertedObjectIDs(
+//            eventName = "Shared a recipe",
+//            objectIDs = listOf(objectId)
+//        )
+//        incrementSentEventsCount()
+//    }
 
     fun sendRatedARecipeEvent(objectId: String) {
-        sharedInsights?.convertedObjectIDs(
-            eventName = "Rated a recipe",
-            objectIDs = listOf(objectId)
-        )
+        val queryId: String = sharedViewModel.searchQueryId.value ?: ""
+
+        if (queryId.isNotEmpty()) {
+            sharedInsights?.convertedObjectIDsAfterSearch(
+                eventName = "Rated a favorites",
+                objectIDs = listOf(objectId),
+                timestamp = System.currentTimeMillis(),
+                queryID = queryId
+            )
+        }
         incrementSentEventsCount()
     }
 

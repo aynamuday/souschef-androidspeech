@@ -29,6 +29,7 @@ import com.google.firebase.storage.storage
 import com.samsantech.souschef.data.CookingAssistantViewModelProvider
 import com.samsantech.souschef.data.NetworkStateProvider
 import com.samsantech.souschef.data.OwnRecipesViewModelProvider
+import com.samsantech.souschef.data.SharedViewModelProvider
 import com.samsantech.souschef.data.UserViewModelProvider
 import com.samsantech.souschef.firebase.FirebaseAuthManager
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
@@ -103,6 +104,7 @@ class MainActivity : ComponentActivity(), NetworkHelper.NetworkChangeListener {
                 CookingAssistantViewModelProvider.cookingAssistantViewModel = cookingAssistantViewModel
                 OwnRecipesViewModelProvider.ownRecipesViewModel = ownRecipesViewModel
                 UserViewModelProvider.userViewModel = userViewModel
+                SharedViewModelProvider.sharedViewModel = sharedViewModel
 
                 val user = auth.currentUser
                 sharedViewModel.updateAlgoliaQueriesUserToken(user?.uid)

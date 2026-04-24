@@ -14,7 +14,13 @@ class SharedViewModel(
     private val homeViewModel: HomeViewModel?,
     private val searchRecipesViewModel: SearchRecipesViewModel?
 ) {
-    val isLoading = MutableStateFlow(false)
+    val searchQueryId = MutableStateFlow(null as String?)
+
+    fun setSearchQueryId(queryId: String?) {
+        searchQueryId.value = queryId
+
+        println(queryId)
+    }
 
     fun updateAlgoliaQueriesUserToken(userId: String?) {
         algoliaInsightsViewModel?.updateUserToken(userId)

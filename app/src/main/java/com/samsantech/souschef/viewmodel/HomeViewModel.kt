@@ -1,6 +1,7 @@
 package com.samsantech.souschef.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.algolia.client.model.search.OptionalFilters
 import com.algolia.instantsearch.android.paging3.Paginator
 import com.algolia.instantsearch.android.paging3.searchbox.connectPaginator
 import com.algolia.instantsearch.compose.loading.LoadingState
@@ -22,12 +23,19 @@ import com.algolia.instantsearch.filter.Filter
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.BuildConfig
 import com.samsantech.souschef.data.SearchRecipe
+import com.samsantech.souschef.data.SharedViewModelProvider
 
 class HomeViewModel: ViewModel() {
+    private val sharedViewModel: SharedViewModel
+        get() = SharedViewModelProvider.sharedViewModel
+
+    val optionalFilters = mutableListOf<OptionalFilters>()
     private var searcher = HitsSearcher(
         BuildConfig.ALGOLIA_APP_ID, BuildConfig.ALGOLIA_API_KEY, BuildConfig.ALGOLIA_INDEX_NAME,
         query = Query(
-            personalizationImpact = 70
+            personalizationImpact = 70,
+            optionalFilters = OptionalFilters.of(optionalFilters),
+            clickAnalytics = true
         )
     )
 
@@ -44,27 +52,22 @@ class HomeViewModel: ViewModel() {
 
     fun updateUserToken(userId: String?, categories: List<String>? = null) {
         searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
-//        val optionalFilters = mutableListOf<List<String>>()
         if (userId != null) {
-//            optionalFilters.add(listOf("seenBy:-$userId"))
+            optionalFilters.add(OptionalFilters.of("seenBy:-$userId"))
 
             if (!categories.isNullOrEmpty()) {
-                val categoriesFilter = mutableListOf<String>()
                 categories.forEach {
-                    categoriesFilter.add("categories:$it")
+                    optionalFilters.add(OptionalFilters.of("categories:$it"))
                 }
-//                optionalFilters.add(categoriesFilter)
             }
         }
-//        if (optionalFilters.isNotEmpty()) {
-//            searcher.query.optionalFilters = optionalFilters
-//        }
 
         filterState = FilterState()
         val searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
         hitsPaginator = Paginator(searcher) {
             it.deserialize(SearchRecipe.serializer())
         }
+
         loadingConnector = LoadingConnector(searcher)
         connections = ConnectionHandler(
             searchBoxConnector,
@@ -88,6 +91,11 @@ class HomeViewModel: ViewModel() {
         }
 
         searchBoxState.setText("", true)
+
+        // search response
+        searcher.response.subscribe { response ->
+            sharedViewModel.setSearchQueryId(response?.queryID)
+        }
     }
 
     override fun onCleared() {

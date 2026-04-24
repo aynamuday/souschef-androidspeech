@@ -25,9 +25,12 @@ import com.algolia.search.helper.deserialize
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.BuildConfig
 import com.samsantech.souschef.data.SearchRecipe
+import com.samsantech.souschef.data.SharedViewModelProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class SearchRecipesViewModel: ViewModel() {
+    private val sharedViewModel: SharedViewModel
+        get() = SharedViewModelProvider.sharedViewModel
     val search = MutableStateFlow("")
     private var category: String = ""
     private val categoriesId = FilterGroupID("categoriesId", FilterOperator.Or)
@@ -39,7 +42,8 @@ class SearchRecipesViewModel: ViewModel() {
         triggerSearchFor = SearchForQuery.lengthAtLeast(1),
         isDisjunctiveFacetingEnabled = false,
         query = Query(
-            personalizationImpact = 70
+            personalizationImpact = 70,
+            clickAnalytics = true
         )
     )
 
@@ -87,6 +91,11 @@ class SearchRecipesViewModel: ViewModel() {
         }
 
         searchBoxState.setText("", true)
+
+        // search response
+        searcher.response.subscribe { response ->
+            sharedViewModel.setSearchQueryId(response?.queryID)
+        }
     }
 
     override fun onCleared() {
