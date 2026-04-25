@@ -21,6 +21,7 @@ import com.algolia.instantsearch.searcher.hits.SearchForQuery
 import com.algolia.instantsearch.filter.Filter
 import com.algolia.instantsearch.compose.loading.LoadingState
 import com.algolia.instantsearch.compose.searchbox.SearchBoxState
+import com.algolia.instantsearch.searcher.updateSearchParamsObject
 import com.algolia.search.helper.deserialize
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.BuildConfig
@@ -56,12 +57,13 @@ class SearchRecipesViewModel: ViewModel() {
     private var loadingConnector = LoadingConnector(searcher)
     private lateinit var connections: ConnectionHandler
 
-    init {
-        updateUserToken(null)
-    }
-
     fun updateUserToken(userId: String?) {
-        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
+//        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
+        searcher.updateSearchParamsObject {
+            it.copy(
+                userToken = if (userId.isNullOrEmpty()) "" else userId
+            )
+        }
 
         filterState = FilterState()
         searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)

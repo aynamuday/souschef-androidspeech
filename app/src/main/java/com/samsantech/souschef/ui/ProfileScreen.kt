@@ -78,7 +78,6 @@ import com.samsantech.souschef.ui.components.BottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.ProfilePhoto
 import com.samsantech.souschef.ui.components.RecipeCard
-import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.utils.convertUriToBitmap
@@ -336,48 +335,48 @@ fun ProfileScreen(
                                     verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
                                     favoriteRecipeList.forEach { recipe ->
-                                        if (recipe.isTikTok) {
-                                            Box (modifier = Modifier.clip(RoundedCornerShape(5.dp))) {
-                                                val width = (maxWidth / 3) - 4.dp
-                                                recipe.postId?.let {
-                                                    TikTokWebView(
-                                                        postId = it,
-                                                        width = width.value.toInt(),
-                                                        height = 180
-                                                    )
-                                                }
-                                                IconButton(
-                                                    onClick = {
-                                                        recipe.id?.let {
-                                                            recipesViewModel.removeFromFavorites(it) { isSuccess ->
-                                                                if (isSuccess) {
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        "TikTok recipe removed from favorites.",
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                } else {
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        "Failed to remove TikTok recipe from favorites.",
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                }
-                                                            }
-                                                        }
-                                                    },
-                                                    modifier = Modifier
-                                                        .align(Alignment.BottomStart)
-                                                        .offset(-(7.dp), -(25.dp))
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Bookmark,
-                                                        contentDescription = "Remove from favorites",
-                                                        tint = Green
-                                                    )
-                                                }
-                                            }
-                                        } else {
+//                                        if (recipe.isTikTok) {
+//                                            Box (modifier = Modifier.clip(RoundedCornerShape(5.dp))) {
+//                                                val width = (maxWidth / 3) - 4.dp
+//                                                recipe.postId?.let {
+//                                                    TikTokWebView(
+//                                                        postId = it,
+//                                                        width = width.value.toInt(),
+//                                                        height = 180
+//                                                    )
+//                                                }
+//                                                IconButton(
+//                                                    onClick = {
+//                                                        recipe.id?.let {
+//                                                            recipesViewModel.removeFromFavorites(it) { isSuccess ->
+//                                                                if (isSuccess) {
+//                                                                    Toast.makeText(
+//                                                                        context,
+//                                                                        "TikTok recipe removed from favorites.",
+//                                                                        Toast.LENGTH_SHORT
+//                                                                    ).show()
+//                                                                } else {
+//                                                                    Toast.makeText(
+//                                                                        context,
+//                                                                        "Failed to remove TikTok recipe from favorites.",
+//                                                                        Toast.LENGTH_SHORT
+//                                                                    ).show()
+//                                                                }
+//                                                            }
+//                                                        }
+//                                                    },
+//                                                    modifier = Modifier
+//                                                        .align(Alignment.BottomStart)
+//                                                        .offset(-(7.dp), -(25.dp))
+//                                                ) {
+//                                                    Icon(
+//                                                        imageVector = Icons.Default.Bookmark,
+//                                                        contentDescription = "Remove from favorites",
+//                                                        tint = Green
+//                                                    )
+//                                                }
+//                                            }
+//                                        } else {
                                             val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
                                                 Uri.parse("${recipe.photosUrl["portrait"]}")
                                             } else {
@@ -431,7 +430,7 @@ fun ProfileScreen(
                                                     )
                                                 }
                                             }
-                                        }
+//                                        }
                                     }
                                 }
                             }

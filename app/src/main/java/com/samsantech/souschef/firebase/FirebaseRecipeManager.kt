@@ -104,7 +104,7 @@ class FirebaseRecipeManager(
         if (recipe.cookTimeHr.isNotEmpty()) data["cookTimeHr"] = recipe.cookTimeHr
         if (recipe.cookTimeMin.isNotEmpty()) data["cookTimeMin"] = recipe.cookTimeMin
         if (recipe.categories.isNotEmpty()) data["categories"] = recipe.categories
-        if (recipe.mealTypes.isNotEmpty()) data["mealTypes"] = recipe.mealTypes
+//        if (recipe.mealTypes.isNotEmpty()) data["mealTypes"] = recipe.mealTypes
         if (recipe.tags.isNotEmpty()) data["tags"] = recipe.tags
         data["createdAt"] = FieldValue.serverTimestamp()
         data["updatedAt"] = FieldValue.serverTimestamp()
@@ -312,7 +312,7 @@ class FirebaseRecipeManager(
             prepTimeMin = data["prepTimeMin"].toString(),
             serving = data["serving"].toString(),
             difficulty = data["difficulty"].toString(),
-            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
+//            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
             categories = data["categories"] as? List<String> ?: listOf(),
             ingredients = data["ingredients"] as? List<String> ?: listOf(),
             instructions = data["instructions"] as? List<String> ?: listOf(),
@@ -321,8 +321,8 @@ class FirebaseRecipeManager(
             ratings = data["ratings"] as? HashMap<String, Float>,
             averageRating = (data["averageRating"] as? Double)?.toFloat(),
             userRating = null,
-            isTikTok = data["isTikTok"] as? Boolean ?: false,
-            postId = data["postId"] as? String,
+//            isTikTok = data["isTikTok"] as? Boolean ?: false,
+//            postId = data["postId"] as? String,
         )
     }
 

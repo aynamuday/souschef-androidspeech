@@ -178,17 +178,17 @@ class OwnRecipesViewModel(
         )
     }
 
-    fun addMealType(mealType: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            mealTypes = actionRecipe.value.mealTypes.plus(mealType)
-        )
-    }
+//    fun addMealType(mealType: String) {
+//        actionRecipe.value = actionRecipe.value.copy(
+//            mealTypes = actionRecipe.value.mealTypes.plus(mealType)
+//        )
+//    }
 
-    fun removeMealType(mealType: String) {
-        actionRecipe.value = actionRecipe.value.copy(
-            mealTypes = actionRecipe.value.mealTypes.minus(mealType)
-        )
-    }
+//    fun removeMealType(mealType: String) {
+//        actionRecipe.value = actionRecipe.value.copy(
+//            mealTypes = actionRecipe.value.mealTypes.minus(mealType)
+//        )
+//    }
 
     fun addCategory(category: String) {
         actionRecipe.value = actionRecipe.value.copy(

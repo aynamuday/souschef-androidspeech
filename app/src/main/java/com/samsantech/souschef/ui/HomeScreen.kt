@@ -8,7 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.SearchRecipe
-import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
@@ -61,6 +58,7 @@ import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.max
 
 @Composable
 fun HomeScreen(
@@ -120,7 +118,7 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
-                BoxWithConstraints {
+                Box {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(1),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -139,109 +137,110 @@ fun HomeScreen(
 
                             val isFavorite = item.objectID in favoriteRecipes
 
-                            if (item.isTikTok == true) {
-                                BoxWithConstraints {
-                                    val maxWidth = maxWidth
-                                    Column {
-                                        Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
-                                            val width = maxWidth
-                                            TikTokWebView(
-                                                postId = item.postId,
-                                                width = width.value.toInt(),
-                                                height = 550,
-                                                onPlayed = {
-                                                    item.objectID?.let { algoliaInsightsViewModel.sendViewedARecipeEvent(it) }
-                                                }
-                                            )
-                                        }
-                                        Row(modifier = Modifier.fillMaxWidth()) {
-                                            androidx.compose.material3.Text(
-                                                text = item.title,
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(top = 8.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(16.dp))
-                                        }
-                                        // Ratings Row
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 4.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            // Stars for User Rating
-                                            Column(
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    (1..5).forEach { star ->
-                                                        Icon(
-                                                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
-                                                            contentDescription = "Rate $star stars",
-                                                            tint = if (star <= userRating) Color(
-                                                                0xFFFFA500
-                                                            ) else Color.Gray,
-                                                            modifier = Modifier
-                                                                .size(18.dp)
-                                                                .clickable {
-                                                                    item.objectID?.let {
-                                                                        recipesViewModel.rateRecipe(it, star.toFloat()) { isSuccess, newAverageRating ->
-                                                                            if (isSuccess) {
-                                                                                userRating =
-                                                                                    star.toFloat()
-                                                                                if (newAverageRating != null) {
-                                                                                    averageRating =
-                                                                                        if (item.ratings != null) newAverageRating else userRating
-                                                                                }
-                                                                            }
-                                                                        }
-
-                                                                        if (star.toFloat() >= 4.0) {
-                                                                            algoliaInsightsViewModel.sendRatedARecipeEvent(it)
-                                                                        }
-                                                                    }
-                                                                }
-                                                        )
-                                                    }
-
-                                                    Text(
-                                                        text = "   %.1f".format(averageRating) + "  (${item.ratings?.size ?: 0} ratings)",
-                                                        fontSize = 12.sp,
-                                                        color = Color.Gray,
-                                                    )
-                                                }
-                                            }
-
-                                            Icon(
-                                                imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
-                                                contentDescription = "Bookmark",
-                                                tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
-                                                modifier = Modifier
-                                                    .size(20.dp)
-                                                    .clickable {
-                                                        item.objectID?.let { id ->
-                                                            recipesViewModel.toggleFavorite(id, !favoriteRecipes.contains(id)) {
-                                                                val message = if (favoriteRecipes.contains(id)) {
-                                                                        "Recipe added to favorites"
-                                                                    } else {
-                                                                        "Recipe removed from favorites"
-                                                                    }
-                                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                                            }
-
-                                                            if (!favoriteRecipes.contains(id)) {
-                                                                algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
-                                                            }
-                                                        }
-                                                    }
-                                            )
-                                        }
-                                    }
-                                }
-                            } else {
+                            // TIKTOK WEB VIEW
+//                            if (item.isTikTok == true) {
+//                                BoxWithConstraints {
+//                                    val maxWidth = maxWidth
+//                                    Column {
+//                                        Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
+//                                            val width = maxWidth
+//                                            TikTokWebView(
+//                                                postId = item.postId,
+//                                                width = width.value.toInt(),
+//                                                height = 550,
+//                                                onPlayed = {
+//                                                    item.objectID?.let { algoliaInsightsViewModel.sendViewedARecipeEvent(it) }
+//                                                }
+//                                            )
+//                                        }
+//                                        Row(modifier = Modifier.fillMaxWidth()) {
+//                                            androidx.compose.material3.Text(
+//                                                text = item.title,
+//                                                fontSize = 16.sp,
+//                                                fontWeight = FontWeight.Bold,
+//                                                modifier = Modifier.padding(top = 8.dp)
+//                                            )
+//                                            Spacer(modifier = Modifier.width(16.dp))
+//                                        }
+//                                        // Ratings Row
+//                                        Row(
+//                                            modifier = Modifier
+//                                                .fillMaxWidth()
+//                                                .padding(top = 4.dp),
+//                                            horizontalArrangement = Arrangement.SpaceBetween,
+//                                            verticalAlignment = Alignment.CenterVertically
+//                                        ) {
+//                                            // Stars for User Rating
+//                                            Column(
+//                                                horizontalAlignment = Alignment.CenterHorizontally,
+//                                                verticalArrangement = Arrangement.spacedBy(4.dp)
+//                                            ) {
+//                                                Row(verticalAlignment = Alignment.CenterVertically) {
+//                                                    (1..5).forEach { star ->
+//                                                        Icon(
+//                                                            imageVector = if (star <= userRating) Icons.Filled.Star else Icons.Outlined.Star,
+//                                                            contentDescription = "Rate $star stars",
+//                                                            tint = if (star <= userRating) Color(
+//                                                                0xFFFFA500
+//                                                            ) else Color.Gray,
+//                                                            modifier = Modifier
+//                                                                .size(18.dp)
+//                                                                .clickable {
+//                                                                    item.objectID?.let {
+//                                                                        recipesViewModel.rateRecipe(it, star.toFloat()) { isSuccess, newAverageRating ->
+//                                                                            if (isSuccess) {
+//                                                                                userRating =
+//                                                                                    star.toFloat()
+//                                                                                if (newAverageRating != null) {
+//                                                                                    averageRating =
+//                                                                                        if (item.ratings != null) newAverageRating else userRating
+//                                                                                }
+//                                                                            }
+//                                                                        }
+//
+//                                                                        if (star.toFloat() >= 4.0) {
+//                                                                            algoliaInsightsViewModel.sendRatedARecipeEvent(it)
+//                                                                        }
+//                                                                    }
+//                                                                }
+//                                                        )
+//                                                    }
+//
+//                                                    Text(
+//                                                        text = "   %.1f".format(averageRating) + "  (${item.ratings?.size ?: 0} ratings)",
+//                                                        fontSize = 12.sp,
+//                                                        color = Color.Gray,
+//                                                    )
+//                                                }
+//                                            }
+//
+//                                            Icon(
+//                                                imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+//                                                contentDescription = "Bookmark",
+//                                                tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
+//                                                modifier = Modifier
+//                                                    .size(20.dp)
+//                                                    .clickable {
+//                                                        item.objectID?.let { id ->
+//                                                            recipesViewModel.toggleFavorite(id, !favoriteRecipes.contains(id)) {
+//                                                                val message = if (favoriteRecipes.contains(id)) {
+//                                                                        "Recipe added to favorites"
+//                                                                    } else {
+//                                                                        "Recipe removed from favorites"
+//                                                                    }
+//                                                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+//                                                            }
+//
+//                                                            if (!favoriteRecipes.contains(id)) {
+//                                                                algoliaInsightsViewModel.sendAddedToFavoritesEvent(id)
+//                                                            }
+//                                                        }
+//                                                    }
+//                                            )
+//                                        }
+//                                    }
+//                                }
+//                            } else {
                                 RecipeCard(
                                     recipe = item,
                                     isFavorite = isFavorite,
@@ -276,7 +275,7 @@ fun HomeScreen(
                                         }
                                     }
                                 )
-                            }
+//                            }
                         }
                     }
                 }
@@ -344,41 +343,20 @@ fun RecipeCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = recipe.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
-
-//            Column {
-//                Row(verticalAlignment = Alignment.CenterVertically) {
-//                    (1..5).forEach { star ->
-//                        Icon(
-//                            imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
-//                            contentDescription = "Rate $star stars",
-//                            tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
-//                            modifier = Modifier
-//                                .size(18.dp)
-//                        )
-//                    }
-//
-//                    Text(
-//                        text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
-//                        fontSize = 12.sp,
-//                        color = Color.Gray,
-//                    )
-//                }
-//            }
 
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
@@ -396,23 +374,42 @@ fun RecipeCard(
 
         Spacer(modifier = Modifier.height(3.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            UserNamePhoto(
-                photoUri = recipe.userPhotoUrl,
-                userName = recipe.userName,
-                photoSize = 20.dp,
-                fontColor = Color.Gray,
-                fontSize = 12.sp,
-                modifier = Modifier.weight(1f),
-                spacer = 8.dp
-            )
-        }
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                (1..5).forEach { star ->
+                    Icon(
+                        imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
+                        contentDescription = "Rate $star stars",
+                        tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
+                        modifier = Modifier
+                            .size(18.dp)
+                    )
+                }
 
+                Text(
+                    text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                UserNamePhoto(
+                    photoUri = recipe.userPhotoUrl,
+                    userName = recipe.userName,
+                    photoSize = 20.dp,
+                    fontColor = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f),
+                    spacer = 8.dp
+                )
+            }
+        }
     }
 }

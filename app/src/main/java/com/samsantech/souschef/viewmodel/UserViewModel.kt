@@ -150,31 +150,31 @@ class UserViewModel(
         signUpPreferences.value = signUpPreferences.value.copy(categories = listOf())
     }
 
-    fun addPreferencesDislike(dislike: String) {
-        signUpPreferences.value = signUpPreferences.value.copy(
-            dislikes = signUpPreferences.value.dislikes?.plus(dislike) ?: listOf(dislike)
-        )
-    }
+//    fun addPreferencesDislike(dislike: String) {
+//        signUpPreferences.value = signUpPreferences.value.copy(
+//            dislikes = signUpPreferences.value.dislikes?.plus(dislike) ?: listOf(dislike)
+//        )
+//    }
 
-    fun removePreferencesDislike(dislike: String) {
-        signUpPreferences.value = signUpPreferences.value.copy(
-            dislikes = signUpPreferences.value.dislikes?.minus(dislike) ?: listOf(dislike)
-        )
-    }
+//    fun removePreferencesDislike(dislike: String) {
+//        signUpPreferences.value = signUpPreferences.value.copy(
+//            dislikes = signUpPreferences.value.dislikes?.minus(dislike) ?: listOf(dislike)
+//        )
+//    }
 
-    fun clearPreferencesDislikes() {
-        signUpPreferences.value = signUpPreferences.value.copy(dislikes = listOf())
-    }
+//    fun clearPreferencesDislikes() {
+//        signUpPreferences.value = signUpPreferences.value.copy(dislikes = listOf())
+//    }
 
-    fun setPreferencesSkillLevel(skillLevel: String) {
-        signUpPreferences.value = signUpPreferences.value.copy(
-            skillLevel = skillLevel
-        )
-    }
+//    fun setPreferencesSkillLevel(skillLevel: String) {
+//        signUpPreferences.value = signUpPreferences.value.copy(
+//            skillLevel = skillLevel
+//        )
+//    }
 
-    fun clearPreferencesSkillLevel() {
-        signUpPreferences.value = signUpPreferences.value.copy(skillLevel = "")
-    }
+//    fun clearPreferencesSkillLevel() {
+//        signUpPreferences.value = signUpPreferences.value.copy(skillLevel = "")
+//    }
 
     fun incrementSentEventsCount() {
         firebaseUserManager.incrementSentEventsCount()

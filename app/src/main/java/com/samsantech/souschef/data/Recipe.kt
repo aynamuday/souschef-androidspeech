@@ -22,7 +22,7 @@ data class Recipe(
     var prepTimeMin: String = "0",
     var serving: String = "1",
     var difficulty: String = "",
-    var mealTypes: List<String> = listOf(),
+//    var mealTypes: List<String> = listOf(),
     var categories: List<String> = listOf(),
     var ingredients: List<String> = listOf(""),
     var instructions: List<String> = listOf(""),
@@ -32,8 +32,8 @@ data class Recipe(
     var ratings: HashMap<String, Float>? = null,
     var averageRating: Float? = null,
     var userRating: Float? = null,
-    var isTikTok: Boolean = false,
-    var postId: String? = null,
+//    var isTikTok: Boolean = false,
+//    var postId: String? = null,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         id = parcel.readString(),
@@ -50,7 +50,7 @@ data class Recipe(
         prepTimeMin = parcel.readString() ?: "0",
         serving = parcel.readString() ?: "1",
         difficulty = parcel.readString() ?: "",
-        mealTypes = parcel.createStringArrayList() ?: listOf(),
+//        mealTypes = parcel.createStringArrayList() ?: listOf(),
         categories = parcel.createStringArrayList() ?: listOf(),
         ingredients = parcel.createStringArrayList() ?: listOf(""),
         instructions = parcel.createStringArrayList() ?: listOf(""),
@@ -78,7 +78,7 @@ data class Recipe(
             parcel.writeString(prepTimeMin)
             parcel.writeString(serving)
             parcel.writeString(difficulty)
-            parcel.writeStringList(mealTypes)
+//            parcel.writeStringList(mealTypes)
             parcel.writeStringList(categories)
             parcel.writeStringList(ingredients)
             parcel.writeStringList(instructions)

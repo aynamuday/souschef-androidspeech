@@ -46,7 +46,7 @@ import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.RecipeCard
 import com.samsantech.souschef.ui.components.SearchBottomActionMenuPopUp
 import com.samsantech.souschef.ui.components.SearchBox
-import com.samsantech.souschef.ui.components.TikTokWebView
+//import com.samsantech.souschef.ui.components.TikTokWebView
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
@@ -331,47 +331,47 @@ fun RecipesList(
             val width = if (view == "grid") ((maxWidth/2) - 8.dp) else maxWidth
             val height = if (view == "grid") (width/2)+width else 300.dp
 
-            if (item.isTikTok == true) {
-                Column {
-                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
-                        if (view == "grid") {
-                            TikTokWebView(
-                                postId = item.postId,
-                                width = width.value.toInt(),
-                                height = height.value.toInt()
-                            )
-                        } else {
-                            TikTokWebView(
-                                postId = item.postId,
-                                width = width.value.toInt(),
-                                height = maxHeight.value.toInt()-32
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = item.title,
-                            fontWeight = FontWeight(500),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                            fontSize = if (view == "grid") 14.sp else 16.sp
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Icon(
-                            imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
-                            contentDescription = "Bookmark",
-                            tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
-                            modifier = Modifier
-                                .size(if (view == "grid") 18.dp else 22.dp)
-                                .clickable {
-                                    onToggleFavorite(item.objectID!!)
-                                },
-                        )
-                    }
-                }
-            } else {
+//            if (item.isTikTok == true) {
+//                Column {
+//                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
+//                        if (view == "grid") {
+//                            TikTokWebView(
+//                                postId = item.postId,
+//                                width = width.value.toInt(),
+//                                height = height.value.toInt()
+//                            )
+//                        } else {
+//                            TikTokWebView(
+//                                postId = item.postId,
+//                                width = width.value.toInt(),
+//                                height = maxHeight.value.toInt()-32
+//                            )
+//                        }
+//                    }
+//                    Spacer(modifier = Modifier.height(8.dp))
+//                    Row(modifier = Modifier.fillMaxWidth()) {
+//                        Text(
+//                            text = item.title,
+//                            fontWeight = FontWeight(500),
+//                            maxLines = 2,
+//                            overflow = TextOverflow.Ellipsis,
+//                            modifier = Modifier.weight(1f),
+//                            fontSize = if (view == "grid") 14.sp else 16.sp
+//                        )
+//                        Spacer(modifier = Modifier.width(16.dp))
+//                        Icon(
+//                            imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+//                            contentDescription = "Bookmark",
+//                            tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
+//                            modifier = Modifier
+//                                .size(if (view == "grid") 18.dp else 22.dp)
+//                                .clickable {
+//                                    onToggleFavorite(item.objectID!!)
+//                                },
+//                        )
+//                    }
+//                }
+//            } else {
                 SearchRecipeItem(
                     itemWidth = width,
                     itemHeight = height,
@@ -383,7 +383,7 @@ fun RecipesList(
                     onToggleFavorite = { onToggleFavorite(item.objectID!!) },
                     view = view
                 )
-            }
+//            }
 
         }
     }

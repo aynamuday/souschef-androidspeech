@@ -38,8 +38,8 @@ import com.samsantech.souschef.ui.HomeScreen
 import com.samsantech.souschef.ui.RecipeScreen
 import com.samsantech.souschef.ui.SearchScreen
 import com.samsantech.souschef.ui.SelectCategoriesScreen
-import com.samsantech.souschef.ui.SelectDislikesScreen
-import com.samsantech.souschef.ui.SelectSkillLevelScreen
+//import com.samsantech.souschef.ui.SelectDislikesScreen
+//import com.samsantech.souschef.ui.SelectSkillLevelScreen
 import com.samsantech.souschef.ui.SignUpOrLoginScreen
 import com.samsantech.souschef.ui.SignUpScreen
 import com.samsantech.souschef.ui.UpdateEmailScreen
@@ -195,28 +195,28 @@ fun SousChefApp(
 //                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) },
                     )
                 }
-                composable<SelectDislikes> {
-                    SelectDislikesScreen(
-                        userViewModel = userViewModel,
-                        onNavigateToSelectCategories = { navController.navigate(route = SelectCategories) {
-                            popUpTo<SelectCategories> { inclusive = true }
-                        } },
-                        onNavigateToSelectSkillLevel = { navController.navigate(route = SelectSkillLevel) },
-                    )
-                }
-                composable<SelectSkillLevel> {
-                    SelectSkillLevelScreen(
-                        userViewModel = userViewModel,
-                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) {
-                            popUpTo<SelectDislikes> { inclusive = true }
-                        } },
-                        onNavigateToHome = {
-                            navController.navigate(route = Home) {
-                                popUpTo(navController.graph.id) { inclusive = true }
-                            }
-                        },
-                    )
-                }
+//                composable<SelectDislikes> {
+//                    SelectDislikesScreen(
+//                        userViewModel = userViewModel,
+//                        onNavigateToSelectCategories = { navController.navigate(route = SelectCategories) {
+//                            popUpTo<SelectCategories> { inclusive = true }
+//                        } },
+//                        onNavigateToSelectSkillLevel = { navController.navigate(route = SelectSkillLevel) },
+//                    )
+//                }
+//                composable<SelectSkillLevel> {
+//                    SelectSkillLevelScreen(
+//                        userViewModel = userViewModel,
+//                        onNavigateToSelectDislikes = { navController.navigate(route = SelectDislikes) {
+//                            popUpTo<SelectDislikes> { inclusive = true }
+//                        } },
+//                        onNavigateToHome = {
+//                            navController.navigate(route = Home) {
+//                                popUpTo(navController.graph.id) { inclusive = true }
+//                            }
+//                        },
+//                    )
+//                }
                 composable<EditProfile> {
                     EditProfileScreen(
                         context,

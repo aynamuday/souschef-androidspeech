@@ -323,9 +323,9 @@ fun getRecipesDifference(recipeOne: Recipe, recipeTwo: Recipe): HashMap<String, 
     if (recipeOne.difficulty != recipeTwo.difficulty) {
         data["difficulty"] = recipeTwo.difficulty
     }
-    if (recipeOne.mealTypes != recipeTwo.mealTypes) {
-        data["mealTypes"] = recipeTwo.mealTypes
-    }
+//    if (recipeOne.mealTypes != recipeTwo.mealTypes) {
+//        data["mealTypes"] = recipeTwo.mealTypes
+//    }
     if (recipeOne.categories != recipeTwo.categories) {
         data["categories"] = recipeTwo.categories
     }
