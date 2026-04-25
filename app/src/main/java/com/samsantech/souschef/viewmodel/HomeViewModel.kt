@@ -20,6 +20,7 @@ import com.algolia.instantsearch.searcher.connectFilterState
 import com.algolia.instantsearch.searcher.hits.HitsSearcher
 import com.algolia.search.helper.deserialize
 import com.algolia.instantsearch.filter.Filter
+import com.algolia.instantsearch.searcher.updateSearchParamsObject
 import com.algolia.search.model.search.Query
 import com.samsantech.souschef.BuildConfig
 import com.samsantech.souschef.data.SearchRecipe
@@ -46,12 +47,18 @@ class HomeViewModel: ViewModel() {
     private var loadingConnector = LoadingConnector(searcher)
     private lateinit var connections: ConnectionHandler
 
-    init {
-        updateUserToken(null)
-    }
+//    init {
+//        updateUserToken(null)
+//    }
 
-    fun updateUserToken(userId: String?, categories: List<String>? = null) {
-        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
+    fun updateUserToken(userId: String? = "xdBhwlCGsOfh8ElI8z8JVJojDbJ3", categories: List<String>? = null) {
+//        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
+        searcher.updateSearchParamsObject {
+            it.copy(
+                userToken = if (userId.isNullOrEmpty()) "" else userId
+            )
+        }
+
         if (userId != null) {
             optionalFilters.add(OptionalFilters.of("seenBy:-$userId"))
 
@@ -61,6 +68,8 @@ class HomeViewModel: ViewModel() {
                 }
             }
         }
+
+
 
         filterState = FilterState()
         val searchBoxConnector = SearchBoxConnector(searcher, searchMode = SearchMode.OnSubmit, searchOnQueryUpdate = false)
