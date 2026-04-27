@@ -18,8 +18,6 @@ class SharedViewModel(
 
     fun setSearchQueryId(queryId: String?) {
         searchQueryId.value = queryId
-
-        println(queryId)
     }
 
     fun updateAlgoliaQueriesUserToken(userId: String?) {

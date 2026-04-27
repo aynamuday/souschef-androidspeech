@@ -18,8 +18,7 @@ import com.samsantech.souschef.ui.theme.Green
 
 @Composable
 fun ColoredButton(modifier: Modifier = Modifier, onClick: () -> Unit, containerColor: Color = Green, contentColor: Color = Color.White,
-                  text: String, border: BorderStroke = BorderStroke(0.dp, Color.Transparent), shadowElevation: Dp = 0.dp,
-                  contentPadding: PaddingValues = PaddingValues(12.dp, 12.dp), fontWeight: FontWeight = FontWeight.SemiBold,
+                  text: String, border: BorderStroke = BorderStroke(0.dp, Color.Transparent), fontWeight: FontWeight = FontWeight.SemiBold,
 ) {
     Button(
         modifier = modifier

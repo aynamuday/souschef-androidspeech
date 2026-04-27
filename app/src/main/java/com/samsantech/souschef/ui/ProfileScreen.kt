@@ -234,7 +234,6 @@ fun ProfileScreen(
                         onClick = { show = "recipes" },
                         text = "Your Recipes",
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(12.dp, 12.dp),
                         containerColor = if (show == "recipes") Green else Color.White,
                         contentColor = if (show == "recipes") Color.White else Green,
                         border = if (show == "recipes")  BorderStroke(0.dp, Green) else BorderStroke(1.dp, Color(0xFF16A637))
@@ -244,7 +243,6 @@ fun ProfileScreen(
                         onClick = { show = "favorites" },
                         text = "Favorites",
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(12.dp, 12.dp),
                         containerColor = if (show == "favorites") Green else Color.White,
                         contentColor = if (show == "favorites") Color.White else Green,
                         border = if (show == "favorites")  BorderStroke(0.dp, Color.Transparent) else BorderStroke(1.dp, Color(0xFF16A637))

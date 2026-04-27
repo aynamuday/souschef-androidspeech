@@ -98,7 +98,6 @@ fun DisplayProfileImage(
                             onClick = onCancel,
                             text = "Cancel",
                             modifier = Modifier.weight(.8f),
-                            contentPadding = PaddingValues(12.dp, 12.dp),
                             containerColor = Color.White, contentColor = Color.Black,
                             border = BorderStroke(1.dp, Yellow)
                         )
@@ -108,7 +107,6 @@ fun DisplayProfileImage(
                         onClick = onOkay,
                         text = onOkayText,
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(12.dp, 12.dp),
                         containerColor = Yellow, contentColor = Color.Black,
                         border = BorderStroke(1.dp, Yellow)
                     )

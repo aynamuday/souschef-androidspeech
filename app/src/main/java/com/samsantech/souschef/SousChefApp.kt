@@ -271,7 +271,6 @@ fun SousChefApp(
                             paddingValues,
                             homeViewModel,
                             recipesViewModel,
-                            userViewModel,
                             algoliaInsightsViewModel,
                             onNavigateToRecipe = {
                                 navController.navigate(route = Recipe)
