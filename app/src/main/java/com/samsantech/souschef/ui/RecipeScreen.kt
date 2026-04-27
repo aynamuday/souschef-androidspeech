@@ -3,18 +3,14 @@ package com.samsantech.souschef.ui
 import android.Manifest
 import androidx.compose.runtime.getValue
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.text.Html.fromHtml
-import android.util.Log
 import android.widget.Toast
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -36,14 +32,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -67,17 +61,18 @@ import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.ui.theme.Green
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.app.ActivityCompat
-import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.data.CookingAssistantState
 import com.samsantech.souschef.data.PreferencesManager
-import com.samsantech.souschef.data.Voice
+import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.KebabMenu
 import com.samsantech.souschef.ui.components.ManageVoiceSettings
 import com.samsantech.souschef.ui.components.OwnRecipeActionMenu
 import com.samsantech.souschef.ui.components.PermissionRationaleDialog
 import com.samsantech.souschef.ui.components.ProgressSpinner
+import com.samsantech.souschef.ui.components.Rating
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.components.VoiceCommandsGuide
+import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.NetworkHelper
 import com.samsantech.souschef.utils.getRecipeTimeText
@@ -125,17 +120,12 @@ fun RecipeScreen(
         mutableStateOf(false)
     }
 
-
-    val userRatingState = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(recipe.id) {
-        recipesViewModel.getUserRatingForRecipe(recipe.id ?: "") { userRating ->
-            userRatingState.value = userRating ?: 0f
-        }
-    }
+    val userRating = remember { mutableFloatStateOf(recipe.ratings?.get(user?.uid)?.toFloat() ?: 0f) }
     val isFavorite = recipe.id in favoriteRecipes
-    var averageRating by remember {
-        mutableFloatStateOf(recipe.averageRating ?: 0f)
-    }
+    val averageRating = remember { mutableFloatStateOf(if (recipe.ratings.isNullOrEmpty()) { 0f } else {
+        recipe.ratings?.values?.average()?.toFloat() ?: 0f
+    }) }
+    val showRateRecipe = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -193,36 +183,15 @@ fun RecipeScreen(
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp)
         ) {
             RecipeMetadata(
+                userId = user?.uid,
                 recipe = recipe,
                 isFavorite = isFavorite,
-                recipesViewModel,
-                rating = userRatingState.value,
-                averageRating = averageRating,
-                onRateRecipe = { newRating ->
-                    recipe.id?.let {
-                        recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
-                            if (success) {
-                                userRatingState.value = newRating
-                                averageRating = (updatedAverageRating ?: averageRating)
-                            }
-                        }
-                        if (newRating >= 4.0) {
-                            algoliaInsightsViewModel.sendRatedARecipeEvent(it)
-                        }
-                    }
-                },
-                removeRating = {
-                    recipe.id?.let {
-                        recipesViewModel.rateRecipe(it, 0f) { success, updatedAverageRating ->
-                            if (success) {
-                                userRatingState.value = 0f
-                                averageRating = (updatedAverageRating ?: averageRating)
-                            }
-                        }
-                    }
-                },
+                recipesViewModel = recipesViewModel,
+                userRating = userRating.floatValue,
+                averageRating = averageRating.floatValue,
                 context = context,
-                algoliaInsightsViewModel = algoliaInsightsViewModel
+                algoliaInsightsViewModel = algoliaInsightsViewModel,
+                showRateRecipe = showRateRecipe
             )
             Spacer(modifier = Modifier.height(20.dp))
             RecipeIngredients(recipe.ingredients)
@@ -238,6 +207,37 @@ fun RecipeScreen(
                 sharedViewModel
             )
         }
+    }
+
+    if (showRateRecipe.value) {
+        RateRecipe(
+            currentRating = userRating.floatValue,
+            showRateRecipe = showRateRecipe,
+            onRateRecipe = { newRating ->
+                recipe.id?.let {
+                    recipesViewModel.rateRecipe(it, newRating) { success, updatedAverageRating ->
+                        if (success) {
+                            userRating.floatValue = newRating
+                            averageRating.floatValue = updatedAverageRating ?: averageRating.floatValue
+                        }
+                    }
+                    // will only send conversion data to algolia if recipe is above 4
+                    if (newRating >= 4.0) {
+                        algoliaInsightsViewModel.sendRatedARecipeEvent(it)
+                    }
+                }
+            },
+            onRemoveRating = {
+                recipe.id?.let {
+                    recipesViewModel.removeRecipeRating(it) { success, updatedAverageRating ->
+                        if (success) {
+                            userRating.floatValue = 0f
+                            averageRating.floatValue = updatedAverageRating ?: averageRating.floatValue
+                        }
+                    }
+                }
+            }
+        )
     }
 
     if (displayVoiceCommandPopUp.value) {
@@ -295,15 +295,15 @@ fun RecipeScreen(
 
 @Composable
 fun RecipeMetadata(
+    userId: String?,
     recipe: Recipe,
     isFavorite: Boolean,
     recipesViewModel: RecipesViewModel,
-    rating: Float,
+    userRating: Float,
     averageRating: Float,
-    removeRating: () -> Unit,
-    onRateRecipe: (Float) -> Unit,
     context: Context,
-    algoliaInsightsViewModel: AlgoliaInsightsViewModel
+    algoliaInsightsViewModel: AlgoliaInsightsViewModel,
+    showRateRecipe: MutableState<Boolean>
 ) {
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
         Column(modifier = Modifier.weight(1f)) {
@@ -330,85 +330,55 @@ fun RecipeMetadata(
                     text = recipe.difficulty,
                     color = color,
                     fontWeight = FontWeight.Bold,
-//                fontStyle = FontStyle.Italic,
-//                modifier = Modifier
-//                    .border(1.dp, color, RoundedCornerShape(8.dp))
-//                    .padding(5.dp, 2.dp),
-                    fontSize = 16.sp
+                    modifier = Modifier
+                        .border(1.dp, color, RoundedCornerShape(8.dp))
+                        .padding(5.dp, 1.dp),
+                    fontSize = 14.sp
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            //Star Rating
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                FiveStarRate(
-                    rating = rating,
-                    onRateRecipe = onRateRecipe)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "( ${"%.1f".format(averageRating)})", fontSize = 12.sp)
-            }
 
-            Text(
-                text = if (rating > 0) "Remove rating" else "Leave a rating",
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .clickable {
-                        if (rating > 0) {
-                            removeRating()
-                        }
-                    }
-                ,
-                fontStyle = FontStyle.Italic,
-                color = Color.Gray
-            )
-//            Text(
-//                text = "Leave a rating", // or edit rating if rated already
-//                fontSize = 12.sp,
-//                modifier = Modifier
-//                    .padding(top = 8.dp),
-//                fontStyle = FontStyle.Italic
-//            )
+            Rating(averageRating, recipe.ratings?.size ?: 0, 24.dp)
+
+            if (recipe.userId != userId) {
+                Text(
+                    text = if (userRating > 0) "Edit your rating" else "Leave a rating",
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .clickable { showRateRecipe.value = true },
+                    fontStyle = FontStyle.Italic,
+                    color = Color.Gray
+                )
+            }
         }
         Spacer(modifier = Modifier.width(32.dp))
-//        Column(horizontalAlignment = Alignment.End) {
-//            if (recipe.audience == "Public") {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
-                    contentDescription = null,
-                    tint = if (isFavorite) Green else Color.Gray,
-                    modifier = Modifier
-                        .padding(0.dp, top = 8.dp)
-                        .size(28.dp)
-                        .clickable {
-                            recipe.id?.let { id ->
-                                recipesViewModel.toggleFavorite(id, !isFavorite) {
-                                    val message = if (isFavorite) {
-                                        "Recipe removed from favorites"
-                                    } else {
-                                        recipe.id?.let { algoliaInsightsViewModel.sendAddedToFavoritesEvent(it) }
-                                        "Recipe added to favorites"
-                                    }
-                                    Toast
-                                        .makeText(context, message, Toast.LENGTH_SHORT)
-                                        .show()
+        if (recipe.userId != userId) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                contentDescription = null,
+                tint = if (isFavorite) Green else Color.Gray,
+                modifier = Modifier
+                    .padding(0.dp, top = 8.dp)
+                    .size(28.dp)
+                    .clickable {
+                        recipe.id?.let { id ->
+                            recipesViewModel.toggleFavorite(id, !isFavorite) {
+                                val message = if (isFavorite) {
+                                    "Recipe removed from favorites"
+                                } else {
+                                    recipe.id?.let { algoliaInsightsViewModel.sendAddedToFavoritesEvent(it) }
+                                    "Recipe added to favorites"
                                 }
+                                Toast
+                                    .makeText(context, message, Toast.LENGTH_SHORT)
+                                    .show()
                             }
-                        },
-                )
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//            Icon(
-//                imageVector = Icons.Filled.Share,
-//                contentDescription = "Share Recipe",
-//                modifier = Modifier
-//                    .size(28.dp)
-//                    .clickable {
-//                        shareRecipeViaEmail(recipe, context)
-//                        recipe.id?.let { algoliaInsightsViewModel.sendSharedARecipeEvent(it) }
-//                    }
-//            )
-//        }
+                        }
+                    },
+            )
+        }
     }
     Spacer(modifier = Modifier.height(20.dp))
     UserNamePhoto(photoUri = recipe.userPhotoUrl, userName = recipe.userName)
@@ -432,91 +402,111 @@ fun RecipeMetadata(
     }
 }
 
-fun shareRecipeViaEmail(recipe: Recipe, context: Context) {
-    val subjectMessage = "Check out this recipe: ${recipe.title}"
-
-    val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
-        Uri.parse("${recipe.photosUrl["portrait"]}")
-    } else if (recipe.photosUrl["square"] != null) {
-        Uri.parse("${recipe.photosUrl["square"]}")
-    } else {
-        null
-    }
-
-    if (photoUrl == null) {
-        Toast.makeText(context, "Image URL is null or invalid", Toast.LENGTH_SHORT).show()
-        return
-    }
-
-    val storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("$photoUrl")
-
-    storageReference.downloadUrl.addOnSuccessListener { uri ->
-        val photo = "$uri?alt=media"
-        val htmlData = """
-        <html>
-        <body>
-            <h2>${recipe.title}</h2>
-            <img src="$photo" alt="Recipe Image" style="width:100%;max-width:300px;">
-            <p><strong>By:</strong> ${recipe.userName}</p>
-            <h3>Ingredients:</h3>
-            <p>${recipe.ingredients.joinToString("<br>") { "• $it" }}</p>
-            <h3>Instructions:</h3>
-            <p>${recipe.instructions.mapIndexed { index, step -> "${index + 1}. $step" }.joinToString("<br>")}</p>
-            <p>Shared via the SousChef App</p>
-        </body>
-        </html>
-        """.trimIndent()
-
-        AlertDialog.Builder(context)
-            .setTitle("Share Recipe")
-            .setMessage("We recommend using Outlook for the best image rendering. Do you wish to continue?")
-            .setPositiveButton("Continue") { _, _ ->
-                shareWithOutlook(context, subjectMessage, htmlData)
-            }
-            .setNegativeButton("Cancel") { _, _ ->
-
-            }
-            .show()
-
-    }.addOnFailureListener { exception ->
-        Log.e("EmailSharing", "Failed to get image URL: ${exception.message}")
-        Toast.makeText(context, "Failed to fetch image URL: ${exception.message}", Toast.LENGTH_SHORT).show()
-    }
-}
-
-private fun shareWithOutlook(context: Context, subject: String, htmlData: String) {
-    val outlookIntent = context.packageManager.getLaunchIntentForPackage("com.microsoft.office.outlook")
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/html"
-        putExtra(Intent.EXTRA_SUBJECT, subject)
-        putExtra(Intent.EXTRA_TEXT, fromHtml(htmlData))
-        putExtra(Intent.EXTRA_HTML_TEXT, htmlData)
-        if (outlookIntent != null) {
-            `package` = "com.microsoft.office.outlook"
-        }
-    }
-    context.startActivity(intent)
-}
-
 @Composable
-fun FiveStarRate(
-    rating: Float,
-    onRateRecipe: (Float) -> Unit
+fun RateRecipe(
+    currentRating: Float,
+    showRateRecipe: MutableState<Boolean>,
+    onRateRecipe: (Float) -> Unit,
+    onRemoveRating: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        for (i in 1..5) {
-            val starColor = if (rating >= i) Color(0xFFFFA500) else Color.Gray
-            Icon(
-                imageVector = Icons.Filled.Star,
-                contentDescription = null,
-                tint = starColor,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { onRateRecipe(i.toFloat()) }
-            )
+    val newUserRating = remember{ mutableFloatStateOf(currentRating) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f))
+            .pointerInput(Unit) {
+                detectTapGestures()
+            },
+        contentAlignment = Alignment.Center,
+    ){
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .width(300.dp)
+                .background(Color.White)
+                .padding(16.dp)
+        ) {
+            Box (
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 4.dp, end = 4.dp)
+                        .clip(CircleShape)
+                        .clickable { showRateRecipe.value = false }
+
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.close_icon),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(15.dp)
+                    )
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (currentRating > 0) "Edit your rating" else "Leave a rating",
+                        color = Color(0xFF16A637),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = Konkhmer_Sleokcher,
+                        modifier = Modifier.clickable {
+
+                        }
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        for (i in 1..5) {
+                            val starColor = if (newUserRating.floatValue >= i) Color(0xFFFFA500) else Color.Gray
+                            Icon(
+                                imageVector = Icons.Filled.Star,
+                                contentDescription = null,
+                                tint = starColor,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clickable { newUserRating.floatValue = i.toFloat() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(7.dp))
+                    if (newUserRating.floatValue > 0) {
+                        Text(
+                            text = "Remove rating",
+                            color = Color.Gray,
+                            fontSize = 16.sp,
+                            fontStyle = FontStyle.Italic,
+                            modifier = Modifier.clickable { newUserRating.floatValue = 0f }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ColoredButton(
+                        onClick = {
+                            newUserRating.floatValue?.let {
+                                if (it == currentRating) {
+                                    return@let
+                                } else if (it == 0f) {
+                                    onRemoveRating()
+                                } else if (it > 0) {
+                                    onRateRecipe(it)
+                                }
+                            }
+
+                            showRateRecipe.value = false
+                        },
+                        text = "Save",
+                        modifier = Modifier.width(100.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -579,7 +569,6 @@ fun RecipeIngredients(ingredients: List<String>) {
     }
 }
 
-//@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun RecipeInstructions(
     context: Context,

@@ -29,7 +29,7 @@ data class Recipe(
     var tags: List<String> = listOf(),
     var audience: String = "Public",
     var favoriteRecipes: List<String> = listOf(),
-    var ratings: HashMap<String, Float>? = null,
+    var ratings: HashMap<String, Double>? = null,
     var averageRating: Float? = null,
     var userRating: Float? = null,
 //    var isTikTok: Boolean = false,
@@ -57,9 +57,7 @@ data class Recipe(
         tags = parcel.createStringArrayList() ?: listOf(),
         audience = parcel.readString() ?: "Public",
         favoriteRecipes = parcel.createStringArrayList() ?: listOf(),
-        ratings = parcel.readSerializable() as HashMap<String, Float>?,
-        averageRating = parcel.readValue(Float::class.java.classLoader) as Float?,
-        userRating = parcel.readValue(Float::class.java.classLoader) as Float?
+        ratings = parcel.readSerializable() as HashMap<String, Double>?,
     )
 
     companion object : Parceler<Recipe> {
@@ -86,8 +84,6 @@ data class Recipe(
             parcel.writeString(audience)
             parcel.writeStringList(favoriteRecipes)
             parcel.writeSerializable(ratings)
-            parcel.writeValue(averageRating)
-            parcel.writeValue(userRating)
         }
 
         override fun create(parcel: Parcel): Recipe {

@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.SearchRecipe
+import com.samsantech.souschef.ui.components.Rating
 import com.samsantech.souschef.ui.components.UserNamePhoto
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
@@ -58,7 +59,6 @@ import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.max
 
 @Composable
 fun HomeScreen(
@@ -66,7 +66,6 @@ fun HomeScreen(
     paddingValues: PaddingValues,
     homeViewModel: HomeViewModel,
     recipesViewModel: RecipesViewModel,
-    userViewModel: UserViewModel,
     algoliaInsightsViewModel: AlgoliaInsightsViewModel,
     onNavigateToRecipe: () -> Unit,
     isCooking: Boolean
@@ -74,7 +73,6 @@ fun HomeScreen(
     val pagingHits = homeViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
     val lazyState = rememberLazyGridState()
     val loadingState = homeViewModel.loadingState
-    val user = userViewModel.user
 
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState()
 
@@ -128,13 +126,9 @@ fun HomeScreen(
                         items(pagingHits.itemCount) { index ->
                             val item = pagingHits[index] ?: return@items
 
-                            var userRating by remember {
-                                mutableFloatStateOf(item.ratings?.get(user.value?.uid) ?: 0f)
+                            val averageRating = if (item.ratings.isNullOrEmpty()) { 0f } else {
+                                item.ratings?.values?.average()?.toFloat() ?: 0f
                             }
-                            var averageRating by remember {
-                                mutableFloatStateOf(item.averageRating ?: 0f)
-                            }
-
                             val isFavorite = item.objectID in favoriteRecipes
 
                             // TIKTOK WEB VIEW
@@ -375,23 +369,7 @@ fun RecipeCard(
         Spacer(modifier = Modifier.height(3.dp))
 
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                (1..5).forEach { star ->
-                    Icon(
-                        imageVector = if (star <= averageRating) Icons.Filled.Star else Icons.Outlined.Star,
-                        contentDescription = "Rate $star stars",
-                        tint = if (star <= averageRating) Color(0xFFFFA500) else Color.Gray,
-                        modifier = Modifier
-                            .size(18.dp)
-                    )
-                }
-
-                Text(
-                    text = "   %.1f".format(averageRating) + "  (${recipe.ratings?.size ?: 0} ratings)",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                )
-            }
+            Rating(averageRating, recipe.ratings?.size ?: 0)
 
             Row(
                 modifier = Modifier

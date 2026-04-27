@@ -318,9 +318,7 @@ class FirebaseRecipeManager(
             instructions = data["instructions"] as? List<String> ?: listOf(),
             tags = data["tags"] as? List<String> ?: listOf(),
             audience = data["audience"].toString(),
-            ratings = data["ratings"] as? HashMap<String, Float>,
-            averageRating = (data["averageRating"] as? Double)?.toFloat(),
-            userRating = null,
+            ratings = data["ratings"] as? HashMap<String, Double>
 //            isTikTok = data["isTikTok"] as? Boolean ?: false,
 //            postId = data["postId"] as? String,
         )
@@ -390,6 +388,8 @@ class FirebaseRecipeManager(
         }
     }
 
+    // used when a recipe is deleted
+    // removes the recipe to all users' favorite recipes
     private fun removeFavoriteFromAllUsers(recipeId: String) {
         db.collection("users")
             .whereArrayContains("favoriteRecipes", recipeId)
@@ -420,50 +420,38 @@ class FirebaseRecipeManager(
         val userId = auth.currentUser?.uid ?: return callback(false, null)
         val recipeRef = db.collection("recipes").document(recipeId)
 
-        db.runTransaction { transaction ->
-            val snapshot = transaction.get(recipeRef)
-            val currentRatings = snapshot.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
-            val updatedRatings = currentRatings.toMutableMap().apply { this[userId] = rating }
-            val newAverageRating = updatedRatings.values.average().toFloat()
+        recipeRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val ratings = document.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
+                val updatedRatings = ratings.toMutableMap().apply { this[userId] = rating }
 
-            currentRatings[userId] = rating
-
-            // Update Firestore
-            transaction.update(recipeRef, mapOf(
-                "ratings" to updatedRatings,
-                "averageRating" to newAverageRating
-            ))
-
-            newAverageRating
-        }.addOnSuccessListener { newAverageRating ->
-            callback(true, newAverageRating)
-        }.addOnFailureListener {
-            callback(false, null)
+                recipeRef
+                    .update("ratings", updatedRatings)
+                    .addOnSuccessListener { callback(true, updatedRatings.values.average().toFloat()) }
+                    .addOnFailureListener { callback(false, null) }
+            } else {
+                callback(false, null)
+            }
         }
     }
 
-    fun getUserRating(recipeId: String, callback: (Float?) -> Unit) {
-        val userId = auth.currentUser?.uid ?: return callback(null)
-        db.collection("recipes").document(recipeId).get()
-            .addOnSuccessListener { document ->
-                val ratings = document.get("ratings") as? Map<String, Any>
-                val userRating = ratings?.get(userId) as? Double
-                callback(userRating?.toFloat())
-            }
-            .addOnFailureListener {
-                callback(null)
-            }
-    }
+    fun removeRecipeRating(recipeId: String, callback: (Boolean, Float?) -> Unit) {
+        val userId = auth.currentUser?.uid ?: return callback(false, null)
+        val recipeRef = db.collection("recipes").document(recipeId)
 
-    fun removeRecipe(recipeId: String, callback: (Boolean) -> Unit) {
-        db.collection("recipes").document(recipeId)
-            .delete()
-            .addOnSuccessListener {
-                callback(true)
+        recipeRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val ratings = document.get("ratings") as? HashMap<String, Float> ?: hashMapOf()
+                ratings.remove(userId)
+
+                recipeRef
+                    .update("ratings", ratings)
+                    .addOnSuccessListener { callback(true, ratings.values.average().toFloat()) }
+                    .addOnFailureListener { callback(false, null) }
+            } else {
+                callback(false, null)
             }
-            .addOnFailureListener {
-                callback(false)
-            }
+        }
     }
 
     fun setSeenPost(recipeId: String) {
@@ -473,7 +461,6 @@ class FirebaseRecipeManager(
             db.collection("recipes")
                 .document(recipeId)
                 .update("seenBy", FieldValue.arrayUnion(userId))
-//                .update("seenBy", FieldValue.arrayRemove(userId))
         }
     }
 }

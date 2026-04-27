@@ -73,19 +73,17 @@ class RecipesViewModel (
         }
     }
 
-    fun getUserRatingForRecipe(recipeId: String, callback: (Float?) -> Unit) {
-        firebaseRecipeManager.getUserRating(recipeId) { rating ->
-            callback(rating)
-        }
-    }
-
-    fun removeRecipe(recipeId: String, callback: (Boolean) -> Unit) {
-        firebaseRecipeManager.removeRecipe(recipeId) { isSuccess ->
+    fun removeRecipeRating(recipeId: String, callback: (Boolean, Float?) -> Unit) {
+        firebaseRecipeManager.removeRecipeRating(recipeId) { isSuccess, updatedAverageRating ->
             if (isSuccess) {
-                // Remove the recipe from the local list
-                allRecipes.value = allRecipes.value.filter { it.id != recipeId }
+                val updatedRecipes = allRecipes.value.map { recipe ->
+                    if (recipe.id == recipeId) {
+                        recipe.copy(userRating = 0.0f, averageRating = updatedAverageRating)
+                    } else recipe
+                }
+                allRecipes.value = updatedRecipes
             }
-            callback(isSuccess)
+            callback(isSuccess, updatedAverageRating)
         }
     }
 
