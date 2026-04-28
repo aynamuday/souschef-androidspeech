@@ -2,6 +2,7 @@ package com.samsantech.souschef.viewmodel
 
 import android.net.Uri
 import com.samsantech.souschef.data.OwnRecipesViewModelProvider
+import com.samsantech.souschef.data.RecipesViewModelProvider
 import com.samsantech.souschef.data.User
 import com.samsantech.souschef.data.UserPreferences
 import com.samsantech.souschef.firebase.FirebaseAuthManager
@@ -17,9 +18,8 @@ class UserViewModel(
 ) {
     val user = MutableStateFlow<User?>(User())
     val signUpPreferences = MutableStateFlow(UserPreferences())
-//    val otherCuisine = MutableStateFlow("")
-    private val ownRecipesViewModel: OwnRecipesViewModel
-        get() = OwnRecipesViewModelProvider.ownRecipesViewModel
+    private val ownRecipesViewModel: OwnRecipesViewModel get() = OwnRecipesViewModelProvider.ownRecipesViewModel
+    private val recipesViewModel: RecipesViewModel get() = RecipesViewModelProvider.recipesViewModel
 
     init {
         refreshUser()
@@ -39,16 +39,18 @@ class UserViewModel(
                                 email = email,
                                 displayName = displayName,
                                 photoUrl = currentUser.photoUrl.toString(),
-                                sentEventsCount = it.sentEventsCount
+                                favoriteRecipes = it.favoriteRecipes
                             )
                         }
                     }
 
+                    recipesViewModel.refreshFavoriteRecipes(it.favoriteRecipes ?: listOf())
+
+                    // uses user preferences as optional filters, ONLY IF there's not enough events sent
                     val lastSentEventTimeStamp = it.lastSentEventTimestamp
                     if (lastSentEventTimeStamp != null) {
-                        val currentTime = Calendar.getInstance().time
-                        val differenceInMillis = lastSentEventTimeStamp.time - currentTime.time
-                        val threeHoursInMillis = 3 * 60 * 60 * 1000
+                        val differenceInMillis = lastSentEventTimeStamp.time - Calendar.getInstance().time.time
+                        val threeHoursInMillis = 10800000
 
                         if (differenceInMillis >= threeHoursInMillis && it.sentEventsCount < 30) {
                             firebaseUserManager.getUserPreferences { preferences ->

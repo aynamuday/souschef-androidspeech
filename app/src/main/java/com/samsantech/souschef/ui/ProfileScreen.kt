@@ -84,6 +84,8 @@ import com.samsantech.souschef.utils.convertUriToBitmap
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
+import androidx.core.net.toUri
+import com.samsantech.souschef.ui.components.Header
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -100,14 +102,8 @@ fun ProfileScreen(
     isCooking: Boolean
 ) {
     val user by userViewModel.user.collectAsState()
-    val allRecipes by recipesViewModel.allRecipes.collectAsState()
     val ownRecipes by ownRecipesViewModel.recipes.collectAsState()
     val favoriteRecipes by recipesViewModel.favoriteRecipes.collectAsState(emptyList())
-
-    val favoriteRecipeList: MutableList<Recipe> = mutableListOf()
-    favoriteRecipes.forEach { recipe ->
-        allRecipes.find { recipe == it.id }?.let { favoriteRecipeList.add(it) }
-    }
 
     var loading by remember {
         mutableStateOf(false)
@@ -147,9 +143,6 @@ fun ProfileScreen(
 
     Box {
         Column(modifier = Modifier.padding(top = 20.dp)) {
-//            Header(showMenuBar = true, onClickMenuBar = {
-//                showMenuBar = true
-//            })
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -290,8 +283,7 @@ fun ProfileScreen(
 
                                         RecipeCard(
                                             photoUrl = photoUrl,
-                                            modifier = Modifier
-                                                .width((maxWidth / 3) - 4.dp),
+                                            modifier = Modifier.width((maxWidth / 3) - 4.dp),
                                             onClick = {
                                                 recipesViewModel.displayRecipe.value = recipe
                                                 onNavigateToRecipe()
@@ -299,7 +291,7 @@ fun ProfileScreen(
                                             showKebabMenu = true,
                                             onClickKebabMenu = {
                                                 showRecipeActionMenu = !showRecipeActionMenu
-                                                recipeWithAction = if (recipeWithAction == null) recipe else null
+                                                recipeWithAction = recipe
                                             },
                                             showPrivacyIcon = true,
                                             privacy = recipe.audience
@@ -313,7 +305,7 @@ fun ProfileScreen(
                 if (show == "favorites") {
                     BoxWithConstraints {
                         val maxWidth = maxWidth
-                        if (favoriteRecipeList.isEmpty()) {
+                        if (favoriteRecipes.isEmpty()) {
                             Text(
                                 text = "No favorites to show",
                                 modifier = Modifier
@@ -332,7 +324,7 @@ fun ProfileScreen(
                                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                                     verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
-                                    favoriteRecipeList.forEach { recipe ->
+                                    favoriteRecipes.forEach { recipe ->
 //                                        if (recipe.isTikTok) {
 //                                            Box (modifier = Modifier.clip(RoundedCornerShape(5.dp))) {
 //                                                val width = (maxWidth / 3) - 4.dp
@@ -376,9 +368,9 @@ fun ProfileScreen(
 //                                            }
 //                                        } else {
                                             val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
-                                                Uri.parse("${recipe.photosUrl["portrait"]}")
+                                                "${recipe.photosUrl["portrait"]}".toUri()
                                             } else {
-                                                Uri.parse("${recipe.photosUrl["square"]}")
+                                                "${recipe.photosUrl["square"]}".toUri()
                                             }
 
                                             Box(modifier = Modifier) {
@@ -387,39 +379,27 @@ fun ProfileScreen(
                                                     modifier = Modifier
                                                         .width((maxWidth / 3) - 4.dp),
                                                     onClick = {
-                                                        recipesViewModel.displayRecipe.value =
-                                                            recipe
-                                                        onNavigateToRecipe()
-                                                    },
-                                                    onClickKebabMenu = {
-                                                        recipeWithAction =
-                                                            if (recipeWithAction == null) recipe else null
+                                                        recipesViewModel.getRecipe(recipe.id) { isSuccess, error, recipe ->
+                                                            if (isSuccess && recipe != null) {
+                                                                recipesViewModel.displayRecipe.value = recipe
+                                                                onNavigateToRecipe()
+                                                            } else {
+                                                                Toast.makeText(context, error ?: "Failed to load recipe", Toast.LENGTH_SHORT).show()
+                                                            }
+                                                        }
                                                     }
                                                 )
 
                                                 IconButton(
                                                     onClick = {
-                                                        recipe.id?.let {
-                                                            recipesViewModel.removeFromFavorites(it) { isSuccess ->
-                                                                if (isSuccess) {
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        "Recipe removed from favorites.",
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                } else {
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        "Failed to remove from favorites.",
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                }
+                                                        recipe.id.let {
+                                                            recipesViewModel.toggleFavorite(it, recipe.photosUrl, false) { isSuccess ->
+                                                                if (isSuccess) Toast.makeText(context, "Recipe removed from favorites", Toast.LENGTH_SHORT).show()
+                                                                else Toast.makeText(context, "Failed to remove from favorites", Toast.LENGTH_SHORT).show()
                                                             }
                                                         }
                                                     },
-                                                    modifier = Modifier
-                                                        .align(Alignment.BottomStart)
-                                                        .offset(-(7.dp), 5.dp)
+                                                    modifier = Modifier.align(Alignment.BottomStart).offset(-(7.dp), 5.dp)
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.Bookmark,
@@ -438,89 +418,6 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
-    }
-
-    AnimatedVisibility(
-        visible = showMenuBar,
-        enter = fadeIn(),
-        exit = fadeOut(),
-        modifier = Modifier
-            .zIndex(1f)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(.4f))
-                .animateEnterExit(
-                    enter = slideInHorizontally(
-                        initialOffsetX = {
-                            it
-                        }
-                    ),
-                    exit = slideOutHorizontally(
-                        targetOffsetX = {
-                            it
-                        }
-                    )
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        showMenuBar = false
-                    }
-                }
-        ) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .width(250.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
-                    .background(Color.White)
-                    .padding(top = 50.dp)
-            ) {
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 16.dp)) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .clickable {
-                                showMenuBar = false
-                            }
-                    )
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-
-                val menu = arrayOf(
-                    Menu("Settings", Icons.Filled.EditNote, onNavigateToEditProfile)
-                )
-
-
-                menu.forEach {
-                    Row(
-                        modifier = Modifier
-                            .clickable(onClick = it.onClick)
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                    ) {
-                        Icon(
-                            imageVector = it.icon,
-                            contentDescription = null,
-                            tint = Color.Black
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = it.title,
-                            modifier = Modifier
-                                .weight(1f)
-                        )
-                    }
-                }
-            }
-        }
-
     }
 
     if (showGetImageOptions) {

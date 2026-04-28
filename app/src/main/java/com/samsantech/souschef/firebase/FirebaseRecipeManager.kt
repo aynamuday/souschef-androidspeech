@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.data.RecipePhotos
 import com.samsantech.souschef.data.User
 
 class FirebaseRecipeManager(
@@ -15,26 +16,6 @@ class FirebaseRecipeManager(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
-    fun getAllRecipes(recipes: (List<Recipe>) -> Unit) {
-        db.collection("recipes")
-            .get()
-            .addOnSuccessListener { documents ->
-                val recipesList = mutableListOf<Recipe>()
-
-                documents.forEach { document ->
-                    val data = document.data
-                    recipesList.add(
-                        convertDocumentDataToRecipe(document.id, data)
-                    )
-                }
-
-                recipes(recipesList)
-            }
-            .addOnFailureListener {
-                println(it)
-            }
-    }
-
     fun getRecipe(id: String, callback: (Boolean, String?, Recipe?) -> Unit) {
         db.collection("recipes").document(id)
             .get()
@@ -324,7 +305,29 @@ class FirebaseRecipeManager(
         )
     }
 
-    fun addFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
+    fun getFavoriteRecipesPhotos(favoriteRecipes: List<String>, onComplete: (MutableList<RecipePhotos>) -> Unit) {
+        val favoriteRecipesPhotos: MutableList<RecipePhotos> = mutableListOf()
+
+        favoriteRecipes.forEachIndexed { index, recipeId ->
+            db.collection("recipesPhotosUrl")
+                .document(recipeId)
+                .get()
+                .addOnSuccessListener { document ->
+                    val data = document.data
+                    if (data != null) {
+                        favoriteRecipesPhotos.add(RecipePhotos(recipeId, data as? HashMap<String, Uri> ?: hashMapOf(),))
+                    }
+                }
+                .addOnFailureListener {
+                    println("error in FirebaseRecipeManager:getFavoriteRecipesPhotos")
+                }
+                .addOnCompleteListener {
+                    if (index == (favoriteRecipes.size - 1)) onComplete(favoriteRecipesPhotos)
+                }
+        }
+    }
+
+    fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
         val user = auth.currentUser
         if (user != null) {
             val userDocRef = db.collection("users").document(user.uid)
@@ -352,44 +355,7 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun getUserFavoriteRecipes(callback: (List<String>) -> Unit) {
-        val user = auth.currentUser
-        if (user != null) {
-            val userDocRef = db.collection("users").document(user.uid)
-            userDocRef.get().addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
-                    callback(favoriteRecipes)
-                } else {
-                    callback(emptyList())
-                }
-            }.addOnFailureListener {
-                callback(emptyList())
-            }
-        } else {
-            callback(emptyList())
-        }
-    }
-
-    fun removeCurrentUserFavorite(recipeId: String, callback: (Boolean) -> Unit) {
-        val user = auth.currentUser
-        if (user != null) {
-            val userDocRef = db.collection("users").document(user.uid)
-
-            userDocRef.get().addOnSuccessListener { document ->
-                if (document.exists()) {
-                    removeUserFavorite(recipeId, document) {
-                        callback(it)
-                    }
-                } else {
-                    callback(false)
-                }
-            }
-        }
-    }
-
-    // used when a recipe is deleted
-    // removes the recipe to all users' favorite recipes
+    // removes the recipe to all users' favorite recipes when a recipe is deleted
     private fun removeFavoriteFromAllUsers(recipeId: String) {
         db.collection("users")
             .whereArrayContains("favoriteRecipes", recipeId)
@@ -397,23 +363,15 @@ class FirebaseRecipeManager(
             .addOnSuccessListener { users ->
                 if (!users.isEmpty) {
                     users.forEach { user ->
-                        removeUserFavorite(recipeId, user) {
-                            println(it)
-                        }
+                        val favoriteRecipes = user.get("favoriteRecipes") as? MutableList<String> ?: mutableListOf()
+                        favoriteRecipes.remove(recipeId)
+
+                        db.collection("users")
+                            .document(user.id)
+                            .update("favoriteRecipes", favoriteRecipes)
                     }
                 }
             }
-    }
-
-    private fun removeUserFavorite(recipeId: String, user: DocumentSnapshot, callback: (Boolean) -> Unit) {
-        val favoriteRecipes = user.get("favoriteRecipes") as? MutableList<String> ?: mutableListOf()
-        favoriteRecipes.remove(recipeId)
-
-        db.collection("users")
-            .document(user.id)
-            .update("favoriteRecipes", favoriteRecipes)
-            .addOnSuccessListener { callback(true) }
-            .addOnFailureListener { callback(false) }
     }
 
     fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Float?) -> Unit) {
@@ -446,7 +404,7 @@ class FirebaseRecipeManager(
 
                 recipeRef
                     .update("ratings", ratings)
-                    .addOnSuccessListener { callback(true, ratings.values.average().toFloat()) }
+                    .addOnSuccessListener { callback(true, if (ratings.isEmpty()) 0f else ratings.values.average().toFloat()) }
                     .addOnFailureListener { callback(false, null) }
             } else {
                 callback(false, null)

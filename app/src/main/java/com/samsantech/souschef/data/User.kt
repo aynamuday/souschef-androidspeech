@@ -11,4 +11,5 @@ data class User(
     var password: String = "",
     var sentEventsCount: Double = 0.0,
     var lastSentEventTimestamp: Date? = null,
+    var favoriteRecipes: List<String>? = null
 )

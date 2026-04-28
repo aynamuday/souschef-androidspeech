@@ -121,7 +121,7 @@ fun RecipeScreen(
     }
 
     val userRating = remember { mutableFloatStateOf(recipe.ratings?.get(user?.uid)?.toFloat() ?: 0f) }
-    val isFavorite = recipe.id in favoriteRecipes
+    val isFavorite = favoriteRecipes.any { it.id == recipe.id }
     val averageRating = remember { mutableFloatStateOf(if (recipe.ratings.isNullOrEmpty()) { 0f } else {
         recipe.ratings?.values?.average()?.toFloat() ?: 0f
     }) }
@@ -346,7 +346,6 @@ fun RecipeMetadata(
                     text = if (userRating > 0) "Edit your rating" else "Leave a rating",
                     fontSize = 12.sp,
                     modifier = Modifier
-                        .padding(top = 8.dp)
                         .clickable { showRateRecipe.value = true },
                     fontStyle = FontStyle.Italic,
                     color = Color.Gray
@@ -364,7 +363,7 @@ fun RecipeMetadata(
                     .size(28.dp)
                     .clickable {
                         recipe.id?.let { id ->
-                            recipesViewModel.toggleFavorite(id, !isFavorite) {
+                            recipesViewModel.toggleFavorite(id, recipe.photosUrl, !isFavorite) {
                                 val message = if (isFavorite) {
                                     "Recipe removed from favorites"
                                 } else {

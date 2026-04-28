@@ -1,30 +1,22 @@
 package com.samsantech.souschef.viewmodel
 
+import android.net.Uri
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.data.RecipePhotos
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class RecipesViewModel (
+    private val userViewModel: UserViewModel,
     private val firebaseRecipeManager: FirebaseRecipeManager
 ) {
-    val favoriteRecipes: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet())
-    val allRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+
+    val favoriteRecipes: MutableStateFlow<List<RecipePhotos>> = MutableStateFlow(listOf())
     val displayRecipe = MutableStateFlow(Recipe())
 
-    init {
-        refreshRecipes()
-        refreshFavoriteRecipes()
-    }
-
-    private fun refreshRecipes() {
-        firebaseRecipeManager.getAllRecipes { recipes ->
-            allRecipes.value = recipes
-        }
-    }
-
-    private fun refreshFavoriteRecipes() {
-        firebaseRecipeManager.getUserFavoriteRecipes { favorites ->
-            favoriteRecipes.value = favorites.toSet()
+    fun refreshFavoriteRecipes(bFavoriteRecipes: List<String>) {
+        firebaseRecipeManager.getFavoriteRecipesPhotos(bFavoriteRecipes) {
+            favoriteRecipes.value = it
         }
     }
 
@@ -34,25 +26,19 @@ class RecipesViewModel (
         }
     }
 
-    fun toggleFavorite(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
-        firebaseRecipeManager.addFavoriteRecipe(recipeId, isAdd) { isSuccess ->
+    fun toggleFavorite(recipeId: String, photosUrl: HashMap<String, Uri>, isAdd: Boolean, callback: (Boolean) -> Unit) {
+        firebaseRecipeManager.toggleFavoriteRecipe(recipeId, isAdd) { isSuccess ->
             if (isSuccess) {
                 if (isAdd) {
                     val updatedFavorites = favoriteRecipes.value.toMutableList()
-                    updatedFavorites.add(0, recipeId)
-                    favoriteRecipes.value = updatedFavorites.toSet()
+                    updatedFavorites.add(0, RecipePhotos(recipeId, photosUrl))
+                    favoriteRecipes.value = updatedFavorites.toMutableList()
                 } else {
-                    favoriteRecipes.value -= recipeId
+                    // the problem lies here
+                    val updatedFavorites = favoriteRecipes.value.toMutableList()
+                    favoriteRecipes.value = favoriteRecipes.value.filter { it.id != recipeId }
+                    favoriteRecipes.value = updatedFavorites.toMutableList()
                 }
-            }
-            callback(isSuccess)
-        }
-    }
-
-    fun removeFromFavorites(recipeId: String, callback: (Boolean) -> Unit) {
-        firebaseRecipeManager.removeCurrentUserFavorite(recipeId) { isSuccess ->
-            if (isSuccess) {
-                favoriteRecipes.value -= recipeId
             }
             callback(isSuccess)
         }
@@ -60,29 +46,12 @@ class RecipesViewModel (
 
     fun rateRecipe(recipeId: String, rating: Float, callback: (Boolean, Float?) -> Unit) {
         firebaseRecipeManager.rateRecipe(recipeId, rating) { isSuccess, updatedAverageRating ->
-            if (isSuccess) {
-                // Update the local recipe list with the new rating
-                val updatedRecipes = allRecipes.value.map { recipe ->
-                    if (recipe.id == recipeId) {
-                        recipe.copy(userRating = rating, averageRating = updatedAverageRating)
-                    } else recipe
-                }
-                allRecipes.value = updatedRecipes
-            }
             callback(isSuccess, updatedAverageRating)
         }
     }
 
     fun removeRecipeRating(recipeId: String, callback: (Boolean, Float?) -> Unit) {
         firebaseRecipeManager.removeRecipeRating(recipeId) { isSuccess, updatedAverageRating ->
-            if (isSuccess) {
-                val updatedRecipes = allRecipes.value.map { recipe ->
-                    if (recipe.id == recipeId) {
-                        recipe.copy(userRating = 0.0f, averageRating = updatedAverageRating)
-                    } else recipe
-                }
-                allRecipes.value = updatedRecipes
-            }
             callback(isSuccess, updatedAverageRating)
         }
     }

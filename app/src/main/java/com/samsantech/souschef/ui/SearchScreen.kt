@@ -41,6 +41,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.samsantech.souschef.R
 import com.samsantech.souschef.data.Recipe
+import com.samsantech.souschef.data.RecipePhotos
 import com.samsantech.souschef.data.SearchRecipe
 import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.RecipeCard
@@ -52,6 +53,7 @@ import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
+import androidx.core.net.toUri
 
 @Composable
 fun SearchScreen(
@@ -202,7 +204,6 @@ fun SearchScreen(
                             lazyPagingItems = pagingHits,
                             lazyGridState = gridState,
                             maxWidth = maxWidth,
-                            maxHeight = maxHeight,
                             onDisplayRecipe = { id ->
                                 recipesViewModel.displayRecipe.value = Recipe()
 
@@ -220,28 +221,16 @@ fun SearchScreen(
                                 algoliaInsightsViewModel.sendViewedARecipeEvent(id)
                             },
                             favoriteRecipes = favoriteRecipes,
-                            onToggleFavorite = { recipeId ->
-                                val isAdd = !favoriteRecipes.contains(recipeId)
-
-                                recipesViewModel.toggleFavorite(
-                                    recipeId,
-                                    isAdd
-                                ) { isSuccess ->
-                                    if (!isSuccess) {
-                                        error = "Failed to toggle favorite status. Please try again later."
-                                    }
-
-                                    val message = if (!isAdd) {
-                                        "Recipe removed from favorites"
-                                    } else {
-                                        "Recipe added to favorites"
-                                    }
+                            onToggleFavorite = { recipeId, photosUrl, isFavorite ->
+                                recipesViewModel.toggleFavorite(recipeId, photosUrl, !isFavorite) { isSuccess ->
+                                    if (!isSuccess) error = if (!isFavorite) "Failed to remove recipe from favorites" else "Failed to add recipe to favorites"
+                                    val message = if (!isFavorite) "Recipe removed from favorites" else "Recipe added to favorites"
                                     Toast
                                         .makeText(context, message, Toast.LENGTH_SHORT)
                                         .show()
                                 }
 
-                                if (isAdd) {
+                                if (isFavorite) {
                                     algoliaInsightsViewModel.sendAddedToFavoritesEvent(recipeId)
                                 }
                             },
@@ -310,12 +299,11 @@ fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
 fun RecipesList(
     modifier: Modifier = Modifier,
     maxWidth: Dp,
-    maxHeight: Dp,
     lazyPagingItems: LazyPagingItems<SearchRecipe>,
     lazyGridState: LazyGridState,
     onDisplayRecipe: (id: String) -> Unit,
-    favoriteRecipes: Set<String>,
-    onToggleFavorite: (String) -> Unit,
+    favoriteRecipes: List<RecipePhotos>,
+    onToggleFavorite: (String, HashMap<String, Uri>, isFavorite: Boolean) -> Unit,
     view: String = "grid" // or list
 ) {
     LazyVerticalGrid(
@@ -331,6 +319,7 @@ fun RecipesList(
             val width = if (view == "grid") ((maxWidth/2) - 8.dp) else maxWidth
             val height = if (view == "grid") (width/2)+width else 300.dp
 
+            // update implementation if will use again
 //            if (item.isTikTok == true) {
 //                Column {
 //                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
@@ -372,6 +361,8 @@ fun RecipesList(
 //                    }
 //                }
 //            } else {
+                val photosUrl = item.photosUrl.mapValues { (_, value) -> value.toUri() } as java.util.HashMap<String, Uri>
+                val isFavorite = favoriteRecipes.any { it.id == item.objectID }
                 SearchRecipeItem(
                     itemWidth = width,
                     itemHeight = height,
@@ -379,8 +370,10 @@ fun RecipesList(
                     onDisplayRecipe = {
                         item.objectID?.let { onDisplayRecipe(it) }
                     },
-                    isFavorite = favoriteRecipes.contains(item.objectID),
-                    onToggleFavorite = { onToggleFavorite(item.objectID!!) },
+                    isFavorite = isFavorite,
+                    onToggleFavorite = {
+                        item.objectID?.let { onToggleFavorite(it, photosUrl, isFavorite) }
+                   },
                     view = view
                 )
 //            }
@@ -400,9 +393,9 @@ fun SearchRecipeItem(
     view: String = "grid",
 ) {
     val photoUri = if(item.photosUrl["portrait"] != null && item.photosUrl["portrait"] != "") {
-        Uri.parse("${item.photosUrl["portrait"]}")
+        "${item.photosUrl["portrait"]}".toUri()
     } else {
-        Uri.parse("${item.photosUrl["square"]}")
+        "${item.photosUrl["square"]}".toUri()
     }
 
     Column {

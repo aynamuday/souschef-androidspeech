@@ -50,23 +50,13 @@ class OwnRecipesViewModel(
     fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
         val recipe = actionRecipe.value
 
-        firebaseRecipeManager.updateRecipe(
-            data,
-            recipe,
-            updatedRecipe = { updatedRecipe ->
-                updateRecipes(updatedRecipe)
-            },
+        firebaseRecipeManager.updateRecipe(data, recipe, updatedRecipe = { updatedRecipe -> updateRecipes(updatedRecipe) },
             callback = { isSuccess, error ->
                 callback(isSuccess, error)
                 if (isSuccess) {
                     updateRecipes(recipe)
                     if (recipesViewModel.displayRecipe.value.id == recipe.id) {
                         recipesViewModel.displayRecipe.value = recipe
-                    }
-                    if (data["audience"] == "Only me" && recipe.id != null) {
-                        recipesViewModel.favoriteRecipes.value = recipesViewModel.favoriteRecipes.value.filter {
-                            it != recipe.id
-                        }.toSet()
                     }
                     resetRecipe()
                 }
@@ -86,7 +76,6 @@ class OwnRecipesViewModel(
                 }
 
                 recipes.value = updatedRecipes
-                recipesViewModel.favoriteRecipes.value -= recipeId
             }
 
             callback(isSuccess, error)

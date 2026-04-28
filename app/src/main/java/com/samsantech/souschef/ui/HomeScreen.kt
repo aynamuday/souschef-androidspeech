@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.data.SearchRecipe
@@ -59,6 +60,7 @@ import com.samsantech.souschef.viewmodel.HomeViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.UserViewModel
 import kotlinx.coroutines.flow.collectLatest
+import java.util.HashMap
 
 @Composable
 fun HomeScreen(
@@ -129,7 +131,7 @@ fun HomeScreen(
                             val averageRating = if (item.ratings.isNullOrEmpty()) { 0f } else {
                                 item.ratings?.values?.average()?.toFloat() ?: 0f
                             }
-                            val isFavorite = item.objectID in favoriteRecipes
+                            val isFavorite = favoriteRecipes.any { it.id == item.objectID }
 
                             // TIKTOK WEB VIEW
 //                            if (item.isTikTok == true) {
@@ -256,7 +258,8 @@ fun HomeScreen(
                                         algoliaInsightsViewModel.sendViewedARecipeEvent(id)
                                     },
                                     onToggleFavorite = { id ->
-                                        recipesViewModel.toggleFavorite(id, !isFavorite) {
+                                        val photosUrl = item.photosUrl.mapValues { (_, value) -> value.toUri() } as HashMap<String, Uri>
+                                        recipesViewModel.toggleFavorite(id, photosUrl, !isFavorite) {
                                             val message = if (isFavorite) {
                                                 "Recipe removed from favorites"
                                             } else {
