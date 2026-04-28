@@ -51,8 +51,7 @@ class HomeViewModel: ViewModel() {
 //        updateUserToken(null)
 //    }
 
-    fun updateUserToken(userId: String? = "xdBhwlCGsOfh8ElI8z8JVJojDbJ3", categories: List<String>? = null) {
-//        searcher.userToken = if (userId.isNullOrEmpty()) "" else userId
+    fun updateUserToken(userId: String? = null, categories: List<String>? = null) {
         searcher.updateSearchParamsObject {
             it.copy(
                 userToken = if (userId.isNullOrEmpty()) "" else userId
@@ -62,6 +61,7 @@ class HomeViewModel: ViewModel() {
         if (userId != null) {
             optionalFilters.add(OptionalFilters.of("seenBy:-$userId"))
 
+            // uses user preferences as optional filters, ONLY IF there's not enough events sent
             if (!categories.isNullOrEmpty()) {
                 categories.forEach {
                     optionalFilters.add(OptionalFilters.of("categories:$it"))

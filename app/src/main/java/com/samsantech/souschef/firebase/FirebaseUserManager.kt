@@ -6,9 +6,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.dataObjects
 import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.data.User
 import com.samsantech.souschef.data.UserPreferences
+import androidx.core.net.toUri
 
 class FirebaseUserManager(private val auth: FirebaseAuth, private val db: FirebaseFirestore, private val storage: FirebaseStorage) {
     fun getUser(uid: String, callback: (User?) -> Unit) {
@@ -147,7 +149,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                     val downloadUri = task.result
 
                     val profileUpdates = userProfileChangeRequest {
-                        photoUri = Uri.parse("$downloadUri")
+                        photoUri = "$downloadUri".toUri()
                     }
                     user.updateProfile(profileUpdates)
                         .addOnCompleteListener { it ->
@@ -165,7 +167,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                                             recipes.forEach { document ->
                                                 db.collection("recipes")
                                                     .document(document.id)
-                                                    .update("userPhotoUrl", Uri.parse("$downloadUri"))
+                                                    .update("userPhotoUrl", "$downloadUri".toUri())
                                             }
                                         }
                                     }
