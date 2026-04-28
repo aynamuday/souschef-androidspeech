@@ -50,6 +50,8 @@ import com.samsantech.souschef.ui.components.OwnRecipeHeader
 import com.samsantech.souschef.ui.components.ProgressSpinner
 import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.ErrorText
+import com.samsantech.souschef.ui.components.SaveRecipeDialog
+import com.samsantech.souschef.ui.components.SuccessSaveRecipeDialog
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.OwnRecipeAction
@@ -66,9 +68,9 @@ fun CreateRecipeScreenFour(
     onNavigateToProfile: () -> Unit
 ) {
     val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
-    val action by ownRecipesViewModel.action.collectAsState()
+    val action = ownRecipesViewModel.action.collectAsState()
     val originalData by ownRecipesViewModel.originalData.collectAsState()
-    var changes by remember {
+    var changes = remember {
         mutableStateOf(hashMapOf<String, Any>())
     }
     var suggestedTags by remember {
@@ -81,13 +83,13 @@ fun CreateRecipeScreenFour(
     var newTag by remember {
         mutableStateOf("")
     }
-    var loading by remember {
+    var loading = remember {
         mutableStateOf(false)
     }
-    var success by remember {
+    var success = remember {
         mutableStateOf(false)
     }
-    var saveRecipe by remember {
+    var saveRecipe = remember {
         mutableStateOf(false)
     }
     var errors by remember {
@@ -223,124 +225,35 @@ fun CreateRecipeScreenFour(
                 CreateRecipeBottomButtons(
                     firstButtonText = "Back",
                     onFirstButtonClick = onNavigateToCreateRecipeThree,
-                    secondButtonText = if (action == OwnRecipeAction.EDIT) "Save" else "Create",
+                    secondButtonText = if (action.value == OwnRecipeAction.EDIT) "Save" else "Create",
                     onSecondButtonClick = {
-                        if (action == OwnRecipeAction.EDIT) {
-                            changes = getRecipesDifference(originalData, recipe)
+                        if (action.value == OwnRecipeAction.EDIT) {
+                            changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
 
-                            if (changes.isEmpty() && recipe.photosUri.size < 1 && ownRecipesViewModel.deletePhotoKey == null) {
+                            if (changes.value.isEmpty() && recipe.photosUri.isEmpty() && ownRecipesViewModel.deletePhotoKey == null) {
                                 closeCreateRecipe()
                             } else {
-                                saveRecipe = true
+                                saveRecipe.value = true
                             }
                         } else {
-                            saveRecipe = true
+                            saveRecipe.value = true
                         }
                     }
                 )
             }
         }
 
-        if (saveRecipe) {
-            ConfirmDialog(
-                message = if (action == OwnRecipeAction.ADD) "Upload recipe?" else "Save changes?",
-                buttonOkayName = "Continue",
-                onClickCancel = { saveRecipe = false }
-            ) {
-                saveRecipe = false
-
-                if (action == OwnRecipeAction.ADD) {
-                    loading = true
-                    ownRecipesViewModel.uploadRecipe { isSuccess, error ->
-                        loading = false
-
-                        if (!isSuccess && error != null) {
-                            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-                        } else {
-                            success = true
-                        }
-                    }
-                } else if (action == OwnRecipeAction.EDIT) {
-                    loading = true
-                    ownRecipesViewModel.updateRecipe(changes) { isSuccess, err ->
-                        loading = false
-
-                        if (!isSuccess && err != null) {
-                            Toast.makeText(context, err, Toast.LENGTH_LONG).show()
-                        } else {
-                            success = true
-                        }
-
-                        changes = hashMapOf()
-                    }
-                }
-            }
+        if (saveRecipe.value) {
+            SaveRecipeDialog(saveRecipe, loading, action.value, changes, ownRecipesViewModel, context, success)
         }
 
-        if (loading) {
+        if (loading.value) {
             ProgressSpinner()
         }
 
-        if (success) {
-            Dialog(
-                icon = "success",
-                message = if (action == OwnRecipeAction.EDIT) "Recipe updated successfully!" else "Recipe uploaded successfully!",
-                subMessage = null,
-                onCloseClick = {
-                    if (action == OwnRecipeAction.EDIT) closeCreateRecipe() else onNavigateToProfile()
-                    ownRecipesViewModel.action.value = OwnRecipeAction.ADD
-                    success = false
-                }
-            )
+        if (success.value) {
+            SuccessSaveRecipeDialog(action = action.value, closeCreateRecipe = closeCreateRecipe, onNavigateToProfile = onNavigateToProfile,
+                ownRecipesViewModel = ownRecipesViewModel, success = success)
         }
     }
-}
-
-fun getRecipesDifference(recipeOne: Recipe, recipeTwo: Recipe): HashMap<String, Any> {
-    val data = hashMapOf<String, Any>()
-
-    if (recipeOne.title != recipeTwo.title) {
-        data["title"] = recipeTwo.title
-    }
-    if (recipeOne.description != recipeTwo.description) {
-        data["description"] = recipeTwo.description
-    }
-    if (recipeOne.prepTimeHr != recipeTwo.prepTimeHr) {
-        data["prepTimeHr"] = recipeTwo.prepTimeHr
-    }
-    if (recipeOne.prepTimeMin != recipeTwo.prepTimeMin) {
-        data["prepTimeMin"] = recipeTwo.prepTimeMin
-    }
-    if (recipeOne.cookTimeHr != recipeTwo.cookTimeHr) {
-        data["cookTimeHr"] = recipeTwo.cookTimeHr
-    }
-    if (recipeOne.cookTimeMin != recipeTwo.cookTimeMin) {
-        data["cookTimeMin"] = recipeTwo.cookTimeMin
-    }
-    if (recipeOne.serving != recipeTwo.serving) {
-        data["serving"] = recipeTwo.serving
-    }
-    if (recipeOne.difficulty != recipeTwo.difficulty) {
-        data["difficulty"] = recipeTwo.difficulty
-    }
-//    if (recipeOne.mealTypes != recipeTwo.mealTypes) {
-//        data["mealTypes"] = recipeTwo.mealTypes
-//    }
-    if (recipeOne.categories != recipeTwo.categories) {
-        data["categories"] = recipeTwo.categories
-    }
-    if (recipeOne.ingredients != recipeTwo.ingredients) {
-        data["ingredients"] = recipeTwo.ingredients
-    }
-    if (recipeOne.instructions != recipeTwo.instructions) {
-        data["instructions"] = recipeTwo.instructions
-    }
-    if (recipeOne.tags != recipeTwo.tags) {
-        data["tags"] = recipeTwo.tags
-    }
-    if (recipeOne.audience != recipeTwo.audience) {
-        data["audience"] = recipeTwo.audience
-    }
-
-    return data
 }

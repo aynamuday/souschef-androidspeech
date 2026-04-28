@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,12 +28,8 @@ import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.ui.theme.Konkhmer_Sleokcher
 
 @Composable
-fun OwnRecipeHeader(
-    closeCreateRecipe: () -> Unit
-) {
-    Box(
-        contentAlignment = Alignment.CenterStart
-    ) {
+fun OwnRecipeHeader(closeCreateRecipe: () -> Unit, showSaveButton: Boolean = false, showSaveRecipeDialog: () -> Unit = {}) {
+    Box(contentAlignment = Alignment.CenterStart) {
         Icon(
             imageVector = Icons.Filled.Close,
             contentDescription = null,
@@ -57,6 +54,22 @@ fun OwnRecipeHeader(
                 .padding(top = 32.dp),
             textAlign = TextAlign.Center
         )
+        if (showSaveButton) {
+            Icon(
+                imageVector = Icons.Filled.Save,
+                contentDescription = null,
+                modifier = Modifier
+                    .zIndex(2f)
+                    .padding(top = 32.dp, end = 10.dp)
+                    .align(Alignment.CenterEnd)
+                    .size(25.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable {
+                        showSaveRecipeDialog()
+                    },
+                tint = Color.White
+            )
+        }
     }
     Spacer(modifier = Modifier
         .background(Color.LightGray)

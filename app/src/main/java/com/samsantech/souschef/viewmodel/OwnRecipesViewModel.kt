@@ -310,4 +310,55 @@ class OwnRecipesViewModel(
 
         recipes.value = updatedRecipes
     }
+
+    fun getUpdatedRecipeDifference(): HashMap<String, Any> {
+        val recipeOne = actionRecipe.value
+        val recipeTwo = originalData.value
+        val data = hashMapOf<String, Any>()
+
+        if (recipeOne.title != recipeTwo.title) {
+            data["title"] = recipeTwo.title
+        }
+        if (recipeOne.description != recipeTwo.description) {
+            data["description"] = recipeTwo.description
+        }
+        if (recipeOne.prepTimeHr != recipeTwo.prepTimeHr) {
+            data["prepTimeHr"] = recipeTwo.prepTimeHr
+        }
+        if (recipeOne.prepTimeMin != recipeTwo.prepTimeMin) {
+            data["prepTimeMin"] = recipeTwo.prepTimeMin
+        }
+        if (recipeOne.cookTimeHr != recipeTwo.cookTimeHr) {
+            data["cookTimeHr"] = recipeTwo.cookTimeHr
+        }
+        if (recipeOne.cookTimeMin != recipeTwo.cookTimeMin) {
+            data["cookTimeMin"] = recipeTwo.cookTimeMin
+        }
+        if (recipeOne.serving != recipeTwo.serving) {
+            data["serving"] = recipeTwo.serving
+        }
+        if (recipeOne.difficulty != recipeTwo.difficulty) {
+            data["difficulty"] = recipeTwo.difficulty
+        }
+//    if (recipeOne.mealTypes != recipeTwo.mealTypes) {
+//        data["mealTypes"] = recipeTwo.mealTypes
+//    }
+        if (recipeOne.categories != recipeTwo.categories) {
+            data["categories"] = recipeTwo.categories
+        }
+        if (recipeOne.ingredients != recipeTwo.ingredients) {
+            data["ingredients"] = recipeTwo.ingredients
+        }
+        if (recipeOne.instructions != recipeTwo.instructions) {
+            data["instructions"] = recipeTwo.instructions
+        }
+        if (recipeOne.tags != recipeTwo.tags) {
+            data["tags"] = recipeTwo.tags
+        }
+        if (recipeOne.audience != recipeTwo.audience) {
+            data["audience"] = recipeTwo.audience
+        }
+
+        return data
+    }
 }

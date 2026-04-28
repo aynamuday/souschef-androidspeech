@@ -1,5 +1,6 @@
 package com.samsantech.souschef.ui
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,26 +44,43 @@ import com.samsantech.souschef.ui.components.ErrorText
 import com.samsantech.souschef.ui.components.FormBasicTextField
 import com.samsantech.souschef.ui.components.ImageButton
 import com.samsantech.souschef.ui.components.OwnRecipeHeader
+import com.samsantech.souschef.ui.components.ProgressSpinner
+import com.samsantech.souschef.ui.components.SaveRecipeDialog
+import com.samsantech.souschef.ui.components.SuccessSaveRecipeDialog
 import com.samsantech.souschef.ui.theme.Yellow
+import com.samsantech.souschef.utils.OwnRecipeAction
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 
 @Composable
 fun CreateRecipeScreenThree(
+    context: Context,
     ownRecipesViewModel: OwnRecipesViewModel,
     onNavigateToCreateRecipeTwo: () -> Unit,
     onNavigateToCreateRecipeFour: () -> Unit,
     closeCreateRecipe: () -> Unit
 ) {
     val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
+    val action = ownRecipesViewModel.action.collectAsState()
+    val saveRecipe = remember { mutableStateOf(false) }
+    val changes = remember { mutableStateOf(hashMapOf<String, Any>()) }
+    val loading = remember { mutableStateOf(false) }
+    val success = remember { mutableStateOf(false) }
 
-    var error by remember {
-        mutableStateOf("")
-    }
+    var error by remember { mutableStateOf("") }
 
     BoxWithConstraints(modifier = Modifier.background(Color.White)) {
         val maxHeight = maxHeight
         Column {
-            OwnRecipeHeader( closeCreateRecipe = closeCreateRecipe )
+            OwnRecipeHeader(closeCreateRecipe, action.value == OwnRecipeAction.EDIT) {
+                // save edit changes
+                changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
+
+                if (changes.value.isEmpty() && recipe.photosUri.isEmpty() && ownRecipesViewModel.deletePhotoKey == null) {
+                    closeCreateRecipe()
+                } else {
+                    saveRecipe.value = true
+                }
+            }
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
@@ -151,6 +169,18 @@ fun CreateRecipeScreenThree(
                     }
                 )
             }
+        }
+
+        if (saveRecipe.value) {
+            SaveRecipeDialog(saveRecipe, loading, action.value, changes, ownRecipesViewModel, context, success)
+        }
+
+        if (loading.value) {
+            ProgressSpinner()
+        }
+
+        if (success.value) {
+            SuccessSaveRecipeDialog(action.value, closeCreateRecipe, ownRecipesViewModel = ownRecipesViewModel, success = success)
         }
     }
 }

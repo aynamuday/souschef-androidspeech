@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -48,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,16 +54,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import com.samsantech.souschef.R
 import com.samsantech.souschef.ui.components.ColoredButton
 import com.samsantech.souschef.ui.components.ErrorText
 import com.samsantech.souschef.ui.components.FormBasicTextField
 import com.samsantech.souschef.ui.components.OwnRecipeHeader
+import com.samsantech.souschef.ui.components.ProgressSpinner
+import com.samsantech.souschef.ui.components.SaveRecipeDialog
+import com.samsantech.souschef.ui.components.SuccessSaveRecipeDialog
 import com.samsantech.souschef.ui.theme.Green
-import com.samsantech.souschef.ui.theme.Yellow
 import com.samsantech.souschef.utils.OwnRecipeAction
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
+import kotlin.collections.hashMapOf
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
@@ -77,70 +78,47 @@ fun CreateRecipeScreenOne(
     closeCreateRecipe: () -> Unit
 ) {
     val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
-    val action by ownRecipesViewModel.action.collectAsState()
+    val action = ownRecipesViewModel.action.collectAsState()
+    val saveRecipe = remember { mutableStateOf(false) }
+    val changes = remember { mutableStateOf(hashMapOf<String, Any>()) }
 
-    var categories by remember {
-//        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafood", "Vegetables", "Dessert", "Drink"))
-        // Rice, Others, Other Meat
-        mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink"))
-    }
-    val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
+    var categories by remember {mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink")) }
+//    val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
-//    val courses = arrayOf("Main", "Side", "Appetizer", "Dessert", "Drink")
-    var portrait by remember {
-        mutableStateOf(if (action == OwnRecipeAction.EDIT && recipe.photosUrl["portrait"] != null) Uri.parse(recipe.photosUrl["portrait"].toString()) else null)
-    }
-//    var landscape by remember {
-//        mutableStateOf<Uri?>(null)
-//    }
-    var square by remember {
-        mutableStateOf(if (action == OwnRecipeAction.EDIT && recipe.photosUrl["square"] != null) Uri.parse(recipe.photosUrl["square"].toString()) else null)
-    }
+    var portrait by remember { mutableStateOf(if (action.value == OwnRecipeAction.EDIT && recipe.photosUrl["portrait"] != null) recipe.photosUrl["portrait"].toString().toUri() else null) }
+//    var landscape by remember { mutableStateOf<Uri?>(null) }
+    var square by remember { mutableStateOf(if (action.value == OwnRecipeAction.EDIT && recipe.photosUrl["square"] != null) recipe.photosUrl["square"].toString().toUri() else null) }
+    var showDifficultyDropdown by remember { mutableStateOf(false) }
+    var errors by remember { mutableStateOf(hashMapOf<String, String>()) }
+    val loading = remember { mutableStateOf(false) }
+    val success = remember { mutableStateOf(false) }
 
-    var showDifficultyDropdown by remember {
-        mutableStateOf(false)
-    }
-    var showAddCategory by remember {
-        mutableStateOf(false)
-    }
-    var errors by remember {
-        mutableStateOf(hashMapOf<String, String>())
-    }
 
-    val pickImagePortrait = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
+    val pickImagePortrait = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             clearError("photos", errors) { newErrors ->
                 errors = newErrors
             }
-
             portrait = uri
 //            portrait = convertUriToBitmap(context, uri)
             ownRecipesViewModel.addPhoto("portrait", uri)
         }
     }
-//    val pickImageLandscape = rememberLauncherForActivityResult(
-//        ActivityResultContracts.PickVisualMedia()
-//    ) { uri ->
+//    val pickImageLandscape = rememberLauncherForActivityResult( ActivityResultContracts.PickVisualMedia() ) { uri ->
 //        if (uri != null) {
 //            clearError("photos", errors) { newErrors ->
 //                errors = newErrors
 //            }
-//
 //            landscape = uri
 ////            landscape = convertUriToBitmap(context, uri)
 //            ownRecipesViewModel.addPhoto("landscape", uri)
 //        }
 //    }
-    val pickImageSquare = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
+    val pickImageSquare = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             clearError("photos", errors) { newErrors ->
                 errors = newErrors
             }
-
             square = uri
 //            square = convertUriToBitmap(context, uri)
             ownRecipesViewModel.addPhoto("square", uri)
@@ -149,7 +127,18 @@ fun CreateRecipeScreenOne(
 
     Box(modifier = Modifier.background(Color.White)) {
         Column {
-            OwnRecipeHeader(closeCreateRecipe)
+            OwnRecipeHeader(closeCreateRecipe, action.value == OwnRecipeAction.EDIT) {
+                // save edit changes
+                changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
+
+                if (changes.value.isEmpty() && recipe.photosUri.isEmpty() && ownRecipesViewModel.deletePhotoKey == null) {
+                    portrait = null
+                    square = null
+                    closeCreateRecipe()
+                } else {
+                    saveRecipe.value = true
+                }
+            }
             Column(
                 modifier = Modifier
                     .padding(start = 24.dp, end = 24.dp)
@@ -161,16 +150,8 @@ fun CreateRecipeScreenOne(
                     CreateRecipeImageContainer(
                         height = 200.dp,
                         width = 113.dp,
-                        image  = if (action == OwnRecipeAction.EDIT)
+                        image  = if (action.value == OwnRecipeAction.EDIT)
                                     portrait
-//                                    Uri.parse(portrait.toString())
-//                                    else Uri.parse(recipe.photosUri["portrait"].toString())
-//                                    else if (recipe.photosUri["portrait"] != null) {
-//                                        println(true)
-//                                        Uri.parse(recipe.photosUri["portrait"].toString())
-//                                    } else {
-//                                        null
-//                                    }
                                 else recipe.photosUri["portrait"],
                         pickImage = pickImagePortrait,
                         onRemoveClick = {
@@ -182,7 +163,7 @@ fun CreateRecipeScreenOne(
                     CreateRecipeImageContainer(
                         height = 150.dp,
                         width = 150.dp,
-                        image  = if (action == OwnRecipeAction.EDIT)
+                        image  = if (action.value == OwnRecipeAction.EDIT)
                             square
                         else recipe.photosUri["square"],
                         pickImage = pickImageSquare,
@@ -220,8 +201,6 @@ fun CreateRecipeScreenOne(
 
                 // TITLE
                 Column {
-//                    Text(text = "Title", fontWeight = FontWeight.Bold)
-//                    Spacer(modifier = Modifier.height(10.dp))
                     FormBasicTextField(
                         value = recipe.title,
                         onValueChange = {
@@ -244,8 +223,6 @@ fun CreateRecipeScreenOne(
 
                 // DESCRIPTION
                 Column {
-//                    Text(text = "Description", fontWeight = FontWeight.Bold)
-//                    Spacer(modifier = Modifier.height(10.dp))
                     FormBasicTextField(
                         value = if (recipe.description != "null") recipe.description else "",
                         onValueChange = {
@@ -501,8 +478,8 @@ fun CreateRecipeScreenOne(
                         val newErrors = hashMapOf<String, String>()
 
                         // recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null &&
-                        if ((action != OwnRecipeAction.EDIT && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null))
-                            || (action == OwnRecipeAction.EDIT && (portrait == null && square == null))) {
+                        if ((action.value != OwnRecipeAction.EDIT && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null))
+                            || (action.value == OwnRecipeAction.EDIT && (portrait == null && square == null))) {
                             newErrors["photos"] = "At least one photo is required."
                         }
 
@@ -532,7 +509,7 @@ fun CreateRecipeScreenOne(
                             newErrors["general"] = "Check your inputs for errors."
                             errors = newErrors
                         } else {
-                            if (action == OwnRecipeAction.EDIT) {
+                            if (action.value == OwnRecipeAction.EDIT) {
                                 ownRecipesViewModel.deletePhotoKey = if (portrait == null && recipe.photosUrl["portrait"] != null) "portrait" else if(square == null && recipe.photosUrl["square"] != null) "square" else null
                             }
                             onNavigateToCreateRecipeTwo()
@@ -546,18 +523,19 @@ fun CreateRecipeScreenOne(
             }
         }
 
-        // ADD CATEGORY POPUP
-        if (showAddCategory) {
-            CreateCategory(
-                onCloseClick = { showAddCategory = false },
-                onAddCategory = {
-                    if (it.trim() != "") {
-                        ownRecipesViewModel.addCategory(it)
-                        categories = categories.plus(it)
-                    }
-                    showAddCategory = false
-                }
-            )
+        if (saveRecipe.value) {
+            SaveRecipeDialog(saveRecipe, loading, action.value, changes, ownRecipesViewModel, context, success) {
+                portrait = null
+                square = null
+            }
+        }
+
+        if (loading.value) {
+            ProgressSpinner()
+        }
+
+        if (success.value) {
+            SuccessSaveRecipeDialog(action.value, closeCreateRecipe, ownRecipesViewModel = ownRecipesViewModel, success = success)
         }
     }
 }
@@ -635,74 +613,6 @@ fun CreateRecipeCard(name: String, onClick: () -> Unit, backgroundColor: Color, 
         color = textColor
     )
     Spacer(modifier = Modifier.height(10.dp))
-}
-
-@Composable
-fun CreateCategory(onCloseClick: () -> Unit, onAddCategory: (String) -> Unit) {
-    var newCategory by remember {
-        mutableStateOf("")
-    }
-
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(.5f))
-            .pointerInput(Unit) {
-                detectTapGestures {
-                    onCloseClick()
-                }
-            }
-    ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .width(maxWidth - 48.dp)
-                .background(Color.White, RoundedCornerShape(10.dp))
-                .padding(vertical = 20.dp, horizontal = 24.dp)
-        ) {
-            Box() {
-                Text(text = "Add Category", fontWeight = FontWeight.Bold,
-                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .clip(RoundedCornerShape(50))
-                        .clickable { onCloseClick() }
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            FormBasicTextField(
-                value = newCategory,
-                onValueChange = {
-                    newCategory = it
-                },
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable { onAddCategory(newCategory) }
-                ) {
-                    Text(
-                        text = "Add",
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Yellow)
-                            .padding(30.dp, 5.dp)
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -858,10 +768,4 @@ fun clearError(errorName: String, errors: HashMap<String, String>, setErrors: (H
     val clearedErrors = HashMap<String, String>(errors.toMap())
     clearedErrors.remove(errorName)
     setErrors(clearedErrors)
-}
-
-fun setError(errorName: String, error: String, errors: HashMap<String, String>, setErrors: (HashMap<String, String>) -> Unit) {
-    val newErrors = HashMap<String, String>(errors.toMap())
-    newErrors[errorName] = error
-    setErrors(newErrors)
 }
