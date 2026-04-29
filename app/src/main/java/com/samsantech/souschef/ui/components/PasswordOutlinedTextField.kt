@@ -38,7 +38,7 @@ fun PasswordOutlinedTextField(value: String, onValueChange: (String) -> Unit,
         onValueChange = onValueChange,
         label = {
             if (label != null) {
-                Text(text = label, fontSize = 14.sp)
+                Text(text = label)
             }
         },
         modifier = Modifier

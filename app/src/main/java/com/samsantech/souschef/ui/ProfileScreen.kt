@@ -129,9 +129,6 @@ fun ProfileScreen(
     var error:String? by remember {
         mutableStateOf(null)
     }
-    var showMenuBar by remember {
-        mutableStateOf(false)
-    }
 
     val activityResultLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -273,13 +270,8 @@ fun ProfileScreen(
                                     verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
                                     ownRecipes.forEach { recipe ->
-                                        val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) {
-                                            Uri.parse("${recipe.photosUrl["portrait"]}")
-                                        } else if (recipe.photosUrl["square"] != null) {
-                                            Uri.parse("${recipe.photosUrl["square"]}")
-                                        } else {
-                                            Uri.parse("${recipe.photosUrl["landscape"]}")
-                                        }
+                                        val photoUrl: Uri? = if (recipe.photosUrl["portrait"] != null) "${recipe.photosUrl["portrait"]}".toUri()
+                                        else "${recipe.photosUrl["square"]}".toUri()
 
                                         RecipeCard(
                                             photoUrl = photoUrl,
@@ -503,9 +495,3 @@ fun ProfileScreen(
         ProgressSpinner()
     }
 }
-
-data class Menu(
-    val title: String,
-    val icon: ImageVector,
-    val onClick: () -> Unit
-)

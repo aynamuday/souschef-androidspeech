@@ -77,13 +77,14 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
         }
     }
 
-    fun updateProfile(username: String? = null, newDisplayName: String? = null, email: String? = null, callback: (Boolean, String?) -> Unit) {
+    fun updateProfile(username: String? = null, bDisplayName: String? = null, email: String? = null, callback: (Boolean, String?) -> Unit) {
         val user = auth.currentUser
 
         if (user != null) {
-            if (newDisplayName != null) {
+            // updates the display name
+            if (bDisplayName != null) {
                 val profileUpdates = userProfileChangeRequest {
-                    displayName = newDisplayName
+                    displayName = bDisplayName
                 }
                 user.updateProfile(profileUpdates)
                     .addOnCompleteListener {
@@ -95,6 +96,8 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         }
                     }
             }
+
+            // updates user in users collection
             val updatedUser = hashMapOf<String, String>()
             updatedUser["username"] = username ?: ""
             updatedUser["email"] = if (email != null) "$email" else "${user.email}"
@@ -106,11 +109,14 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         callback(true, null)
                         user.reload()
 
+                        // updates userName field in all user's recipes
                         if (!updatedUser["username"].isNullOrEmpty()) {
+                            // first, gets all the user's recipes
                             db.collection("recipes")
                                 .whereEqualTo("userId", user.uid)
                                 .get()
                                 .addOnSuccessListener { recipes ->
+                                    // then updates the userName field in each recipe
                                     if (!recipes.isEmpty) {
                                         recipes.forEach { document ->
                                             db.collection("recipes")
@@ -132,6 +138,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
         val user = auth.currentUser
 
         if (user != null) {
+            // uploads the photo to storage
             val storageRef = storage.reference
             val userProfileRef = storageRef.child("profile/${user.uid}.jpg")
 
@@ -140,7 +147,6 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
             uploadTask.continueWithTask { task ->
                 if (!task.isSuccessful) {
                     callback(false, getErrorMessage(task.exception), null)
-                    println(task.exception)
                 }
 
                 userProfileRef.downloadUrl
@@ -148,6 +154,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                 if (task.isSuccessful) {
                     val downloadUri = task.result
 
+                    // update the photoUri in user's authentication data
                     val profileUpdates = userProfileChangeRequest {
                         photoUri = "$downloadUri".toUri()
                     }
@@ -159,6 +166,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                                 user.reload()
                                 callback(true, null, downloadUri.toString())
 
+                                // updates the userPhotoUrl field in all user's recipes
                                 db.collection("recipes")
                                     .whereEqualTo("userId", user.uid)
                                     .get()
@@ -175,7 +183,6 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         }
                 } else {
                     callback(false, getErrorMessage(task.exception), null)
-                    println(task.exception)
                 }
             }
         }
@@ -186,8 +193,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
 
         if (user != null) {
             val credential = user.email?.let {
-                EmailAuthProvider
-                    .getCredential(it, password)
+                EmailAuthProvider.getCredential(it, password)
             }
 
             if (credential != null) {
@@ -196,9 +202,14 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
                         if (!task.isSuccessful) {
                             callback(false, getErrorMessage(task.exception))
                         } else {
+                            // updates the user's email in authentication data
                             user.verifyBeforeUpdateEmail(newEmail)
                                 .addOnCompleteListener {
                                     if (it.isSuccessful) {
+                                        // update email of user in user's collection
+                                        // WHY IS THERE EMAIL IN USERS COLLECTION, WHEN IT IS ALREADY AVAILABLE IN AUTHENTICATION DATA?
+                                        // because of the minor functionality to check if an email already exists when updating an email or creating new account
+                                        // emails cannot be fetched from authentication data
                                         updateProfile(username = username, email = newEmail) { _, err ->
                                             println(err)
                                         }
@@ -233,6 +244,7 @@ class FirebaseUserManager(private val auth: FirebaseAuth, private val db: Fireba
             }
     }
 
+    // for a minor functionality to ask for user categories if sent event counts are not enough
     fun incrementSentEventsCount() {
         val user = auth.currentUser
         val data: Map<String, Any> = mapOf(

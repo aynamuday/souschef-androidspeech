@@ -11,37 +11,31 @@ class OwnRecipesViewModel(
     private val firebaseRecipeManager: FirebaseRecipeManager,
     private val recipesViewModel: RecipesViewModel
 ) {
-    val actionRecipe = MutableStateFlow(Recipe())
     val recipes = MutableStateFlow<List<Recipe>>(listOf())
-    val action = MutableStateFlow(OwnRecipeAction.ADD)
-    val originalData = MutableStateFlow(Recipe())
+    val originalData = MutableStateFlow(Recipe())   // the original recipe value before edit action
+    val actionRecipe = MutableStateFlow(Recipe())   // the recipe value to perform action with (add, edit)
     var deletePhotoKey: String? = null
+    val action = MutableStateFlow(OwnRecipeAction.ADD)
 
     init {
         getOwnRecipes()
     }
 
     fun getOwnRecipes() {
-        firebaseRecipeManager.getOwnRecipes {
-            recipes.value = it
-        }
+        firebaseRecipeManager.getOwnRecipes { recipes.value = it }
     }
 
     fun uploadRecipe(callback: (Boolean, String?) -> Unit) {
         val user = userViewModel.user.value
 
         if (user != null) {
-            firebaseRecipeManager.addRecipe(
-                recipe = actionRecipe.value,
-                user = user,
+            firebaseRecipeManager.addRecipe(recipe = actionRecipe.value, user = user,
                 callback = { isSuccess, error ->
                     callback(isSuccess, error)
-                    if (isSuccess) {
-                        resetRecipe()
-                    }
+                    if (isSuccess) resetRecipe()
                 },
-                updatedRecipe = { updatedRecipe ->
-                    updateRecipes(updatedRecipe)
+                createdRecipe = { createdRecipe ->
+                    updateRecipes(createdRecipe)
                 }
             )
         }
@@ -94,11 +88,8 @@ class OwnRecipesViewModel(
             it.id == recipe.id
         }
 
-        if (recipeIndexToUpdate != -1) {
-            updatedRecipes[recipeIndexToUpdate] = recipe
-        } else {
-            updatedRecipes.add(0, recipe)
-        }
+        if (recipeIndexToUpdate != -1) updatedRecipes[recipeIndexToUpdate] = recipe
+        else updatedRecipes.add(0, recipe)
 
         recipes.value = updatedRecipes
     }
@@ -166,18 +157,6 @@ class OwnRecipesViewModel(
             difficulty = difficulty
         )
     }
-
-//    fun addMealType(mealType: String) {
-//        actionRecipe.value = actionRecipe.value.copy(
-//            mealTypes = actionRecipe.value.mealTypes.plus(mealType)
-//        )
-//    }
-
-//    fun removeMealType(mealType: String) {
-//        actionRecipe.value = actionRecipe.value.copy(
-//            mealTypes = actionRecipe.value.mealTypes.minus(mealType)
-//        )
-//    }
 
     fun addCategory(category: String) {
         actionRecipe.value = actionRecipe.value.copy(

@@ -44,15 +44,16 @@ class UserViewModel(
                         }
                     }
 
+                    // update favorite recipes every new login
                     recipesViewModel.refreshFavoriteRecipes(it.favoriteRecipes ?: listOf())
 
                     // uses user preferences as optional filters, ONLY IF there's not enough events sent
                     val lastSentEventTimeStamp = it.lastSentEventTimestamp
-                    if (lastSentEventTimeStamp != null) {
+                    if (lastSentEventTimeStamp != null && it.sentEventsCount < 30) {
                         val differenceInMillis = lastSentEventTimeStamp.time - Calendar.getInstance().time.time
                         val threeHoursInMillis = 10800000
 
-                        if (differenceInMillis >= threeHoursInMillis && it.sentEventsCount < 30) {
+                        if (differenceInMillis >= threeHoursInMillis) {
                             firebaseUserManager.getUserPreferences { preferences ->
                                 if (preferences != null && !preferences.categories.isNullOrEmpty()) {
                                     homeViewModel.updateUserToken(user.value?.uid, preferences.categories)
@@ -82,7 +83,7 @@ class UserViewModel(
     }
 
     fun updateProfile(name: String? = null, username: String? = null, callback: (Boolean, String?) -> Unit) {
-        firebaseUserManager.updateProfile(newDisplayName = name, username = username) { isSuccess, error ->
+        firebaseUserManager.updateProfile(bDisplayName = name, username = username) { isSuccess, error ->
             if (isSuccess) {
                 refreshUser()
 

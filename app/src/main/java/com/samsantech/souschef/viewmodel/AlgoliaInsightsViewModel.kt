@@ -82,6 +82,7 @@ class AlgoliaInsightsViewModel(private val context: Context) {
 
     private fun incrementSentEventsCount() {
         val user = userViewModel.user.value
+        // monitors sent events counts only if it's less than 30, meaning not enough events have been sent
         if (user != null && user.sentEventsCount < 30.0) {
             userViewModel.incrementSentEventsCount()
         }

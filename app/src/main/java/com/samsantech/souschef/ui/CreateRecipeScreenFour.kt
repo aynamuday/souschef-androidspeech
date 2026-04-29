@@ -69,8 +69,7 @@ fun CreateRecipeScreenFour(
 ) {
     val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
     val action = ownRecipesViewModel.action.collectAsState()
-    val originalData by ownRecipesViewModel.originalData.collectAsState()
-    var changes = remember {
+    val changes = remember {
         mutableStateOf(hashMapOf<String, Any>())
     }
     var suggestedTags by remember {
@@ -83,13 +82,13 @@ fun CreateRecipeScreenFour(
     var newTag by remember {
         mutableStateOf("")
     }
-    var loading = remember {
+    val loading = remember {
         mutableStateOf(false)
     }
-    var success = remember {
+    val success = remember {
         mutableStateOf(false)
     }
-    var saveRecipe = remember {
+    val saveRecipe = remember {
         mutableStateOf(false)
     }
     var errors by remember {

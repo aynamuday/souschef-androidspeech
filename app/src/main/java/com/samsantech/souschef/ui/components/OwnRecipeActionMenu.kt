@@ -27,9 +27,6 @@ fun OwnRecipeActionMenu(
     var successDelete by remember {
         mutableStateOf(false)
     }
-    var error:String? by remember {
-        mutableStateOf(null)
-    }
 
     if (showRecipeActionMenu) {
         BottomActionMenuPopUp(
@@ -75,8 +72,6 @@ fun OwnRecipeActionMenu(
                                 if (isSuccess) {
                                     onDeleted(true)
                                     successDelete = true
-                                } else {
-                                    error = err
                                 }
                             }
                         }

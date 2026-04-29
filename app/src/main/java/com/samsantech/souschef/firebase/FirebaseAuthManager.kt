@@ -29,7 +29,7 @@ class FirebaseAuthManager(
                 } else {
                     val signedUpUser = getCurrentUser()
                     if (signedUpUser != null) {
-                        firebaseUserManager.updateProfile(newDisplayName = user.displayName) { _, errorMessage ->
+                        firebaseUserManager.updateProfile(bDisplayName = user.displayName) { _, errorMessage ->
                             if (errorMessage != null) {
                                 error = errorMessage
                             }

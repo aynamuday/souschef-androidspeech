@@ -44,7 +44,7 @@ fun OwnRecipeHeader(closeCreateRecipe: () -> Unit, showSaveButton: Boolean = fal
             tint = Color.White
         )
         Text(
-            text = "Create Recipe",
+            text = if (showSaveButton) "Edit Recipe" else "Create Recipe",
             fontFamily = Konkhmer_Sleokcher,
             fontSize = 24.sp,
             color = Color.White,

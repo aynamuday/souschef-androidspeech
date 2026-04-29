@@ -1,0 +1,4 @@
+This file includes notes or discussions of the codes.
+
+•   Recipe Photos
+    When creating or updating a recipe, there are three variables for its photos: photosUri, photosUrl, and
