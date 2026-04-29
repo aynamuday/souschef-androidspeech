@@ -2,7 +2,6 @@ package com.samsantech.souschef.firebase
 
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -10,7 +9,9 @@ import com.google.firebase.storage.FirebaseStorage
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.data.RecipePhotos
 import com.samsantech.souschef.data.User
+import androidx.core.net.toUri
 
+// handles all the direct operations related with recipes to Firebase
 class FirebaseRecipeManager(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore,
@@ -42,15 +43,12 @@ class FirebaseRecipeManager(
                 .get()
                 .addOnSuccessListener { documents ->
                     val recipesList = mutableListOf<Recipe>()
-
                     documents.forEach { document ->
                         val data = document.data
-
                         recipesList.add(
                             convertDocumentDataToRecipe(document.id, data)
                         )
                     }
-
                     recipes(recipesList)
                 }
                 .addOnFailureListener {
@@ -59,12 +57,7 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun addRecipe(
-        recipe: Recipe,
-        user: User,
-        callback: (Boolean, String?) -> Unit,
-        updatedRecipe: (Recipe) -> Unit
-    ) {
+    fun addRecipe(recipe: Recipe, user: User, callback: (Boolean, String?) -> Unit, createdRecipe: (Recipe) -> Unit) {
         val data = hashMapOf(
             "userId" to user.uid,
             "userName" to user.username,
@@ -76,9 +69,10 @@ class FirebaseRecipeManager(
 //            "categories" to recipe.categories,
             "ingredients" to recipe.ingredients,
             "instructions" to recipe.instructions,
-            "audience" to recipe.audience
+            "audience" to recipe.audience,
+            "createdAt" to FieldValue.serverTimestamp(),
+            "updatedAt" to FieldValue.serverTimestamp()
         )
-
         if (recipe.description.isNotEmpty()) data["description"] = recipe.description
         if (recipe.prepTimeHr.isNotEmpty()) data["prepTimeHr"] = recipe.prepTimeHr
         if (recipe.prepTimeMin.isNotEmpty()) data["prepTimeMin"] = recipe.prepTimeMin
@@ -87,31 +81,26 @@ class FirebaseRecipeManager(
         if (recipe.categories.isNotEmpty()) data["categories"] = recipe.categories
 //        if (recipe.mealTypes.isNotEmpty()) data["mealTypes"] = recipe.mealTypes
         if (recipe.tags.isNotEmpty()) data["tags"] = recipe.tags
-        data["createdAt"] = FieldValue.serverTimestamp()
-        data["updatedAt"] = FieldValue.serverTimestamp()
 
         db.collection("recipes")
-            .add(data)  // adds the recipe to db
+            .add(data)
             .addOnSuccessListener { recipeDocRef ->
+                // assigns the recipe id and user data to recipe
                 recipe.id = recipeDocRef.id
                 recipe.userId = user.uid
                 recipe.userName = user.username
                 recipe.userPhotoUrl = user.photoUrl
 
-                // on success, upload the recipe photos
-                if (recipe.photosUri.size > 0) {
+                // on success, upload the recipe photos to storage
+                if (recipe.photosUri.isNotEmpty()) {
                     uploadRecipePhotos(
                         recipe.photosUri,
                         recipe,
-                        updatedRecipe = {
-                            updatedRecipe(it)
-                        },
-                        callback = { isSuccess, err ->
-                            callback(isSuccess, err)
-                        }
+                        updatedRecipe = { createdRecipe(it) }, // returns the recipe with the photos url
+                        callback = { isSuccess, err -> callback(isSuccess, err) }
                     )
                 } else {
-                    updatedRecipe(recipe)
+                    createdRecipe(recipe)
                     callback(true, null)
                 }
             }
@@ -120,37 +109,29 @@ class FirebaseRecipeManager(
             }
     }
 
-    fun updateRecipe(
-        data: HashMap<String, Any>,
-        recipe: Recipe,
-        updatedRecipe: (Recipe) -> Unit,
-        callback: (Boolean, String?) -> Unit,
-        deletePhotoKey: String?
-    ) {
-        if (recipe.photosUri.size > 0) {
+    fun updateRecipe(data: HashMap<String, Any>, recipe: Recipe, updatedRecipe: (Recipe) -> Unit, callback: (Boolean, String?) -> Unit, deletePhotoKey: String?) {
+        // uploads new photos for the recipe
+        if (recipe.photosUri.isNotEmpty()) {
             uploadRecipePhotos(
                 recipe.photosUri,
                 recipe,
-                updatedRecipe = {
-                    updatedRecipe(it)
-                },
+                updatedRecipe = { updatedRecipe(it) },
                 callback = { isSuccess, err ->
-                    if (data.isEmpty()) {
-                        callback(isSuccess, err)
-                    }
+                    // if photos are the only update, that is data parameter is empty, returns a callback already
+                    if (data.isEmpty()) callback(isSuccess, err)
                 }
             )
         }
 
-        if (data["audience"] == "Only me") {
-            recipe.id?.let { removeFavoriteFromAllUsers(it) }
-        }
-
+        // will it update the new photos while also delete?
+        // when there is no square but adds square, there is portrait but removed portrait: portrait is not removed
         if (deletePhotoKey != null) {
             recipe.id?.let {
+                // delete the photo in storage
                 deleteRecipePhoto(it, deletePhotoKey) { isSuccess, err ->
                     if (isSuccess) {
                         recipe.id?.let { recipeId ->
+                            // delete the photo url in recipes collection
                             db.collection("recipes")
                                 .document(recipeId)
                                 .update("photosUrl.$deletePhotoKey", FieldValue.delete())
@@ -191,26 +172,27 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun deleteRecipe(document: String, photos: HashMap<String, Uri>, callback: (Boolean, String?) -> Unit) {
+    fun deleteRecipe(recipeId: String, photos: HashMap<String, Uri>, callback: (Boolean, String?) -> Unit) {
         db.collection("recipes")
-            .document(document)
-            .delete()
+            .document(recipeId)
+            .delete()       // delete recipe from recipes collection
             .addOnSuccessListener {
                 callback(true, null)
 
-                val storageRef = storage.reference
-                val recipesRef = storageRef.child("recipes/${document}")
+                // delete recipe from recipesPhotosUrl collection
+                db.collection("recipesPhotosUrl")
+                    .document(recipeId)
+                    .delete()
 
+                // delete photos of recipes from storage
+                val storageRef = storage.reference
+                val recipesRef = storageRef.child("recipes/${recipeId}")
                 photos.forEach { photo ->
                     val photoRef = recipesRef.child("${photo.key}.jpg")
-
                     photoRef.delete()
-                        .addOnFailureListener {
-                            println(it)
-                        }
                 }
 
-                removeFavoriteFromAllUsers(document)
+                removeFavoriteFromAllUsers(recipeId)
             }
             .addOnFailureListener {
                 callback(false, getErrorMessage(it))
@@ -223,42 +205,43 @@ class FirebaseRecipeManager(
         updatedRecipe: (Recipe) -> Unit,
         callback: (Boolean, String?) -> Unit
     ) {
+        // return photosUrl, instead of updated recipe
+
         val storageRef = storage.reference
         val recipesRef = storageRef.child("recipes/${recipe.id}")
+        val uploadedPhotosUrl = mutableMapOf<String, Any>()
+        val photosUriSize = photosUri.size; var completedCount = 0
 
         photosUri.forEach { photo ->
+            // uploads each photo to storage
             val uploadRef = recipesRef.child("${photo.key}.jpg")
             val uploadTask = uploadRef.putFile(photo.value)
-
             uploadTask.continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    println(task.exception)
-                }
-
+                if (!task.isSuccessful) println(task.exception)
                 uploadRef.downloadUrl
             }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val downloadUri = task.result
-                    val url = Uri.parse("$downloadUri")
+                    val url = task.result.toString().toUri()
+                    uploadedPhotosUrl["photosUrl.${photo.key}"] = url
+                    recipe.photosUrl[photo.key] = url
+                    recipe.photosUri.remove(photo.key)
+                }
 
-                    // update the recipe in db - adds the url of photos
-                    val recipeRef = recipe.id?.let { db.collection("recipes").document(it) }
-                    recipeRef?.update(
-                        mapOf(
-                            "photosUrl.${photo.key}" to url,
-                            "updatedAt" to FieldValue.serverTimestamp()
-                        )
-                    )?.addOnSuccessListener {
-                        recipe.photosUrl[photo.key] = url
-                        recipe.photosUri.remove(photo.key)
-                        updatedRecipe(recipe)
-                    }?.addOnFailureListener {
-                        println(it)
-                    }?.addOnCompleteListener {
-                        callback(true, null)
-                    }
-                } else {
+                completedCount++
+
+                // update the photosUrl field in recipes collection
+                if (completedCount == photosUriSize) {
                     callback(true, null)
+
+                    uploadedPhotosUrl["updatedAt"] = FieldValue.serverTimestamp()
+                    recipe.id?.let { recipeId ->
+                        db.collection("recipes")
+                            .document(recipeId)
+                            .update(uploadedPhotosUrl)
+                            .addOnSuccessListener {
+                                updatedRecipe(recipe)
+                            }
+                    }
                 }
             }
         }
@@ -305,24 +288,28 @@ class FirebaseRecipeManager(
         )
     }
 
-    fun getFavoriteRecipesPhotos(favoriteRecipes: List<String>, onComplete: (MutableList<RecipePhotos>) -> Unit) {
-        val favoriteRecipesPhotos: MutableList<RecipePhotos> = mutableListOf()
+    // gets the photos only of recipes, not the whole data
+    fun getRecipesPhotos(recipeIds: List<String>, onComplete: (MutableList<RecipePhotos>) -> Unit) {
+        val recipesPhotos: MutableList<RecipePhotos> = mutableListOf()
 
-        favoriteRecipes.forEachIndexed { index, recipeId ->
+        recipeIds.forEachIndexed { index, recipeId ->
             db.collection("recipesPhotosUrl")
                 .document(recipeId)
                 .get()
                 .addOnSuccessListener { document ->
                     val data = document.data
                     if (data != null) {
-                        favoriteRecipesPhotos.add(RecipePhotos(recipeId, data as? HashMap<String, Uri> ?: hashMapOf(),))
+                        recipesPhotos.add(RecipePhotos(
+                            recipeId,
+                            data as? HashMap<String, Uri> ?: hashMapOf()
+                        ))
                     }
                 }
                 .addOnFailureListener {
                     println("error in FirebaseRecipeManager:getFavoriteRecipesPhotos")
                 }
                 .addOnCompleteListener {
-                    if (index == (favoriteRecipes.size - 1)) onComplete(favoriteRecipesPhotos)
+                    if (index == (recipeIds.size - 1)) onComplete(recipesPhotos)
                 }
         }
     }
@@ -355,11 +342,11 @@ class FirebaseRecipeManager(
         }
     }
 
-    // removes the recipe to all users' favorite recipes when a recipe is deleted
+    // removes the recipe to all users' favorite recipes
     private fun removeFavoriteFromAllUsers(recipeId: String) {
         db.collection("users")
             .whereArrayContains("favoriteRecipes", recipeId)
-            .get()
+            .get()      // retrieves all users that have the recipe as a favorite
             .addOnSuccessListener { users ->
                 if (!users.isEmpty) {
                     users.forEach { user ->
