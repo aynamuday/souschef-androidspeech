@@ -15,7 +15,7 @@ class RecipesViewModel (
     val displayRecipe = MutableStateFlow(Recipe())
 
     fun refreshFavoriteRecipes(bFavoriteRecipes: List<String>) {
-        firebaseRecipeManager.getFavoriteRecipesPhotos(bFavoriteRecipes) {
+        firebaseRecipeManager.getRecipesPhotos(bFavoriteRecipes) {
             favoriteRecipes.value = it
         }
     }
@@ -34,9 +34,7 @@ class RecipesViewModel (
                     updatedFavorites.add(0, RecipePhotos(recipeId, photosUrl))
                     favoriteRecipes.value = updatedFavorites.toMutableList()
                 } else {
-                    // the problem lies here
-                    val updatedFavorites = favoriteRecipes.value.toMutableList()
-                    favoriteRecipes.value = favoriteRecipes.value.filter { it.id != recipeId }
+                    val updatedFavorites = favoriteRecipes.value.filter { it.id != recipeId }
                     favoriteRecipes.value = updatedFavorites.toMutableList()
                 }
             }
