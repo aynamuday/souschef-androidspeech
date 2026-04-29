@@ -13,7 +13,6 @@ data class Recipe(
     var userName: String? = null,
     var userPhotoUrl: String? = null,
     var photosUrl: HashMap<String, Uri> = hashMapOf(),
-    var photosUri: HashMap<String, Uri> = hashMapOf(),
     var title: String = "",
     var description: String = "",
     var cookTimeHr: String = "0",
@@ -22,7 +21,6 @@ data class Recipe(
     var prepTimeMin: String = "0",
     var serving: String = "1",
     var difficulty: String = "",
-//    var mealTypes: List<String> = listOf(),
     var categories: List<String> = listOf(),
     var ingredients: List<String> = listOf(""),
     var instructions: List<String> = listOf(""),
@@ -41,7 +39,6 @@ data class Recipe(
         userName = parcel.readString(),
         userPhotoUrl = parcel.readString(),
         photosUrl = parcel.readHashMap(Uri::class.java.classLoader) as HashMap<String, Uri>,
-        photosUri = parcel.readHashMap(Uri::class.java.classLoader) as HashMap<String, Uri>,
         title = parcel.readString() ?: "",
         description = parcel.readString() ?: "",
         cookTimeHr = parcel.readString() ?: "0",
@@ -50,7 +47,6 @@ data class Recipe(
         prepTimeMin = parcel.readString() ?: "0",
         serving = parcel.readString() ?: "1",
         difficulty = parcel.readString() ?: "",
-//        mealTypes = parcel.createStringArrayList() ?: listOf(),
         categories = parcel.createStringArrayList() ?: listOf(),
         ingredients = parcel.createStringArrayList() ?: listOf(""),
         instructions = parcel.createStringArrayList() ?: listOf(""),
@@ -67,7 +63,6 @@ data class Recipe(
             parcel.writeString(userName)
             parcel.writeString(userPhotoUrl)
             parcel.writeMap(photosUrl)
-            parcel.writeMap(photosUri)
             parcel.writeString(title)
             parcel.writeString(description)
             parcel.writeString(cookTimeHr)

@@ -51,9 +51,7 @@ class FirebaseRecipeManager(
                     }
                     recipes(recipesList)
                 }
-                .addOnFailureListener {
-                    println(it)
-                }
+                .addOnFailureListener { println(it) }
         }
     }
 
@@ -65,8 +63,6 @@ class FirebaseRecipeManager(
             "title" to recipe.title,
             "serving" to recipe.serving,
             "difficulty" to recipe.difficulty,
-//            "mealTypes" to recipe.mealTypes,
-//            "categories" to recipe.categories,
             "ingredients" to recipe.ingredients,
             "instructions" to recipe.instructions,
             "audience" to recipe.audience,
@@ -79,22 +75,21 @@ class FirebaseRecipeManager(
         if (recipe.cookTimeHr.isNotEmpty()) data["cookTimeHr"] = recipe.cookTimeHr
         if (recipe.cookTimeMin.isNotEmpty()) data["cookTimeMin"] = recipe.cookTimeMin
         if (recipe.categories.isNotEmpty()) data["categories"] = recipe.categories
-//        if (recipe.mealTypes.isNotEmpty()) data["mealTypes"] = recipe.mealTypes
         if (recipe.tags.isNotEmpty()) data["tags"] = recipe.tags
 
         db.collection("recipes")
             .add(data)
             .addOnSuccessListener { recipeDocRef ->
-                // assigns the recipe id and user data to recipe
+                // assigns the recipe id and user data to recipe, for later use of returning the recipe
                 recipe.id = recipeDocRef.id
                 recipe.userId = user.uid
                 recipe.userName = user.username
                 recipe.userPhotoUrl = user.photoUrl
 
                 // on success, upload the recipe photos to storage
-                if (recipe.photosUri.isNotEmpty()) {
+                if (recipe.photosUrl.isNotEmpty()) {
                     uploadRecipePhotos(
-                        recipe.photosUri,
+                        recipe.photosUrl,
                         recipe,
                         updatedRecipe = { createdRecipe(it) }, // returns the recipe with the photos url
                         callback = { isSuccess, err -> callback(isSuccess, err) }
@@ -104,16 +99,14 @@ class FirebaseRecipeManager(
                     callback(true, null)
                 }
             }
-            .addOnFailureListener {
-                callback(false, getErrorMessage(it))
-            }
+            .addOnFailureListener { callback(false, getErrorMessage(it)) }
     }
 
     fun updateRecipe(data: HashMap<String, Any>, recipe: Recipe, updatedRecipe: (Recipe) -> Unit, callback: (Boolean, String?) -> Unit, deletePhotoKey: String?) {
         // uploads new photos for the recipe
-        if (recipe.photosUri.isNotEmpty()) {
+        if (recipe.photosUrl.isNotEmpty()) {
             uploadRecipePhotos(
-                recipe.photosUri,
+                recipe.photosUrl,
                 recipe,
                 updatedRecipe = { updatedRecipe(it) },
                 callback = { isSuccess, err ->
@@ -224,7 +217,6 @@ class FirebaseRecipeManager(
                     val url = task.result.toString().toUri()
                     uploadedPhotosUrl["photosUrl.${photo.key}"] = url
                     recipe.photosUrl[photo.key] = url
-                    recipe.photosUri.remove(photo.key)
                 }
 
                 completedCount++

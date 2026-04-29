@@ -21,6 +21,12 @@ class OwnRecipesViewModel(
         getOwnRecipes()
     }
 
+    fun resetRecipe() {
+        actionRecipe.value = Recipe()
+        originalData.value = Recipe()
+        deletePhotoKey = null
+    }
+
     fun getOwnRecipes() {
         firebaseRecipeManager.getOwnRecipes { recipes.value = it }
     }
@@ -35,7 +41,7 @@ class OwnRecipesViewModel(
                     if (isSuccess) resetRecipe()
                 },
                 createdRecipe = { createdRecipe ->
-                    updateRecipes(createdRecipe)
+                    updateRecipes(createdRecipe, true)
                 }
             )
         }
@@ -44,11 +50,11 @@ class OwnRecipesViewModel(
     fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
         val recipe = actionRecipe.value
 
-        firebaseRecipeManager.updateRecipe(data, recipe, updatedRecipe = { updatedRecipe -> updateRecipes(updatedRecipe) },
+        firebaseRecipeManager.updateRecipe(data, recipe, updatedRecipe = { updatedRecipe -> updateRecipes(updatedRecipe, false) },
             callback = { isSuccess, error ->
                 callback(isSuccess, error)
                 if (isSuccess) {
-                    updateRecipes(recipe)
+                    updateRecipes(recipe, false)
                     if (recipesViewModel.displayRecipe.value.id == recipe.id) {
                         recipesViewModel.displayRecipe.value = recipe
                     }
@@ -64,49 +70,106 @@ class OwnRecipesViewModel(
             if (isSuccess) {
                 val updatedRecipes = recipes.value.toMutableList()
                 val recipeIndexToRemove = updatedRecipes.indexOfFirst { it.id == recipeId }
-
                 if (recipeIndexToRemove != -1) {
                     updatedRecipes.removeAt(recipeIndexToRemove)
                 }
-
                 recipes.value = updatedRecipes
             }
-
             callback(isSuccess, error)
         }
     }
 
-    fun resetRecipe() {
-        actionRecipe.value = Recipe()
-        originalData.value = Recipe()
-        deletePhotoKey = null
-    }
+    fun getUpdatedRecipeDifference(): HashMap<String, Any> {
+        val recipeOne = actionRecipe.value
+        val recipeTwo = originalData.value
+        val data = hashMapOf<String, Any>()
 
-    private fun updateRecipes(recipe: Recipe) {
-        val updatedRecipes = recipes.value.toMutableList()
-        val recipeIndexToUpdate = updatedRecipes.indexOfFirst {
-            it.id == recipe.id
+        if (recipeOne.title != recipeTwo.title) {
+            data["title"] = recipeTwo.title
+        }
+        if (recipeOne.description != recipeTwo.description) {
+            data["description"] = recipeTwo.description
+        }
+        if (recipeOne.prepTimeHr != recipeTwo.prepTimeHr) {
+            data["prepTimeHr"] = recipeTwo.prepTimeHr
+        }
+        if (recipeOne.prepTimeMin != recipeTwo.prepTimeMin) {
+            data["prepTimeMin"] = recipeTwo.prepTimeMin
+        }
+        if (recipeOne.cookTimeHr != recipeTwo.cookTimeHr) {
+            data["cookTimeHr"] = recipeTwo.cookTimeHr
+        }
+        if (recipeOne.cookTimeMin != recipeTwo.cookTimeMin) {
+            data["cookTimeMin"] = recipeTwo.cookTimeMin
+        }
+        if (recipeOne.serving != recipeTwo.serving) {
+            data["serving"] = recipeTwo.serving
+        }
+        if (recipeOne.difficulty != recipeTwo.difficulty) {
+            data["difficulty"] = recipeTwo.difficulty
+        }
+        if (recipeOne.categories != recipeTwo.categories) {
+            data["categories"] = recipeTwo.categories
+        }
+        if (recipeOne.ingredients != recipeTwo.ingredients) {
+            data["ingredients"] = recipeTwo.ingredients
+        }
+        if (recipeOne.instructions != recipeTwo.instructions) {
+            data["instructions"] = recipeTwo.instructions
+        }
+        if (recipeOne.tags != recipeTwo.tags) {
+            data["tags"] = recipeTwo.tags
+        }
+        if (recipeOne.audience != recipeTwo.audience) {
+            data["audience"] = recipeTwo.audience
+        }
+        if (recipeOne.photosUrl != recipeTwo.photosUrl) {
+            data["photosUrl"] = recipeTwo.photosUrl
         }
 
-        if (recipeIndexToUpdate != -1) updatedRecipes[recipeIndexToUpdate] = recipe
-        else updatedRecipes.add(0, recipe)
+        return data
+    }
+
+    fun setDeletePhotoKey(): String? {
+        var deletePhotoKey: String? = null
+
+        deletePhotoKey = if (originalData.value.photosUrl.containsKey("portrait") && !actionRecipe.value.photosUrl.containsKey("portrait")) "portrait"
+        else if (originalData.value.photosUrl.containsKey("square") && !actionRecipe.value.photosUrl.containsKey("square")) "square" else null
+
+        // if there was portrait photo in original data but not in action recipe, portrait must be deleted in the database, so deletePhotoKey is set
+        // if there is portrait photo in action recipe but is updated instead, the getUpdatedRecipeDifference will determine it,
+        // and will be uploaded to the database to overwrite the former photo
+        // there should be at least one photo of the recipe
+
+        return deletePhotoKey
+    }
+
+    private fun updateRecipes(recipe: Recipe, isNew: Boolean) {
+        val updatedRecipes = recipes.value.toMutableList()
+
+        if (isNew) {
+            updatedRecipes.add(0, recipe)
+        } else {
+            val recipeIndexToUpdate = updatedRecipes.indexOfFirst { it.id == recipe.id }
+            if (recipeIndexToUpdate != -1) updatedRecipes[recipeIndexToUpdate] = recipe
+        }
 
         recipes.value = updatedRecipes
     }
 
     fun addPhoto(key: String, value: Uri) {
-        val photos = HashMap<String, Uri>(actionRecipe.value.photosUri.toMap())
+        val photos = HashMap<String, Uri>(actionRecipe.value.photosUrl.toMap())
         photos[key] = value
         actionRecipe.value = actionRecipe.value.copy(
-            photosUri = photos
+            photosUrl = photos
         )
     }
 
     fun removePhoto(key: String) {
-        val photos = HashMap<String, Uri>(actionRecipe.value.photosUri.toMap())
+        val photos = HashMap<String, Uri>(actionRecipe.value.photosUrl.toMap())
         photos.remove(key)
         actionRecipe.value = actionRecipe.value.copy(
-            photosUri = photos
+            photosUrl = photos
         )
     }
 
@@ -255,6 +318,7 @@ class OwnRecipesViewModel(
             audience = audience
         )
     }
+
     fun updateRecipesUserPhotoUrl(photoUrl: String) {
         val updatedRecipes: MutableList<Recipe> = mutableListOf()
 
@@ -277,56 +341,5 @@ class OwnRecipesViewModel(
         updatedRecipes.reverse()
 
         recipes.value = updatedRecipes
-    }
-
-    fun getUpdatedRecipeDifference(): HashMap<String, Any> {
-        val recipeOne = actionRecipe.value
-        val recipeTwo = originalData.value
-        val data = hashMapOf<String, Any>()
-
-        if (recipeOne.title != recipeTwo.title) {
-            data["title"] = recipeTwo.title
-        }
-        if (recipeOne.description != recipeTwo.description) {
-            data["description"] = recipeTwo.description
-        }
-        if (recipeOne.prepTimeHr != recipeTwo.prepTimeHr) {
-            data["prepTimeHr"] = recipeTwo.prepTimeHr
-        }
-        if (recipeOne.prepTimeMin != recipeTwo.prepTimeMin) {
-            data["prepTimeMin"] = recipeTwo.prepTimeMin
-        }
-        if (recipeOne.cookTimeHr != recipeTwo.cookTimeHr) {
-            data["cookTimeHr"] = recipeTwo.cookTimeHr
-        }
-        if (recipeOne.cookTimeMin != recipeTwo.cookTimeMin) {
-            data["cookTimeMin"] = recipeTwo.cookTimeMin
-        }
-        if (recipeOne.serving != recipeTwo.serving) {
-            data["serving"] = recipeTwo.serving
-        }
-        if (recipeOne.difficulty != recipeTwo.difficulty) {
-            data["difficulty"] = recipeTwo.difficulty
-        }
-//    if (recipeOne.mealTypes != recipeTwo.mealTypes) {
-//        data["mealTypes"] = recipeTwo.mealTypes
-//    }
-        if (recipeOne.categories != recipeTwo.categories) {
-            data["categories"] = recipeTwo.categories
-        }
-        if (recipeOne.ingredients != recipeTwo.ingredients) {
-            data["ingredients"] = recipeTwo.ingredients
-        }
-        if (recipeOne.instructions != recipeTwo.instructions) {
-            data["instructions"] = recipeTwo.instructions
-        }
-        if (recipeOne.tags != recipeTwo.tags) {
-            data["tags"] = recipeTwo.tags
-        }
-        if (recipeOne.audience != recipeTwo.audience) {
-            data["audience"] = recipeTwo.audience
-        }
-
-        return data
     }
 }

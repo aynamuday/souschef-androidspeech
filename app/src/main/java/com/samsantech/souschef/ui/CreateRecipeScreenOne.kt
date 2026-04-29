@@ -78,35 +78,26 @@ fun CreateRecipeScreenOne(
     closeCreateRecipe: () -> Unit
 ) {
     val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
+    val originalData = ownRecipesViewModel.originalData
     val action = ownRecipesViewModel.action.collectAsState()
+    val categories = arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink")
+    val difficulty = arrayOf("Easy", "Medium", "Hard")
+    var errors by remember { mutableStateOf(hashMapOf<String, String>()) }
     val saveRecipe = remember { mutableStateOf(false) }
     val changes = remember { mutableStateOf(hashMapOf<String, Any>()) }
-    var categories by remember {mutableStateOf(arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink")) }
-//    val mealTypes = arrayOf("Breakfast", "Lunch", "Dinner", "Snack")
-    val difficulty = arrayOf("Easy", "Medium", "Hard")
     var showDifficultyDropdown by remember { mutableStateOf(false) }
-    var errors by remember { mutableStateOf(hashMapOf<String, String>()) }
     val loading = remember { mutableStateOf(false) }
     val success = remember { mutableStateOf(false) }
-
-    // when action is edit, meaning recipe already exists, photos are stored in recipe.photosUrl
-    // when action is add, the initial value of portrait and square is null
-    // picked photos are stored in recipe.photosUri
-    var portrait by remember { mutableStateOf(if (action.value == OwnRecipeAction.EDIT && recipe.photosUrl["portrait"] != null) recipe.photosUrl["portrait"].toString().toUri() else null) }
-    var square by remember { mutableStateOf(if (action.value == OwnRecipeAction.EDIT && recipe.photosUrl["square"] != null) recipe.photosUrl["square"].toString().toUri() else null) }
-
 
     val pickImagePortrait = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             clearError("photos", errors) { newErrors -> errors = newErrors }
-            portrait = uri
             ownRecipesViewModel.addPhoto("portrait", uri)
         }
     }
     val pickImageSquare = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             clearError("photos", errors) { newErrors -> errors = newErrors }
-            square = uri
             ownRecipesViewModel.addPhoto("square", uri)
         }
     }
@@ -116,8 +107,8 @@ fun CreateRecipeScreenOne(
             OwnRecipeHeader(closeCreateRecipe, action.value == OwnRecipeAction.EDIT) {
                 changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
 
-                if (changes.value.isEmpty() && recipe.photosUri.isEmpty() && ownRecipesViewModel.deletePhotoKey == null) {
-                    portrait = null; square = null
+                if (changes.value.isEmpty()) {
+                    ownRecipesViewModel.resetRecipe()
                     closeCreateRecipe()
                 } else { saveRecipe.value = true }
             }
@@ -132,17 +123,17 @@ fun CreateRecipeScreenOne(
                     CreateRecipeImageContainer(
                         height = 200.dp,
                         width = 113.dp,
-                        image  = if (action.value == OwnRecipeAction.EDIT) portrait else recipe.photosUri["portrait"],
+                        image  = recipe.photosUrl["portrait"].toString().toUri(),
                         pickImage = pickImagePortrait,
-                        onRemoveClick = { portrait = null; ownRecipesViewModel.removePhoto("portrait") }
+                        onRemoveClick = { ownRecipesViewModel.removePhoto("portrait") }
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     CreateRecipeImageContainer(
                         height = 150.dp,
                         width = 150.dp,
-                        image  = if (action.value == OwnRecipeAction.EDIT) square else recipe.photosUri["square"],
+                        image  = recipe.photosUrl["square"].toString().toUri(),
                         pickImage = pickImageSquare,
-                        onRemoveClick = { square = null; ownRecipesViewModel.removePhoto("square") }
+                        onRemoveClick = { ownRecipesViewModel.removePhoto("square") }
                     )
                 }
                 if (errors["photos"] != null && errors["photos"] != "") {
@@ -397,9 +388,7 @@ fun CreateRecipeScreenOne(
                     onClick = {
                         val newErrors = hashMapOf<String, String>()
 
-                        // recipe.photosUri["portrait"] == null && recipe.photosUri["landscape"] == null &&
-                        if ((action.value == OwnRecipeAction.ADD && (recipe.photosUri["square"] == null && recipe.photosUri["portrait"] == null))
-                            || (action.value == OwnRecipeAction.EDIT && (portrait == null && square == null))) {
+                        if (recipe.photosUrl["square"] == null && recipe.photosUrl["portrait"] == null) {
                             newErrors["photos"] = "At least one photo is required."
                         }
 
@@ -421,11 +410,6 @@ fun CreateRecipeScreenOne(
                             newErrors["general"] = "Check your inputs for errors."
                             errors = newErrors
                         } else {
-                            if (action.value == OwnRecipeAction.EDIT) {
-                                // when action is edit, meaning recipe already exists, photos are stored in recipe.photosUrl
-                                // if it is NOT null but the variable portrait is, then the user removed the photo to be deleted
-                                ownRecipesViewModel.deletePhotoKey = if (recipe.photosUrl["portrait"] != null && portrait == null) "portrait" else if(recipe.photosUrl["square"] != null && square == null) "square" else null
-                            }
                             onNavigateToCreateRecipeTwo()
                         }
                     },
@@ -439,8 +423,7 @@ fun CreateRecipeScreenOne(
 
         if (saveRecipe.value) {
             SaveRecipeDialog(saveRecipe, loading, action.value, changes, ownRecipesViewModel, context, success) {
-                portrait = null
-                square = null
+                ownRecipesViewModel.resetRecipe()
             }
         }
 

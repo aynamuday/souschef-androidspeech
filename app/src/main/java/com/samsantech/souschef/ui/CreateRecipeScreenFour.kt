@@ -2,7 +2,6 @@ package com.samsantech.souschef.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,13 +41,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.samsantech.souschef.data.Recipe
-import com.samsantech.souschef.ui.components.ConfirmDialog
 import com.samsantech.souschef.ui.components.CreateRecipeBottomButtons
 import com.samsantech.souschef.ui.components.FormBasicTextField
 import com.samsantech.souschef.ui.components.OwnRecipeHeader
 import com.samsantech.souschef.ui.components.ProgressSpinner
-import com.samsantech.souschef.ui.components.Dialog
 import com.samsantech.souschef.ui.components.ErrorText
 import com.samsantech.souschef.ui.components.SaveRecipeDialog
 import com.samsantech.souschef.ui.components.SuccessSaveRecipeDialog
@@ -229,7 +225,7 @@ fun CreateRecipeScreenFour(
                         if (action.value == OwnRecipeAction.EDIT) {
                             changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
 
-                            if (changes.value.isEmpty() && recipe.photosUri.isEmpty() && ownRecipesViewModel.deletePhotoKey == null) {
+                            if (changes.value.isEmpty()) {
                                 closeCreateRecipe()
                             } else {
                                 saveRecipe.value = true

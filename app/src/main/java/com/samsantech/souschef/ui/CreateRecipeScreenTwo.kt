@@ -73,10 +73,9 @@ fun CreateRecipeScreenTwo(
         val maxHeight = maxHeight
         Column {
             OwnRecipeHeader(closeCreateRecipe, action.value == OwnRecipeAction.EDIT) {
-                // save edit changes
                 changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
 
-                if (changes.value.isEmpty() && recipe.photosUri.isEmpty() && ownRecipesViewModel.deletePhotoKey == null) {
+                if (changes.value.isEmpty()) {
                     closeCreateRecipe()
                 } else {
                     saveRecipe.value = true
