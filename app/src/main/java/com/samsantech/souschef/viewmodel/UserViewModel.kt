@@ -123,15 +123,10 @@ class UserViewModel(
     }
 
     fun setUserPreferences(isSuccess: (Boolean) -> Unit) {
-//        signUpPreferences.value.categories = signUpPreferences.value.categories?.plus(otherCuisine.value)
         firebaseUserManager.updateUserPreferences(signUpPreferences.value) {
             isSuccess(it)
-//            userPreferences.value = signUpPreferences.value
-
             val categories = signUpPreferences.value.categories
-            if (!categories.isNullOrEmpty()) {
-                homeViewModel.updateUserToken(user.value?.uid, categories)
-            }
+            if (!categories.isNullOrEmpty()) homeViewModel.updateUserToken(user.value?.uid, categories)
 
             signUpPreferences.value = UserPreferences()
         }
@@ -152,32 +147,6 @@ class UserViewModel(
     fun clearPreferencesCategories() {
         signUpPreferences.value = signUpPreferences.value.copy(categories = listOf())
     }
-
-//    fun addPreferencesDislike(dislike: String) {
-//        signUpPreferences.value = signUpPreferences.value.copy(
-//            dislikes = signUpPreferences.value.dislikes?.plus(dislike) ?: listOf(dislike)
-//        )
-//    }
-
-//    fun removePreferencesDislike(dislike: String) {
-//        signUpPreferences.value = signUpPreferences.value.copy(
-//            dislikes = signUpPreferences.value.dislikes?.minus(dislike) ?: listOf(dislike)
-//        )
-//    }
-
-//    fun clearPreferencesDislikes() {
-//        signUpPreferences.value = signUpPreferences.value.copy(dislikes = listOf())
-//    }
-
-//    fun setPreferencesSkillLevel(skillLevel: String) {
-//        signUpPreferences.value = signUpPreferences.value.copy(
-//            skillLevel = skillLevel
-//        )
-//    }
-
-//    fun clearPreferencesSkillLevel() {
-//        signUpPreferences.value = signUpPreferences.value.copy(skillLevel = "")
-//    }
 
     fun incrementSentEventsCount() {
         firebaseUserManager.incrementSentEventsCount()
