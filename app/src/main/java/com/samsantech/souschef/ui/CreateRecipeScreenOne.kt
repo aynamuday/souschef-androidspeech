@@ -66,6 +66,7 @@ import com.samsantech.souschef.ui.components.SaveRecipeDialog
 import com.samsantech.souschef.ui.components.SuccessSaveRecipeDialog
 import com.samsantech.souschef.ui.theme.Green
 import com.samsantech.souschef.utils.OwnRecipeAction
+import com.samsantech.souschef.utils.RecipeScreenNumber
 import com.samsantech.souschef.viewmodel.OwnRecipesViewModel
 import kotlin.collections.hashMapOf
 
@@ -78,11 +79,10 @@ fun CreateRecipeScreenOne(
     closeCreateRecipe: () -> Unit
 ) {
     val recipe by ownRecipesViewModel.actionRecipe.collectAsState()
-    val originalData = ownRecipesViewModel.originalData
     val action = ownRecipesViewModel.action.collectAsState()
     val categories = arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
-    var errors by remember { mutableStateOf(hashMapOf<String, String>()) }
+    var errors = remember { mutableStateOf(hashMapOf<String, String>()) }
     val saveRecipe = remember { mutableStateOf(false) }
     val changes = remember { mutableStateOf(hashMapOf<String, Any>()) }
     var showDifficultyDropdown by remember { mutableStateOf(false) }
@@ -91,13 +91,13 @@ fun CreateRecipeScreenOne(
 
     val pickImagePortrait = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            clearError("photos", errors) { newErrors -> errors = newErrors }
+            clearError("photos", errors.value) { newErrors -> errors.value = newErrors }
             ownRecipesViewModel.addPhoto("portrait", uri)
         }
     }
     val pickImageSquare = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            clearError("photos", errors) { newErrors -> errors = newErrors }
+            clearError("photos", errors.value) { newErrors -> errors.value = newErrors }
             ownRecipesViewModel.addPhoto("square", uri)
         }
     }
@@ -110,7 +110,11 @@ fun CreateRecipeScreenOne(
                 if (changes.value.isEmpty()) {
                     ownRecipesViewModel.resetRecipe()
                     closeCreateRecipe()
-                } else { saveRecipe.value = true }
+                } else {
+                    ownRecipesViewModel.handleErrors(RecipeScreenNumber.One, errors) {
+                        saveRecipe.value = true
+                    }
+                }
             }
             Column(
                 modifier = Modifier
@@ -123,7 +127,7 @@ fun CreateRecipeScreenOne(
                     CreateRecipeImageContainer(
                         height = 200.dp,
                         width = 113.dp,
-                        image  = recipe.photosUrl["portrait"].toString().toUri(),
+                        image  = if (recipe.photosUrl["portrait"] == null) null else recipe.photosUrl["portrait"].toString().toUri(),
                         pickImage = pickImagePortrait,
                         onRemoveClick = { ownRecipesViewModel.removePhoto("portrait") }
                     )
@@ -131,14 +135,14 @@ fun CreateRecipeScreenOne(
                     CreateRecipeImageContainer(
                         height = 150.dp,
                         width = 150.dp,
-                        image  = recipe.photosUrl["square"].toString().toUri(),
+                        image  = if (recipe.photosUrl["square"] == null) null else recipe.photosUrl["square"].toString().toUri(),
                         pickImage = pickImageSquare,
                         onRemoveClick = { ownRecipesViewModel.removePhoto("square") }
                     )
                 }
-                if (errors["photos"] != null && errors["photos"] != "") {
+                if (errors.value["photos"] != null && errors.value["photos"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["photos"]!!)
+                    ErrorText(text = errors.value["photos"]!!)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -147,8 +151,8 @@ fun CreateRecipeScreenOne(
                     FormBasicTextField(
                         value = recipe.title,
                         onValueChange = {
-                            clearError("title", errors) { newErrors ->
-                                errors = newErrors
+                            clearError("title", errors.value) { newErrors ->
+                                errors.value = newErrors
                             }
 
                             ownRecipesViewModel.setTitle(it)
@@ -158,9 +162,9 @@ fun CreateRecipeScreenOne(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                if (errors["title"] != null && errors["title"] != "") {
+                if (errors.value["title"] != null && errors.value["title"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["title"]!!)
+                    ErrorText(text = errors.value["title"]!!)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -185,35 +189,35 @@ fun CreateRecipeScreenOne(
                     hr = recipe.prepTimeHr,
                     maxHr = 48,
                     onHrChange = {
-                        clearError("prepTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("prepTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
-                        clearError("cookTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("cookTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
 
                         ownRecipesViewModel.setPrepTimeHr(it)
                     },
                     min = recipe.prepTimeMin,
                     onMinChange = {
-                        clearError("prepTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("prepTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
-                        clearError("cookTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("cookTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
 
                         ownRecipesViewModel.setPrepTimeMin(it)
                     },
                     errorName = "prepTime",
-                    errors = errors,
+                    errors = errors.value,
                     setErrors = {
-                        errors = it
+                        errors.value = it
                     }
                 )
-                if (errors["prepTime"] != null && errors["prepTime"] != "") {
+                if (errors.value["prepTime"] != null && errors.value["prepTime"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["prepTime"]!!, textAlign = TextAlign.End)
+                    ErrorText(text = errors.value["prepTime"]!!, textAlign = TextAlign.End)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -223,35 +227,35 @@ fun CreateRecipeScreenOne(
                     hr = recipe.cookTimeHr,
                     maxHr = 48,
                     onHrChange = {
-                        clearError("prepTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("prepTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
-                        clearError("cookTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("cookTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
 
                         ownRecipesViewModel.setCookTimeHr(it)
                     },
                     min = recipe.cookTimeMin,
                     onMinChange = {
-                        clearError("prepTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("prepTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
-                        clearError("cookTime", errors) { newErrors ->
-                            errors = newErrors
+                        clearError("cookTime", errors.value) { newErrors ->
+                            errors.value = newErrors
                         }
 
                         ownRecipesViewModel.setCookTimeMin(it)
                     },
                     errorName = "cookTime",
-                    errors = errors,
+                    errors = errors.value,
                     setErrors = {
-                        errors = it
+                        errors.value = it
                     },
                 )
-                if (errors["cookTime"] != null && errors["cookTime"] != "") {
+                if (errors.value["cookTime"] != null && errors.value["cookTime"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["cookTime"]!!, textAlign = TextAlign.End)
+                    ErrorText(text = errors.value["cookTime"]!!, textAlign = TextAlign.End)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -266,22 +270,22 @@ fun CreateRecipeScreenOne(
                         maxValue = 200,
                         minValue = 1,
                         onValueChange = {
-                            clearError("serving", errors) { newErrors ->
-                                errors = newErrors
+                            clearError("serving", errors.value) { newErrors ->
+                                errors.value = newErrors
                             }
 
                             ownRecipesViewModel.setServing(it)
                         },
                         errorName = "serving",
-                        errors = errors,
+                        errors = errors.value,
                         setErrors = {
-                            errors = it
+                            errors.value = it
                         }
                     )
                 }
-                if (errors["serving"] != null && errors["serving"] != "") {
+                if (errors.value["serving"] != null && errors.value["serving"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["serving"]!!, textAlign = TextAlign.End)
+                    ErrorText(text = errors.value["serving"]!!, textAlign = TextAlign.End)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -322,8 +326,8 @@ fun CreateRecipeScreenOne(
                                 DropdownMenuItem(
                                     text = { Text(text = difficulty, fontSize = 16.sp) },
                                     onClick = {
-                                        clearError("difficulty", errors) { newErrors ->
-                                            errors = newErrors
+                                        clearError("difficulty", errors.value) { newErrors ->
+                                            errors.value = newErrors
                                         }
 
                                         ownRecipesViewModel.setDifficulty(difficulty)
@@ -336,9 +340,9 @@ fun CreateRecipeScreenOne(
                         }
                     }
                 }
-                if (errors["difficulty"] != null && errors["difficulty"] != "") {
+                if (errors.value["difficulty"] != null && errors.value["difficulty"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["difficulty"]!!)
+                    ErrorText(text = errors.value["difficulty"]!!)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -352,8 +356,8 @@ fun CreateRecipeScreenOne(
                         CreateRecipeCard(
                             category,
                             onClick = {
-                                clearError("categories", errors) { newErrors ->
-                                    errors = newErrors
+                                clearError("categories", errors.value) { newErrors ->
+                                    errors.value = newErrors
                                 }
 
                                 if (isSelected) {
@@ -372,44 +376,21 @@ fun CreateRecipeScreenOne(
                         )
                     }
                 }
-                if (errors["categories"] != null && errors["categories"] != "") {
+                if (errors.value["categories"] != null && errors.value["categories"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["categories"]!!)
+                    ErrorText(text = errors.value["categories"]!!)
                 }
 
                 // NEXT BUTTON
                 Spacer(modifier = Modifier.height(16.dp))
-                if (errors["general"] != null && errors["general"] != "") {
+                if (errors.value["general"] != null && errors.value["general"] != "") {
                     Spacer(modifier = Modifier.height(5.dp))
-                    ErrorText(text = errors["general"]!!, textAlign = TextAlign.Center)
+                    ErrorText(text = errors.value["general"]!!, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(5.dp))
                 }
                 ColoredButton(
                     onClick = {
-                        val newErrors = hashMapOf<String, String>()
-
-                        if (recipe.photosUrl["square"] == null && recipe.photosUrl["portrait"] == null) {
-                            newErrors["photos"] = "At least one photo is required."
-                        }
-
-                        if (recipe.title.isEmpty()) {
-                            newErrors["title"] = "Title is required."
-                        }
-
-                        if (recipe.prepTimeHr == "0" && recipe.prepTimeMin == "0"
-                            && recipe.cookTimeHr == "0" && recipe.cookTimeMin == "0") {
-                            newErrors["prepTime"] = "Provide either preparation time or cook time."
-                            newErrors["cookTime"] = "Provide either preparation time or cook time."
-                        }
-
-                        if (recipe.difficulty.isEmpty()) {
-                            newErrors["difficulty"] = "Difficulty is required."
-                        }
-
-                        if (newErrors.isNotEmpty()) {
-                            newErrors["general"] = "Check your inputs for errors."
-                            errors = newErrors
-                        } else {
+                        ownRecipesViewModel.handleErrors(RecipeScreenNumber.One, errors) {
                             onNavigateToCreateRecipeTwo()
                         }
                     },

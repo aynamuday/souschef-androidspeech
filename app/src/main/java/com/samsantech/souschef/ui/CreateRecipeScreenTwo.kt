@@ -75,10 +75,12 @@ fun CreateRecipeScreenTwo(
             OwnRecipeHeader(closeCreateRecipe, action.value == OwnRecipeAction.EDIT) {
                 changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
 
-                if (changes.value.isEmpty()) {
-                    closeCreateRecipe()
-                } else {
-                    saveRecipe.value = true
+                if (changes.value.isEmpty()) closeCreateRecipe()
+                else {
+                    ownRecipesViewModel.cleanIngredients()
+
+                    if(recipe.ingredients.isEmpty()) error = "At least one ingredient is required."
+                    else saveRecipe.value = true
                 }
             }
             Column(
@@ -155,15 +157,10 @@ fun CreateRecipeScreenTwo(
                     onFirstButtonClick = onNavigateToCreateRecipeOne,
                     secondButtonText = "Next",
                     onSecondButtonClick = {
-                        val newIngredients = recipe.ingredients.toMutableList()
-                        newIngredients.removeAll { it.trim().isBlank() }
+                        ownRecipesViewModel.cleanIngredients()
 
-                        if(newIngredients.size == 0) {
-                            error = "At least one ingredient is required."
-                        } else {
-                            ownRecipesViewModel.setIngredients(newIngredients)
-                            onNavigateToCreateRecipeThree()
-                        }
+                        if(recipe.ingredients.isEmpty()) error = "At least one ingredient is required."
+                        else onNavigateToCreateRecipeThree()
                     }
                 )
             }

@@ -74,10 +74,12 @@ fun CreateRecipeScreenThree(
             OwnRecipeHeader(closeCreateRecipe, action.value == OwnRecipeAction.EDIT) {
                 changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
 
-                if (changes.value.isEmpty()) {
-                    closeCreateRecipe()
-                } else {
-                    saveRecipe.value = true
+                if (changes.value.isEmpty()) closeCreateRecipe()
+                else {
+                    ownRecipesViewModel.cleanInstructions()
+
+                    if(recipe.instructions.isEmpty()) error = "At least one instruction is required."
+                    else saveRecipe.value = true
                 }
             }
             Column(
@@ -156,15 +158,10 @@ fun CreateRecipeScreenThree(
                     onFirstButtonClick = onNavigateToCreateRecipeTwo,
                     secondButtonText = "Next",
                     onSecondButtonClick = {
-                        val newInstructions = recipe.instructions.toMutableList()
-                        newInstructions.removeAll { it.trim().isBlank() }
+                        ownRecipesViewModel.cleanInstructions()
 
-                        if(newInstructions.size == 0) {
-                            error = "At least one instruction is required."
-                        } else {
-                            ownRecipesViewModel.setInstructions(newInstructions)
-                            onNavigateToCreateRecipeFour()
-                        }
+                        if(recipe.instructions.isEmpty()) error = "At least one instruction is required."
+                        else onNavigateToCreateRecipeFour()
                     }
                 )
             }

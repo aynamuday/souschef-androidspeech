@@ -55,7 +55,7 @@ class FirebaseRecipeManager(
         }
     }
 
-    fun addRecipe(recipe: Recipe, user: User, callback: (Boolean, String?) -> Unit, createdRecipe: (Recipe) -> Unit) {
+    fun addRecipe(recipe: Recipe, user: User, callback: (Boolean, String?, Recipe?) -> Unit) {
         val data = hashMapOf(
             "userId" to user.uid,
             "userName" to user.username,
@@ -80,7 +80,6 @@ class FirebaseRecipeManager(
         db.collection("recipes")
             .add(data)
             .addOnSuccessListener { recipeDocRef ->
-                // assigns the recipe id and user data to recipe, for later use of returning the recipe
                 recipe.id = recipeDocRef.id
                 recipe.userId = user.uid
                 recipe.userName = user.username
@@ -88,79 +87,71 @@ class FirebaseRecipeManager(
 
                 // on success, upload the recipe photos to storage
                 if (recipe.photosUrl.isNotEmpty()) {
-                    uploadRecipePhotos(
-                        recipe.photosUrl,
-                        recipe,
-                        updatedRecipe = { createdRecipe(it) }, // returns the recipe with the photos url
-                        callback = { isSuccess, err -> callback(isSuccess, err) }
-                    )
+                    recipe.id?.let { recipeId ->
+                        uploadRecipePhotos(
+                            recipeId,
+                            recipe.photosUrl,
+                            callback = { isSuccess, err, uploadedPhotosUrl ->
+                                if (!isSuccess) callback(false, err, null)
+                                else {
+                                    uploadedPhotosUrl?.let { recipe.photosUrl = it }
+                                    callback(true, null, recipe)
+                                }
+                            }
+                        )
+                    }
                 } else {
-                    createdRecipe(recipe)
-                    callback(true, null)
+                    callback(true, null, recipe)
                 }
             }
-            .addOnFailureListener { callback(false, getErrorMessage(it)) }
+            .addOnFailureListener { callback(false, getErrorMessage(it), null) }
     }
 
-    fun updateRecipe(data: HashMap<String, Any>, recipe: Recipe, updatedRecipe: (Recipe) -> Unit, callback: (Boolean, String?) -> Unit, deletePhotoKey: String?) {
-        // uploads new photos for the recipe
-        if (recipe.photosUrl.isNotEmpty()) {
-            uploadRecipePhotos(
-                recipe.photosUrl,
-                recipe,
-                updatedRecipe = { updatedRecipe(it) },
-                callback = { isSuccess, err ->
-                    // if photos are the only update, that is data parameter is empty, returns a callback already
-                    if (data.isEmpty()) callback(isSuccess, err)
-                }
-            )
-        }
-
-        // will it update the new photos while also delete?
-        // when there is no square but adds square, there is portrait but removed portrait: portrait is not removed
-        if (deletePhotoKey != null) {
-            recipe.id?.let {
-                // delete the photo in storage
-                deleteRecipePhoto(it, deletePhotoKey) { isSuccess, err ->
-                    if (isSuccess) {
-                        recipe.id?.let { recipeId ->
-                            // delete the photo url in recipes collection
-                            db.collection("recipes")
-                                .document(recipeId)
-                                .update("photosUrl.$deletePhotoKey", FieldValue.delete())
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        recipe.photosUrl.remove(deletePhotoKey)
-                                        updatedRecipe(recipe)
-                                    }
-                                    if (data.isEmpty()) {
-                                        callback(task.isSuccessful, getErrorMessage(task.exception))
-                                    }
-                                }
-                        }
-                    } else {
-                        if (data.isEmpty()) {
-                            callback(false, err)
-                        }
+    fun updateRecipe(updates: HashMap<String, Any>, recipe: Recipe, deletePhotoKey: String?, callback: (Boolean, String?, Recipe?) -> Unit) {
+        // to be called later
+        fun updateRecipeMetaData() {
+            if (deletePhotoKey != null) {
+                recipe.id?.let { recipeId ->
+                    deleteRecipePhoto(recipeId, deletePhotoKey) { isSuccess, _ ->
+                        if (isSuccess) {
+                            recipe.photosUrl.remove(deletePhotoKey)
+                            if (updates.isEmpty()) {
+                                callback(true, null, recipe)
+                            }
+                        } // no callback for else here
                     }
+                }
+            }
+
+            if (updates.isNotEmpty()) {
+                updates["updatedAt"] = FieldValue.serverTimestamp()
+
+                recipe.id?.let { recipeId ->
+                    db.collection("recipes")
+                        .document(recipeId)
+                        .update(updates)
+                        .addOnSuccessListener {
+                            callback(true, null, recipe)
+                        }
+                        .addOnFailureListener {
+                            callback(false, getErrorMessage(it), null)
+                        }
                 }
             }
         }
 
-        if (data.isNotEmpty()) {
-            data["updatedAt"] = FieldValue.serverTimestamp()
-
+        if (recipe.photosUrl.isNotEmpty()) {
             recipe.id?.let { recipeId ->
-                db.collection("recipes")
-                    .document(recipeId)
-                    .update(data)
-                    .addOnSuccessListener {
-                        callback(true, null)
+                uploadRecipePhotos(recipeId, recipe.photosUrl) { isSuccess, err, uploadedPhotosUrl ->
+                    if (!isSuccess) {
+                        callback(false, err, null)
+                        return@uploadRecipePhotos
                     }
-                    .addOnFailureListener {
-                        callback(false, getErrorMessage(it))
-                        println(it)
-                    }
+
+                    recipe.photosUrl = uploadedPhotosUrl ?: hashMapOf()
+                    if (updates.isEmpty() && deletePhotoKey == null) callback(true, null, recipe)
+                    else updateRecipeMetaData()
+                }
             }
         }
     }
@@ -193,17 +184,16 @@ class FirebaseRecipeManager(
     }
 
     private fun uploadRecipePhotos(
-        photosUri: Map<String, Uri>,
-        recipe: Recipe,
-        updatedRecipe: (Recipe) -> Unit,
-        callback: (Boolean, String?) -> Unit
+        recipeId: String,
+        photosUri: HashMap<String, Uri>,
+        callback: (Boolean, String?, HashMap<String, Uri>?) -> Unit
     ) {
-        // return photosUrl, instead of updated recipe
-
         val storageRef = storage.reference
-        val recipesRef = storageRef.child("recipes/${recipe.id}")
-        val uploadedPhotosUrl = mutableMapOf<String, Any>()
-        val photosUriSize = photosUri.size; var completedCount = 0
+        val recipesRef = storageRef.child("recipes/${recipeId}")
+        val photosUrl = mutableMapOf<String, Uri>()
+        val photosUriSize = photosUri.size;
+        var completedCount = 0
+        val forUploadToRecipesCol = mutableMapOf<String, Any>()
 
         photosUri.forEach { photo ->
             // uploads each photo to storage
@@ -215,25 +205,28 @@ class FirebaseRecipeManager(
             }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val url = task.result.toString().toUri()
-                    uploadedPhotosUrl["photosUrl.${photo.key}"] = url
-                    recipe.photosUrl[photo.key] = url
+                    photosUrl[photo.key] = url  // for upload to recipesPhotosUrl collection and to be returned with callback
+                    forUploadToRecipesCol["photosUrl.${photo.key}"] = url
                 }
 
                 completedCount++
 
-                // update the photosUrl field in recipes collection
+                // update the photosUrl field in recipes and recipesPhotosUrl collections
                 if (completedCount == photosUriSize) {
-                    callback(true, null)
-
-                    uploadedPhotosUrl["updatedAt"] = FieldValue.serverTimestamp()
-                    recipe.id?.let { recipeId ->
-                        db.collection("recipes")
-                            .document(recipeId)
-                            .update(uploadedPhotosUrl)
-                            .addOnSuccessListener {
-                                updatedRecipe(recipe)
-                            }
-                    }
+                    db.collection("recipes")
+                        .document(recipeId)
+                        .update(forUploadToRecipesCol)
+                        .addOnSuccessListener {
+                            db.collection("recipesPhotosUrl")
+                                .document(recipeId)
+                                .update(HashMap<String, Any>(photosUrl))
+                                .addOnSuccessListener {
+                                    callback(true, null, HashMap(photosUrl))
+                                }
+                                .addOnFailureListener {
+                                    callback(false, "There was an error uploading the photos.", null)
+                                }
+                        }
                 }
             }
         }
@@ -241,14 +234,25 @@ class FirebaseRecipeManager(
 
     private fun deleteRecipePhoto(recipeId: String, key: String, callback: (Boolean, String?) -> Unit) {
         val storageRef = storage.reference
-        val photoRef = storageRef.child("recipes/$recipeId/${key}.jpg")
-        photoRef.delete()
+
+        // delete photos from storage
+        storageRef.child("recipes/$recipeId/${key}.jpg")
+            .delete()
             .addOnCompleteListener {
                 if (it.isSuccessful) {
                     callback(true, null)
+
+                    // delete the photos url in recipes collection
+                    db.collection("recipes")
+                        .document(recipeId)
+                        .update("photosUrl.$key", FieldValue.delete())
+
+                    // delete the photos url in recipesPhotosUrl collection
+                    db.collection("recipesPhotosUrl")
+                        .document(recipeId)
+                        .update(key, FieldValue.delete())
                 } else {
                     callback(false, getErrorMessage(it.exception))
-                    println(it.exception)
                 }
             }
     }

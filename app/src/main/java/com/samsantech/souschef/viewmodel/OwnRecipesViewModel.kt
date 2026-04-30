@@ -1,9 +1,11 @@
 package com.samsantech.souschef.viewmodel
 
 import android.net.Uri
+import androidx.compose.runtime.MutableState
 import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.firebase.FirebaseRecipeManager
 import com.samsantech.souschef.utils.OwnRecipeAction
+import com.samsantech.souschef.utils.RecipeScreenNumber
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class OwnRecipesViewModel(
@@ -14,7 +16,6 @@ class OwnRecipesViewModel(
     val recipes = MutableStateFlow<List<Recipe>>(listOf())
     val originalData = MutableStateFlow(Recipe())   // the original recipe value before edit action
     val actionRecipe = MutableStateFlow(Recipe())   // the recipe value to perform action with (add, edit)
-    var deletePhotoKey: String? = null
     val action = MutableStateFlow(OwnRecipeAction.ADD)
 
     init {
@@ -24,7 +25,6 @@ class OwnRecipesViewModel(
     fun resetRecipe() {
         actionRecipe.value = Recipe()
         originalData.value = Recipe()
-        deletePhotoKey = null
     }
 
     fun getOwnRecipes() {
@@ -36,32 +36,39 @@ class OwnRecipesViewModel(
 
         if (user != null) {
             firebaseRecipeManager.addRecipe(recipe = actionRecipe.value, user = user,
-                callback = { isSuccess, error ->
+                callback = { isSuccess, error, createdRecipe ->
+                    if (isSuccess) {
+                        resetRecipe()
+                        createdRecipe?.let { updateRecipes(it, true) }
+                    }
                     callback(isSuccess, error)
-                    if (isSuccess) resetRecipe()
-                },
-                createdRecipe = { createdRecipe ->
-                    updateRecipes(createdRecipe, true)
                 }
             )
         }
     }
 
-    fun updateRecipe(data: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
+    fun updateRecipe(updates: HashMap<String, Any>, callback: (Boolean, String?) -> Unit) {
         val recipe = actionRecipe.value
 
-        firebaseRecipeManager.updateRecipe(data, recipe, updatedRecipe = { updatedRecipe -> updateRecipes(updatedRecipe, false) },
-            callback = { isSuccess, error ->
-                callback(isSuccess, error)
+        firebaseRecipeManager.updateRecipe(
+            updates = updates,
+            recipe = recipe,
+            deletePhotoKey = if (originalData.value.photosUrl.containsKey("portrait") && !actionRecipe.value.photosUrl.containsKey("portrait")) "portrait"
+            else if (originalData.value.photosUrl.containsKey("square") && !actionRecipe.value.photosUrl.containsKey("square")) "square" else null,
+                    // if there was portrait photo in original data but not in action recipe, portrait must be deleted in the database, so deletePhotoKey is set
+                    // if there is portrait photo in action recipe but is an updated one, the getUpdatedRecipeDifference will determine it,
+                    // and will be uploaded to the database to overwrite the former photo
+                    // there should be at least one photo of the recipe
+            callback = { isSuccess, error, updatedRecipe ->
                 if (isSuccess) {
-                    updateRecipes(recipe, false)
+                    updatedRecipe?.let {updateRecipes(it, false) }
                     if (recipesViewModel.displayRecipe.value.id == recipe.id) {
                         recipesViewModel.displayRecipe.value = recipe
                     }
                     resetRecipe()
                 }
-            },
-            deletePhotoKey = deletePhotoKey
+                callback(isSuccess, error)
+            }
         )
     }
 
@@ -76,6 +83,43 @@ class OwnRecipesViewModel(
                 recipes.value = updatedRecipes
             }
             callback(isSuccess, error)
+        }
+    }
+
+    fun getErrors(recipeScreen: RecipeScreenNumber): HashMap<String, String> {
+        val recipe = actionRecipe.value
+        val errors = hashMapOf<String, String>()
+
+        if (recipeScreen == RecipeScreenNumber.One) {
+            if (recipe.photosUrl["square"] == null && recipe.photosUrl["portrait"] == null) {
+                errors["photos"] = "At least one photo is required."
+            }
+            if (recipe.title.isEmpty()) {
+                errors["title"] = "Title is required."
+            }
+            if (recipe.prepTimeHr == "0" && recipe.prepTimeMin == "0"
+                && recipe.cookTimeHr == "0" && recipe.cookTimeMin == "0") {
+                errors["prepTime"] = "Provide either preparation time or cook time."
+                errors["cookTime"] = "Provide either preparation time or cook time."
+            }
+            if (recipe.difficulty.isEmpty()) {
+                errors["difficulty"] = "Difficulty is required."
+            }
+        }
+
+        return errors
+    }
+
+    fun handleErrors(recipeScreenNumber: RecipeScreenNumber,
+                     errors: MutableState<HashMap<String, String>>,
+                     onNoErrorsAction: () -> Unit) {
+        val newErrors = getErrors(recipeScreenNumber)
+
+        if (newErrors.isNotEmpty()) {
+            newErrors["general"] = "Check your inputs for errors."
+            errors.value = newErrors
+        } else {
+            onNoErrorsAction()
         }
     }
 
@@ -126,22 +170,7 @@ class OwnRecipesViewModel(
         if (recipeOne.photosUrl != recipeTwo.photosUrl) {
             data["photosUrl"] = recipeTwo.photosUrl
         }
-
         return data
-    }
-
-    fun setDeletePhotoKey(): String? {
-        var deletePhotoKey: String? = null
-
-        deletePhotoKey = if (originalData.value.photosUrl.containsKey("portrait") && !actionRecipe.value.photosUrl.containsKey("portrait")) "portrait"
-        else if (originalData.value.photosUrl.containsKey("square") && !actionRecipe.value.photosUrl.containsKey("square")) "square" else null
-
-        // if there was portrait photo in original data but not in action recipe, portrait must be deleted in the database, so deletePhotoKey is set
-        // if there is portrait photo in action recipe but is updated instead, the getUpdatedRecipeDifference will determine it,
-        // and will be uploaded to the database to overwrite the former photo
-        // there should be at least one photo of the recipe
-
-        return deletePhotoKey
     }
 
     private fun updateRecipes(recipe: Recipe, isNew: Boolean) {
@@ -233,6 +262,7 @@ class OwnRecipesViewModel(
         )
     }
 
+    // for adding empty ingredients text field in UI
     fun addIngredient() {
         val newIngredients = actionRecipe.value.ingredients.toMutableList()
         newIngredients.add("")
@@ -254,19 +284,25 @@ class OwnRecipesViewModel(
 
     fun removeIngredient(ingredientIndex: Int) {
         val newIngredients = actionRecipe.value.ingredients.toMutableList()
-        newIngredients.removeAt(ingredientIndex)
+        if (ingredientIndex in newIngredients.indices) {
+            newIngredients.removeAt(ingredientIndex)
+        }
 
         actionRecipe.value = actionRecipe.value.copy(
             ingredients = newIngredients
         )
     }
 
-    fun setIngredients(ingredients: List<String>) {
+    fun cleanIngredients() {
+        val newIngredients = actionRecipe.value.ingredients.toMutableList()
+        newIngredients.removeAll { it.trim().isBlank() }
+
         actionRecipe.value = actionRecipe.value.copy(
-            ingredients = ingredients
+            ingredients = newIngredients
         )
     }
 
+    // for adding empty instructions text field in UI
     fun addInstruction() {
         val newInstructions = actionRecipe.value.instructions.toMutableList()
         newInstructions.add("")
@@ -295,9 +331,12 @@ class OwnRecipesViewModel(
         )
     }
 
-    fun setInstructions(instructions: List<String>) {
+    fun cleanInstructions() {
+        val newInstructions = actionRecipe.value.instructions.toMutableList()
+        newInstructions.removeAll { it.trim().isBlank() }
+
         actionRecipe.value = actionRecipe.value.copy(
-            instructions = instructions
+            instructions = newInstructions
         )
     }
 

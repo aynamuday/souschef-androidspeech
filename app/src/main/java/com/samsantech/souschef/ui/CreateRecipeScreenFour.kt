@@ -224,12 +224,8 @@ fun CreateRecipeScreenFour(
                     onSecondButtonClick = {
                         if (action.value == OwnRecipeAction.EDIT) {
                             changes.value = ownRecipesViewModel.getUpdatedRecipeDifference()
-
-                            if (changes.value.isEmpty()) {
-                                closeCreateRecipe()
-                            } else {
-                                saveRecipe.value = true
-                            }
+                            if (changes.value.isEmpty()) closeCreateRecipe()
+                            else saveRecipe.value = true
                         } else {
                             saveRecipe.value = true
                         }
