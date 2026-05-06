@@ -124,8 +124,8 @@ class OwnRecipesViewModel(
     }
 
     fun getUpdatedRecipeDifference(): HashMap<String, Any> {
-        val recipeOne = actionRecipe.value
-        val recipeTwo = originalData.value
+        val recipeOne = originalData.value
+        val recipeTwo = actionRecipe.value
         val data = hashMapOf<String, Any>()
 
         if (recipeOne.title != recipeTwo.title) {

@@ -8,6 +8,7 @@ data class SearchRecipe(
     var path: String? = null,
 //    var isTikTok: Boolean? = null,
 //    var postId: String = "",
+    var userId: String = "",
     var userName: String = "",
     var userPhotoUrl: String = "",
     var photosUrl: HashMap<String, String> = hashMapOf(),

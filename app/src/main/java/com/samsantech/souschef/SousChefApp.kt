@@ -364,7 +364,8 @@ fun SousChefApp(
                             algoliaInsightsViewModel,
                             onNavigateToRecipe = {
                                 navController.navigate(route = Recipe)
-                            }
+                            },
+                            userViewModel
                         )
                     }
                 }

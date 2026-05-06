@@ -10,6 +10,7 @@ import com.samsantech.souschef.data.Recipe
 import com.samsantech.souschef.data.RecipePhotos
 import com.samsantech.souschef.data.User
 import androidx.core.net.toUri
+import com.google.firebase.firestore.FieldPath
 
 // handles all the direct operations related with recipes to Firebase
 class FirebaseRecipeManager(
@@ -80,34 +81,43 @@ class FirebaseRecipeManager(
         db.collection("recipes")
             .add(data)
             .addOnSuccessListener { recipeDocRef ->
+                // set the recipe id and user data for callback later
                 recipe.id = recipeDocRef.id
                 recipe.userId = user.uid
                 recipe.userName = user.username
                 recipe.userPhotoUrl = user.photoUrl
 
-                // on success, upload the recipe photos to storage
-                if (recipe.photosUrl.isNotEmpty()) {
-                    recipe.id?.let { recipeId ->
+                recipe.id?.let { recipeId ->
+                    db.collection("recipesPhotosUrl")
+                        .document(recipeId)
+                        .set(emptyMap<String, Any>())
+
+                    // on success, upload the recipe photos to storage
+                    if (recipe.photosUrl.isNotEmpty()) {
                         uploadRecipePhotos(
                             recipeId,
                             recipe.photosUrl,
                             callback = { isSuccess, err, uploadedPhotosUrl ->
                                 if (!isSuccess) callback(false, err, null)
                                 else {
+                                    updateRecipePhotosUrlAudience(recipeId, recipe.audience)
                                     uploadedPhotosUrl?.let { recipe.photosUrl = it }
                                     callback(true, null, recipe)
                                 }
                             }
                         )
+                    } else {
+                        callback(true, null, recipe)
                     }
-                } else {
-                    callback(true, null, recipe)
                 }
             }
             .addOnFailureListener { callback(false, getErrorMessage(it), null) }
     }
 
     fun updateRecipe(updates: HashMap<String, Any>, recipe: Recipe, deletePhotoKey: String?, callback: (Boolean, String?, Recipe?) -> Unit) {
+        val newPhotosUrl = updates["photosUrl"] as? HashMap<String, Uri> ?: hashMapOf()
+        updates.remove("photosUrl")
+
         // to be called later
         fun updateRecipeMetaData() {
             if (deletePhotoKey != null) {
@@ -140,9 +150,9 @@ class FirebaseRecipeManager(
             }
         }
 
-        if (recipe.photosUrl.isNotEmpty()) {
+        if (newPhotosUrl.isNotEmpty()) {
             recipe.id?.let { recipeId ->
-                uploadRecipePhotos(recipeId, recipe.photosUrl) { isSuccess, err, uploadedPhotosUrl ->
+                uploadRecipePhotos(recipeId, newPhotosUrl) { isSuccess, err, uploadedPhotosUrl ->
                     if (!isSuccess) {
                         callback(false, err, null)
                         return@uploadRecipePhotos
@@ -153,7 +163,7 @@ class FirebaseRecipeManager(
                     else updateRecipeMetaData()
                 }
             }
-        }
+        } else updateRecipeMetaData()
     }
 
     fun deleteRecipe(recipeId: String, photos: HashMap<String, Uri>, callback: (Boolean, String?) -> Unit) {
@@ -272,7 +282,6 @@ class FirebaseRecipeManager(
             prepTimeMin = data["prepTimeMin"].toString(),
             serving = data["serving"].toString(),
             difficulty = data["difficulty"].toString(),
-//            mealTypes = data["mealTypes"] as? List<String> ?: listOf(),
             categories = data["categories"] as? List<String> ?: listOf(),
             ingredients = data["ingredients"] as? List<String> ?: listOf(),
             instructions = data["instructions"] as? List<String> ?: listOf(),
@@ -290,15 +299,18 @@ class FirebaseRecipeManager(
 
         recipeIds.forEachIndexed { index, recipeId ->
             db.collection("recipesPhotosUrl")
-                .document(recipeId)
+                .whereEqualTo("audience", "Public")
+                .whereEqualTo(FieldPath.documentId(), recipeId)
                 .get()
-                .addOnSuccessListener { document ->
-                    val data = document.data
-                    if (data != null) {
-                        recipesPhotos.add(RecipePhotos(
-                            recipeId,
-                            data as? HashMap<String, Uri> ?: hashMapOf()
-                        ))
+                .addOnSuccessListener { querySnapshot ->
+                    if (!querySnapshot.isEmpty) {
+                        val data = querySnapshot.getDocuments()[0].data
+                        if (data != null) {
+                            recipesPhotos.add(RecipePhotos(
+                                recipeId,
+                                data as? HashMap<String, Uri> ?: hashMapOf()
+                            ))
+                        }
                     }
                 }
                 .addOnFailureListener {
@@ -310,30 +322,25 @@ class FirebaseRecipeManager(
         }
     }
 
+    fun updateRecipePhotosUrlAudience(recipeId: String, audience: String) {
+        db.collection("recipesPhotosUrl")
+            .document(recipeId)
+            .update("audience", audience)
+    }
+
     fun toggleFavoriteRecipe(recipeId: String, isAdd: Boolean, callback: (Boolean) -> Unit) {
         val user = auth.currentUser
         if (user != null) {
             val userDocRef = db.collection("users").document(user.uid)
 
-            userDocRef.get().addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val favoriteRecipes = document.get("favoriteRecipes") as? List<String> ?: listOf()
-                    val updatedFavorites = if (isAdd) {
-                        if (!favoriteRecipes.contains(recipeId)) {
-                            favoriteRecipes.toMutableList().apply { add(recipeId) }
-                        } else {
-                            return@addOnSuccessListener
-                        }
-                    } else {
-                        favoriteRecipes.toMutableList().apply { remove(recipeId) }
-                    }
-
-                    userDocRef.update("favoriteRecipes", updatedFavorites).addOnSuccessListener {
-                        callback(true)
-                    }.addOnFailureListener {
-                        callback(false)
-                    }
-                }
+            if (isAdd) {
+                userDocRef.update("favoriteRecipes", FieldValue.arrayUnion(recipeId))
+                    .addOnSuccessListener { callback(true) }
+                    .addOnFailureListener { callback(false) }
+            } else {
+                userDocRef.update("favoriteRecipes", FieldValue.arrayRemove(recipeId))
+                    .addOnSuccessListener { callback(true) }
+                    .addOnFailureListener { callback(false) }
             }
         }
     }

@@ -54,6 +54,7 @@ import com.samsantech.souschef.viewmodel.AlgoliaInsightsViewModel
 import com.samsantech.souschef.viewmodel.RecipesViewModel
 import com.samsantech.souschef.viewmodel.SearchRecipesViewModel
 import androidx.core.net.toUri
+import com.samsantech.souschef.viewmodel.UserViewModel
 
 @Composable
 fun SearchScreen(
@@ -63,7 +64,9 @@ fun SearchScreen(
     recipesViewModel: RecipesViewModel,
     algoliaInsightsViewModel: AlgoliaInsightsViewModel,
     onNavigateToRecipe: () -> Unit,
+    userViewModel: UserViewModel
 ) {
+    val user by userViewModel.user.collectAsState()
     val pagingHits = searchRecipesViewModel.hitsPaginator.pager.flow.collectAsLazyPagingItems()
     val gridState by searchRecipesViewModel.gridState.collectAsState()
     val loadingState = searchRecipesViewModel.loadingState
@@ -201,6 +204,7 @@ fun SearchScreen(
                 } else {
                     BoxWithConstraints {
                         RecipesList(
+                            currentUserId = user?.uid,
                             lazyPagingItems = pagingHits,
                             lazyGridState = gridState,
                             maxWidth = maxWidth,
@@ -297,6 +301,7 @@ fun SearchCategoryCard(title: String, drawable: Int, onClick: () -> Unit) {
 
 @Composable
 fun RecipesList(
+    currentUserId: String?,
     modifier: Modifier = Modifier,
     maxWidth: Dp,
     lazyPagingItems: LazyPagingItems<SearchRecipe>,
@@ -318,52 +323,10 @@ fun RecipesList(
 
             val width = if (view == "grid") ((maxWidth/2) - 8.dp) else maxWidth
             val height = if (view == "grid") (width/2)+width else 300.dp
-
-            // update implementation if will use again
-//            if (item.isTikTok == true) {
-//                Column {
-//                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))) {
-//                        if (view == "grid") {
-//                            TikTokWebView(
-//                                postId = item.postId,
-//                                width = width.value.toInt(),
-//                                height = height.value.toInt()
-//                            )
-//                        } else {
-//                            TikTokWebView(
-//                                postId = item.postId,
-//                                width = width.value.toInt(),
-//                                height = maxHeight.value.toInt()-32
-//                            )
-//                        }
-//                    }
-//                    Spacer(modifier = Modifier.height(8.dp))
-//                    Row(modifier = Modifier.fillMaxWidth()) {
-//                        Text(
-//                            text = item.title,
-//                            fontWeight = FontWeight(500),
-//                            maxLines = 2,
-//                            overflow = TextOverflow.Ellipsis,
-//                            modifier = Modifier.weight(1f),
-//                            fontSize = if (view == "grid") 14.sp else 16.sp
-//                        )
-//                        Spacer(modifier = Modifier.width(16.dp))
-//                        Icon(
-//                            imageVector = if (favoriteRecipes.contains(item.objectID)) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
-//                            contentDescription = "Bookmark",
-//                            tint = if (favoriteRecipes.contains(item.objectID)) Green else Color.Gray,
-//                            modifier = Modifier
-//                                .size(if (view == "grid") 18.dp else 22.dp)
-//                                .clickable {
-//                                    onToggleFavorite(item.objectID!!)
-//                                },
-//                        )
-//                    }
-//                }
-//            } else {
                 val photosUrl = item.photosUrl.mapValues { (_, value) -> value.toUri() } as java.util.HashMap<String, Uri>
                 val isFavorite = favoriteRecipes.any { it.id == item.objectID }
                 SearchRecipeItem(
+                    currentUserId = currentUserId,
                     itemWidth = width,
                     itemHeight = height,
                     item = item,
@@ -376,14 +339,13 @@ fun RecipesList(
                    },
                     view = view
                 )
-//            }
-
         }
     }
 }
 
 @Composable
 fun SearchRecipeItem(
+    currentUserId: String?,
     itemWidth: Dp,
     itemHeight: Dp,
     item: SearchRecipe,
@@ -417,9 +379,7 @@ fun SearchRecipeItem(
             overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(5.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             UserNamePhoto(
                 photoUri = item.userPhotoUrl,
                 userName = item.userName,
@@ -429,16 +389,18 @@ fun SearchRecipeItem(
                 modifier = Modifier.weight(1f),
                 spacer = 8.dp
             )
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
-                contentDescription = "Bookmark",
-                tint = if (isFavorite) Green else Color.Gray,
-                modifier = Modifier
-                    .size(if (view == "grid") 18.dp else 22.dp)
-                    .clickable {
-                        onToggleFavorite()
-                    },
-            )
+            if (currentUserId != item.userId) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                    contentDescription = "Bookmark",
+                    tint = if (isFavorite) Green else Color.Gray,
+                    modifier = Modifier
+                        .size(if (view == "grid") 18.dp else 22.dp)
+                        .clickable {
+                            onToggleFavorite()
+                        },
+                )
+            }
         }
     }
 }
