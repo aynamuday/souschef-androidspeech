@@ -2,15 +2,26 @@
   <img src="display.png" alt="">
 </p>
 
+
+**SousChef** is an Android-based cooking application equipped with voice assistance and personalization designed to enhance the users' culinary experience. 
+
+
+## Key Features
+- Browse a variety of recipes and manage their own recipe collection
+- Voice-assisted cooking using simple commands (e.g., “next,” “start over”)
+- Personalized recipe recommendations
+
 ## Prerequisites
 - Android Studio
 - Firebase
 - Algolia
 
+
 ## Getting Started
 1. Open the project folder in Android Studio
 2. Prepare the emulator or physical device
 3. Click *Run*
+
 
 ## Firebase
 1. Create a Firebase project
@@ -25,6 +36,7 @@
      - Collection ID: *recipes*
      - Fields to index: *userId (ascending), createdAt (descending), __name__ (descending)*
 7. Initialize **Storage**
+
 
 ## Algolia
 1. In Firebase Extensions, install **Search Firestore with Algolia**
@@ -41,6 +53,7 @@
     algoliaApiKey=your_api_key
     algoliaIndexName="souschef"
     ```
+
 
 ## Troubleshooting
 1. **Illegal Argument Exception: source must not be null**
