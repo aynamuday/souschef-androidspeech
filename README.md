@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="display.png" alt="">
+</p>
+
 ## Prerequisites
 - Android Studio
 - Firebase
