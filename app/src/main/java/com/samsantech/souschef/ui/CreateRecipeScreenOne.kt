@@ -82,7 +82,7 @@ fun CreateRecipeScreenOne(
     val action = ownRecipesViewModel.action.collectAsState()
     val categories = arrayOf("Chicken", "Pork", "Beef", "Seafoods", "Vegetables", "Fruits", "Dessert", "Drink")
     val difficulty = arrayOf("Easy", "Medium", "Hard")
-    var errors = remember { mutableStateOf(hashMapOf<String, String>()) }
+    val errors = remember { mutableStateOf(hashMapOf<String, String>()) }
     val saveRecipe = remember { mutableStateOf(false) }
     val changes = remember { mutableStateOf(hashMapOf<String, Any>()) }
     var showDifficultyDropdown by remember { mutableStateOf(false) }

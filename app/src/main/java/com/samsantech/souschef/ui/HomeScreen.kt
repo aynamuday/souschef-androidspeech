@@ -137,13 +137,8 @@ fun HomeScreen(
                                                     recipesViewModel.displayRecipe.value = recipe
                                                     onNavigateToRecipe()
                                                 }
-                                            } else {
-                                                Toast
-                                                    .makeText(context, err, Toast.LENGTH_LONG)
-                                                    .show()
-                                            }
+                                            } else Toast.makeText(context, err, Toast.LENGTH_LONG).show()
                                         }
-
                                         algoliaInsightsViewModel.sendViewedARecipeEvent(id)
                                     },
                                     onToggleFavorite = { id ->
